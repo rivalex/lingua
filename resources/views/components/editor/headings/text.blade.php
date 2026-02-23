@@ -10,5 +10,5 @@
             <path d="M19 4H9.5a4.5 4.5 0 0 0 0 9H13"/>
         </svg>
     </x-slot>
-    <p>@lang('rivalex::lingua.translations.editor.headings.paragraph')</p>
+    <p>@lang('lingua::lingua.translations.editor.headings.paragraph')</p>
 </flux:menu.item>

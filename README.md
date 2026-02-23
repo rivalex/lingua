@@ -58,8 +58,8 @@ php artisan vendor:publish --tag="lingua-views"
 ## Usage
 
 ```php
-$laravelTranslate = new rivalex\Lingua();
-echo $laravelTranslate->echoPhrase('Hello, rivalex!');
+$translate = new rivalex\Lingua();
+echo $translate->echoPhrase('Hello, rivalex!');
 ```
 
 ## Testing

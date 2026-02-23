@@ -24,7 +24,11 @@ new class extends Component {
     #[On('refreshLanguages')]
     public function refreshLanguagesSelector(): void
     {
-        $this->renderIsland('languageItems');
+        if($this->modal) {
+            $this->renderIsland('languageSelectorModal');
+        } else {
+            $this->renderIsland('languageSelectorMenu');
+        }
     }
 
     #[Computed]
@@ -46,18 +50,18 @@ new class extends Component {
     @if($modal)
         <flux:modal.trigger name="{{ $modalName }}">
             <flux:button variant="filled" square>
-                <x-icon name="flag-language-{{ app()->currentLocale() }}" style="width: 2rem;"/>
+                @svg('flag-circle-language-'.app()->currentLocale(), 'w-6 h-6')
             </flux:button>
         </flux:modal.trigger>
-        <flux:modal name="{{ $modalName }}" class="translate-modal">
-            <div class="flex flex-col gap-4">
+        <flux:modal name="{{ $modalName }}" class="lingua-modal">
+            <div
+                class="flex flex-col gap-4">
                 <h2 class="text-lg">@lang('language.select')</h2>
-                @island(name: 'languageItems')
+                @island(name: 'languageSelectorModal', always: true)
                 <div class="flex flex-wrap gap-4">
-                    @foreach($this->languages as $locale)
-                        <flux:button type="button"
+                  @foreach($this->languages as $locale)
+                        <flux:button type="button" wire:key="'modal_locale_{{ $locale->code }}'"
                                      wire:click.prevent.stop="changeLocale('{{ $locale->code }}')"
-                                     :key="'locale_{{ $locale->code }}'"
                             @class(['bg-zinc-100' => $locale->code === app()->currentLocale()])>
                             <div class="justify-between flex items-center text-start"
                                  style="width: 8rem; min-width: 8rem; max-width: 8rem;">
@@ -65,7 +69,7 @@ new class extends Component {
                                     <div class="truncate">{{ $locale->name }}</div>
                                     <div class="text-xs font-light text-gray-500 truncate">{{ $locale->native }}</div>
                                 </div>
-                                <x-icon name="flag-language-{{ $locale->code }}" style="width: 2.5rem;"/>
+                                @svg('flag-circle-language-'.$locale->code, 'w-6 h-6')
                             </div>
                         </flux:button>
                     @endforeach
@@ -74,27 +78,27 @@ new class extends Component {
             </div>
         </flux:modal>
     @else
-        <flux:dropdown>
+        <flux:dropdown wire:ignore>
             <flux:button variant="filled" square>
-                <x-icon name="flag-language-{{ app()->currentLocale() }}" style="width: 2rem;"/>
+                @svg('flag-circle-language-'.app()->currentLocale(), 'w-6 h-6')
             </flux:button>
+            @island(name: 'languageSelectorMenu', always: true)
             <flux:menu>
-                @island(name: 'languageItems')
                 @foreach($this->languages as $locale)
                     <flux:menu.item wire:click.prevent.stop="changeLocale('{{ $locale->code }}')"
-                                    :key="'locale_{{ $locale->code }}'"
+                                    wire:key="'menu_locale_{{ $locale->code }}'"
                         @class(['bg-zinc-100' => $locale->code === app()->currentLocale()])>
                         <div class="w-full justify-between flex items-center">
                             <div class="flex flex-col grow leading-5 truncate">
                                 <div class="truncate">{{ $locale->name }}</div>
                                 <div class="text-xs font-light text-gray-500 truncate">{{ $locale->native }}</div>
                             </div>
-                            <x-icon name="flag-language-{{ $locale->code }}" style="width: 2.5rem;"/>
+                            @svg('flag-circle-language-'.$locale->code, 'w-6 h-6')
                         </div>
                     </flux:menu.item>
                 @endforeach
-                @endisland
             </flux:menu>
+            @endisland
         </flux:dropdown>
     @endif
 

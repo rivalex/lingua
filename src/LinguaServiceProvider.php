@@ -36,7 +36,7 @@ class LinguaServiceProvider extends PackageServiceProvider
             ->hasCommands(SyncToLocalCommand::class, SyncToDatabaseCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
-                    ->startWith(function (InstallCommand $command) {
+                    ->startWith(function(InstallCommand $command) {
                         $command->info('Hello, and welcome to Lingua new package!');
                     })
                     ->publishAssets()
@@ -44,7 +44,7 @@ class LinguaServiceProvider extends PackageServiceProvider
                     ->publishMigrations()
                     ->askToRunMigrations()
                     ->askToStarRepoOnGitHub('rivalex/lingua')
-                    ->endWith(function (InstallCommand $command) {
+                    ->endWith(function(InstallCommand $command) {
                         $command->info('Lingua package installed successfully!');
                     });
             });
@@ -57,30 +57,11 @@ class LinguaServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        /* Register and merge the config file from package */
-        //        $this->mergeConfigFrom(
-        //            __DIR__ . '/../config/lingua.php', 'lingua'
-        //        );
-        //
-        //        /* Publish the config file from package */
-        //        $this->publishes([
-        //            __DIR__ . '/../config/lingua.php' => config_path('lingua.php'),
-        //        ], 'config');
-
-        /* Load views from package */
-        //        $this->loadViewsFrom(__DIR__ . '/../resources/views/lingua', 'lingua');
-
-        /* Load translations from package */
-        //        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'rivalex');
-
         /* Register Blade Namespace components */
         Blade::componentNamespace('Rivalex\\Views\\Components', 'lingua');
 
         /* Add Livewire Namespace for components */
         Livewire::addNamespace('lingua', $this->getViewPath());
-
-        /* Register Package Routes */
-        $this->registerRoutes();
 
         $this->app->make(Kernel::class)->appendMiddlewareToGroup('web', LinguaMiddleware::class);
 
@@ -97,6 +78,9 @@ class LinguaServiceProvider extends PackageServiceProvider
         });
     }
 
+    /**
+     * @return void
+     */
     protected function registerTranslator(): void
     {
         $this->app->singleton('translator', function ($app) {
@@ -108,13 +92,14 @@ class LinguaServiceProvider extends PackageServiceProvider
             $locale = $app->getLocale();
             $trans = new Translator($loader, $locale);
             $trans->setFallback($defaultLocale);
-
             return $trans;
         });
     }
 
     /**
      * Get the services provided by the provider.
+     *
+     * @return array
      */
     public function provides(): array
     {
@@ -123,8 +108,8 @@ class LinguaServiceProvider extends PackageServiceProvider
 
     protected function getViewPath(): string
     {
-        $publishedPath = resource_path('views/vendor/rivalex/lingua');
-        $packagePath = __DIR__.'/../resources/views/lingua';
+        $publishedPath = resource_path("views/vendor/rivalex/lingua");
+        $packagePath = __DIR__ . "/../resources/views/lingua";
 
         return file_exists($publishedPath) ? $publishedPath : $packagePath;
     }
@@ -132,36 +117,19 @@ class LinguaServiceProvider extends PackageServiceProvider
     protected function registerLivewireComponent(string $name, string $fileName): void
     {
         $publishedPath = resource_path("views/vendor/rivalex/lingua/{$fileName}");
-        $packagePath = __DIR__."/../resources/views/lingua/{$fileName}";
+        $packagePath = __DIR__ . "/../resources/views/lingua/{$fileName}";
 
         $componentPath = file_exists($publishedPath) ? $publishedPath : $packagePath;
 
         Livewire::addComponent($name, $componentPath);
     }
 
-    public function register(): void
-    {
-        parent::register();
-
-        $this->app->singleton(Lingua::class, function () {
-            return new Lingua;
-        });
-    }
-
-    protected function registerRoutes(): void
-    {
-        Route::group($this->routeConfiguration(), function () {
-            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
-        });
-    }
-
-    protected function routeConfiguration(): array
-    {
-        $middleware = array_unique(array_merge(['web'], config('lingua.middleware', 'web')));
-
-        return [
-            'prefix' => config('lingua.routes_prefix', 'lingua'),
-            'middleware' => $middleware,
-        ];
-    }
+//    public function register(): void
+//    {
+//        parent::register();
+//
+//        $this->app->singleton(Lingua::class, function () {
+//           return new Lingua();
+//        });
+//    }
 }

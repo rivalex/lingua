@@ -11,5 +11,5 @@
             <path d="m17 12 3-2v8"/>
         </svg>
     </x-slot>
-    <p class="headings-h1">@lang('rivalex::lingua.translations.editor.headings.header-1')</p>
+    <p class="headings-h1">@lang('lingua::lingua.translations.editor.headings.header-1')</p>
 </flux:menu.item>

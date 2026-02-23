@@ -9,7 +9,7 @@
     data-flux-field>
     @if(!empty($label))
         <flux:label x-bind:for="id"
-                    :badge="$attributes->has('required') ? __('rivalex::lingua.global.required') : null">{{ $label }}</flux:label>
+                    :badge="$attributes->has('required') ? __('lingua::lingua.global.required') : null">{{ $label }}</flux:label>
     @endif
     <flux:with-field :$attributes>
         <!-- Combobox -->
@@ -57,7 +57,7 @@
                 </ul>
 
                 <p x-show="filteredOptions.length == 0"
-                   class="px-2 py-1.5 text-zinc-600 dark:text-zinc-400">{{ __('rivalex::lingua.global.no_results_found') }}</p>
+                   class="px-2 py-1.5 text-zinc-600 dark:text-zinc-400">{{ __('lingua::lingua.global.no_results_found') }}</p>
             </div>
         </div>
     </flux:with-field>

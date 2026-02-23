@@ -52,8 +52,8 @@ new class extends Component {
 @placeholder
 <flux:table>
 	<flux:table.columns>
-		<flux:table.column style="width: 15%">@lang('rivalex::lingua.languages.table.language')</flux:table.column>
-		<flux:table.column>@lang('rivalex::lingua.languages.table.status')</flux:table.column>
+		<flux:table.column style="width: 15%">@lang('lingua::lingua.languages.table.language')</flux:table.column>
+		<flux:table.column>@lang('lingua::lingua.languages.table.status')</flux:table.column>
 		<flux:table.column style="width: 10%" align="center">
 			<flux:icon.cog/>
 		</flux:table.column>
@@ -87,18 +87,18 @@ new class extends Component {
 
 <flux:table :paginate="$this->languages">
 	<flux:table.columns>
-		<flux:table.column style="width: 15%">@lang('rivalex::lingua.languages.table.language')</flux:table.column>
-		<flux:table.column>@lang('rivalex::lingua.languages.table.status')</flux:table.column>
+		<flux:table.column style="width: 15%">@lang('lingua::lingua.languages.table.language')</flux:table.column>
+		<flux:table.column>@lang('lingua::lingua.languages.table.status')</flux:table.column>
 		<flux:table.column style="width: 10%" align="center">
 			<flux:icon.cog/>
 		</flux:table.column>
 	</flux:table.columns>
 
-	@island(name: 'languagesRows', always: true)
 	<flux:table.rows>
-		@foreach ($this->languages as $language)
-			<livewire:lingua::language.row :language-id="$language->id" :key="$language->id" lazy/>
-		@endforeach
+        @island(name: 'languagesRows', always: true)
+            @foreach ($this->languages as $language)
+                <livewire:lingua::language.row :language-id="$language->id" :key="$language->id" lazy/>
+            @endforeach
+        @endisland
 	</flux:table.rows>
-	@endisland
 </flux:table>

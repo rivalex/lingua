@@ -45,7 +45,7 @@ new class extends Component {
 
 <flux:table.row>
 	<flux:table.cell class="flex items-center gap-2">
-		<x-icon name="flag-language-{{ $language->code }}" class="w-8 h-8"/>
+        @svg('flag-circle-language-'.$language->code, 'w-8 h-8')
 		<div class="flex flex-col gap-0.5">
 			<flux:link variant="ghost" wire:navigate
 			           href="{{ route('lingua.translations', ['locale' => $language->code]) }}">
@@ -59,13 +59,13 @@ new class extends Component {
 		<div class="flex flex-col gap-2">
 			<div class="flex flex-row text-xs gap-2 items-center">
 				@if($language->is_default)
-					<p class="font-black">@lang('rivalex::lingua.languages.table.row.default_language')</p>
+					<p class="font-black">@lang('lingua::lingua.languages.table.row.default_language')</p>
 					<flux:separator vertical/>
-					<p>@lang('rivalex::lingua.languages.table.row.strings_total', ['count' => $language->total_strings])</p>
+					<p>@lang('lingua::lingua.languages.table.row.strings_total', ['count' => $language->total_strings])</p>
 				@else
-					<p>@lang('rivalex::lingua.languages.table.row.strings_translated', ['count' => $language->translated_strings])</p>
+					<p>@lang('lingua::lingua.languages.table.row.strings_translated', ['count' => $language->translated_strings])</p>
 					<flux:separator vertical/>
-					<p>@lang('rivalex::lingua.languages.table.row.strings_missing', ['count' => $language->missing_strings])</p>
+					<p>@lang('lingua::lingua.languages.table.row.strings_missing', ['count' => $language->missing_strings])</p>
 					<flux:separator vertical/>
 					<p>{{ $language->completion_percentage }}%</p>
 					<flux:spacer/>

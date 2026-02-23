@@ -65,7 +65,7 @@ new class extends Component {
 };
 ?>
 
-<flux:modal name="{{ $modalName }}" class="translate-modal">
+<flux:modal name="{{ $modalName }}" class="lingua-modal">
 	<div class="flex flex-col gap-4" x-data="{ control: '' }">
 		<h2 class="text-xl">{!! $this->deleteHeader !!}</h2>
 		<flux:separator/>

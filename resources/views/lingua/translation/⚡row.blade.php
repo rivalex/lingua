@@ -32,15 +32,15 @@ new class extends Component {
     public function validationAttributes(): array
     {
         $attribute = match ($this->translation->type->value) {
-            'text' => __('rivalex::lingua.translations.attributes.text_value'),
-            'html' => __('rivalex::lingua.translations.attributes.html_value'),
-            'markdown' => __('rivalex::lingua.translations.attributes.md_value')
+            'text' => __('lingua::lingua.translations.attributes.text_value'),
+            'html' => __('lingua::lingua.translations.attributes.html_value'),
+            'markdown' => __('lingua::lingua.translations.attributes.md_value')
         };
         return [
             'value' => match ($this->translation->type->value) {
-                'text' => __('rivalex::lingua.translations.attributes.text_value'),
-                'html' => __('rivalex::lingua.translations.attributes.html_value'),
-                'markdown' => __('rivalex::lingua.translations.attributes.md_value')
+                'text' => __('lingua::lingua.translations.attributes.text_value'),
+                'html' => __('lingua::lingua.translations.attributes.html_value'),
+                'markdown' => __('lingua::lingua.translations.attributes.md_value')
             }
         ];
     }
@@ -116,7 +116,7 @@ new class extends Component {
 
 
 <flux:table.row>
-    <flux:table.cell class="translate-row">
+    <flux:table.cell class="lingua-row">
         <div class="flex flex-row gap-2 items-center">
             {!! $translation->type->iconColor(8) !!}
             <div class="flex flex-col gap-1">
@@ -151,8 +151,8 @@ new class extends Component {
         </div>
     </flux:table.cell>
 
-    <flux:table.cell class="translate-row">
-        <div class="translate-preview">
+    <flux:table.cell class="lingua-row">
+        <div class="lingua-preview">
             <x-lingua::clipboard text-to-copy="{{ $defaultValue }}">
                 @if($translation->type->value === 'markdown')
                     <div x-data="{ showMarkdown: @js($defaultValue) }">
@@ -172,12 +172,12 @@ new class extends Component {
             </div>
         </div>
     </flux:table.cell>
-    <flux:table.cell class="translate-row">
+    <flux:table.cell class="lingua-row">
         <x-lingua::editor wire:model.blur.live="value" type="{{ $translation->type->value }}"
-                             :placeholder="__('rivalex::lingua.translations.create.fields.htmlValue_placeholder')"/>
+                             :placeholder="__('lingua::lingua.translations.create.fields.htmlValue_placeholder')"/>
     </flux:table.cell>
 
-    <flux:table.cell align="center" class="translate-row center" wire:loading.class="pointer-events-none">
+    <flux:table.cell align="center" class="lingua-row center" wire:loading.class="pointer-events-none">
         <flux:button.group>
             {{--            @if($this->currentLocale === defaultLocale())--}}
             <flux:modal.trigger name="{{ $editModalName }}">

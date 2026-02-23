@@ -1,7 +1,7 @@
 @blaze
 
 <flux:dropdown position="bottom" align="start">
-    <flux:tooltip :content="__('rivalex::lingua.translations.editor.format')">
+    <flux:tooltip :content="__('lingua::lingua.translations.editor.format')">
         <button class="editor-button" tabindex="-1" x-on:mousedown.stop.prevent @click.stop.prevent>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"

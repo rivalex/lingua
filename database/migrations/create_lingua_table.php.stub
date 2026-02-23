@@ -46,7 +46,7 @@ class CreateLinguaTable extends Migration
             $table->index(['code', 'regional', 'native'], 'unique_language');
         });
 
-        $defaultLocale = app()->getFallbackLocale() ?? config('translate.default_locale');
+        $defaultLocale = app()->getFallbackLocale() ?? config('lingua.default_locale');
         if (! Locales::installed()->contains($defaultLocale)) {
             Artisan::call('lang:add '.$defaultLocale);
         }
