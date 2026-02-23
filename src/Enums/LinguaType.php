@@ -47,7 +47,6 @@ use Flux\Flux;
  */
 enum LinguaType: string
 {
-
     case any = 'any';
     case text = 'text';
     case html = 'html';
@@ -95,31 +94,34 @@ enum LinguaType: string
 
     public function iconColor(int $size = 4): string
     {
-        $iconSize = 'h-' . $size . ' w-' . $size;
+        $iconSize = 'h-'.$size.' w-'.$size;
+
         return match ($this) {
-            self::any => '<div class="' .$iconSize . ' text-gray-400 dark:text-gray-600">' . $this->icon() . '</div>',
-            self::text => '<div class="' .$iconSize . ' text-gray-600 dark:text-gray-400">' . $this->icon() . '</div>',
-            self::html => '<div class="' .$iconSize . ' text-sky-600 dark:text-sky-500">' . $this->icon() . '</div>',
-            self::markdown => '<div class="' .$iconSize . ' text-orange-600 dark:text-orange-500">' . $this->icon() . '</div>'
+            self::any => '<div class="'.$iconSize.' text-gray-400 dark:text-gray-600">'.$this->icon().'</div>',
+            self::text => '<div class="'.$iconSize.' text-gray-600 dark:text-gray-400">'.$this->icon().'</div>',
+            self::html => '<div class="'.$iconSize.' text-sky-600 dark:text-sky-500">'.$this->icon().'</div>',
+            self::markdown => '<div class="'.$iconSize.' text-orange-600 dark:text-orange-500">'.$this->icon().'</div>'
         };
     }
 
     public function labelWithIcon(): string
     {
-        return '<div class="flex flex-row items-center gap-2 ' . $this->color() . '">' . $this->icon() . '<span>' . $this->label() . '</span></div>';
+        return '<div class="flex flex-row items-center gap-2 '.$this->color().'">'.$this->icon().'<span>'.$this->label().'</span></div>';
     }
 
     public static function selectValues(): array
     {
         $array = [];
         foreach (self::cases() as $value) {
-            if($value === self::any) continue;
+            if ($value === self::any) {
+                continue;
+            }
             $array[] = [
                 'value' => $value->value,
-                'label' => Flux::pro() ? $value->labelWithIcon() : $value->label()
+                'label' => Flux::pro() ? $value->labelWithIcon() : $value->label(),
             ];
         }
+
         return $array;
     }
-
 }

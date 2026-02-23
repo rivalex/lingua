@@ -11,20 +11,17 @@ class SyncToDatabaseCommand extends Command
      *
      * @var string
      */
-	protected $signature = 'lingua:sync-to-database';
+    protected $signature = 'lingua:sync-to-database';
 
     /**
      * The console command description.
      *
      * @var string
      */
-	protected $description = 'Sync translations from local files to database';
+    protected $description = 'Sync translations from local files to database';
 
     /**
      * Execute the console command.
      */
-	public function handle(): void
-	{
-
-	}
+    public function handle(): void {}
 }

@@ -8,15 +8,14 @@ use Spatie\TranslationLoader\LanguageLine;
 use Spatie\TranslationLoader\TranslationLoaderManager;
 use Spatie\TranslationLoader\TranslationLoaders\TranslationLoader;
 
-class LinguaManager extends TranslationLoaderManager {
+class LinguaManager extends TranslationLoaderManager
+{
     /**
      * Load the messages for the given locale.
      *
      * @param  string  $locale
      * @param  string  $group
      * @param  string  $namespace
-     *
-     * @return array
      */
     public function load($locale, $group, $namespace = null): array
     {
@@ -32,7 +31,7 @@ class LinguaManager extends TranslationLoaderManager {
             return array_replace_recursive($fileTranslations, $loaderTranslations);
         } catch (QueryException $exception) {
             $modelClass = config('lingua.model');
-            $model = new $modelClass();
+            $model = new $modelClass;
 
             if (is_a($model, LanguageLine::class) && ! Schema::hasTable($model->getTable())) {
                 return parent::load($locale, $group, $namespace);
@@ -45,7 +44,7 @@ class LinguaManager extends TranslationLoaderManager {
     protected function getTranslationsForTranslationLoaders(
         string $locale,
         string $group,
-        string|null $namespace = null
+        ?string $namespace = null
     ): array {
         return collect(config('lingua.translation_loaders'))
             ->map(function (string $className) {
@@ -56,5 +55,4 @@ class LinguaManager extends TranslationLoaderManager {
             })
             ->toArray();
     }
-
 }

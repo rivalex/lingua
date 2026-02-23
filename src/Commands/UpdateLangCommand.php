@@ -11,20 +11,17 @@ class UpdateLangCommand extends Command
      *
      * @var string
      */
-	protected $signature = 'lingua:update-lang';
+    protected $signature = 'lingua:update-lang';
 
     /**
      * The console command description.
      *
      * @var string
      */
-	protected $description = 'Update the local language files via Laravel Lang and sync translations to database';
+    protected $description = 'Update the local language files via Laravel Lang and sync translations to database';
 
     /**
      * Execute the console command.
      */
-	public function handle(): void
-	{
-
-	}
+    public function handle(): void {}
 }

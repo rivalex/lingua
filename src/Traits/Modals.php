@@ -3,7 +3,6 @@
 namespace Rivalex\Lingua\Traits;
 
 use Flux\Flux;
-use Livewire\Attributes\Validate;
 
 trait Modals
 {
@@ -16,7 +15,7 @@ trait Modals
 
     public function closeModal(): void
     {
-        if (!$this->modalName) {
+        if (! $this->modalName) {
             $this->closeModals();
         }
         Flux::modal($this->modalName)->close();

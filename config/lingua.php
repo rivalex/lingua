@@ -45,7 +45,7 @@ return [
         'bullet' => true,
         'ordered' => true,
         'clear' => true,
-        'code-mode' => false
-    ]
+        'code-mode' => false,
+    ],
 
 ];

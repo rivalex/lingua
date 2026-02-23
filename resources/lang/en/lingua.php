@@ -33,7 +33,7 @@ return [
                 'sync_database_done_fail' => 'Error occurred while syncing to Database! Please check the error logs.',
                 'lang_updated' => 'All languages and translations have been successfully updated!',
                 'lang_updated_fail' => 'Error occurred while updating languages! Please check the error logs.',
-            ]
+            ],
         ],
         'default' => [
             'button' => 'Set as DEFAULT',
@@ -56,7 +56,7 @@ return [
                 'strings_missing' => 'Missing: <strong>:count</strong>',
                 'strings_total' => 'Total strings: <strong>:count</strong>',
                 'strings_translated' => 'Translated: <strong>:count</strong>',
-            ]
+            ],
         ],
         'create' => [
             'action' => 'Add new Language',
@@ -77,7 +77,7 @@ return [
             'title' => 'Sort Languages.',
             'subtitle' => 'Drag and drop languages to reorder them.',
             'sorted' => 'Languages reordered successfully!',
-            'sorted_fail' => 'Languages reorder failed!'
+            'sorted_fail' => 'Languages reorder failed!',
         ],
         'delete' => [
             'confirm' => 'DELETE :language',
@@ -85,14 +85,14 @@ return [
             'alert_translations' => 'This action will also delete all translations for <strong>:language</strong>.',
             'header' => 'Delete language <strong>:language</strong>',
             'action' => 'Delete :language',
-        ]
+        ],
     ],
     'translations' => [
         'header' => ':locale Translations',
         'subheader' => 'Manage translations for :locale language.',
         'group' => [
             'placeholder' => 'Select a group...',
-            'all_groups' => 'All groups'
+            'all_groups' => 'All groups',
         ],
         'table' => [
             'columns' => [
@@ -133,7 +133,7 @@ return [
             'redo' => 'Redo',
             'helper_html' => 'Focus out of this editor to save your HTML changes.',
             'helper_markdown' => 'Focus out of this editor to save your MD changes.',
-            'helper_text' => 'Focus out of this textarea to save your changes.'
+            'helper_text' => 'Focus out of this textarea to save your changes.',
         ],
         'attributes' => [
             'translation_type' => 'Translation Type',
@@ -145,7 +145,7 @@ return [
             'required' => 'This :attribute is required',
             'string' => 'This :attribute must be a string',
             'min' => 'This :attribute must be at least :min characters',
-            'lang_updated_fail' => 'Failed to update language translation'
+            'lang_updated_fail' => 'Failed to update language translation',
         ],
         'create' => [
             'action' => 'Add a new translation',
@@ -163,7 +163,7 @@ return [
                 'htmlValue_placeholder' => 'Enter an HTML translation...',
                 'mdValue' => 'Translation Markdown Value',
                 'mdValue_placeholder' => 'Enter a Markdown translation...',
-            ]
+            ],
         ],
         'delete' => [
             'confirm_locale' => 'DELETE :locale TRANSLATION',
@@ -175,5 +175,5 @@ return [
             'alert' => 'Are you sure you want to delete <strong>:key</strong>?',
             'alert_translations' => 'All translations will be deleted as well.',
         ],
-    ]
+    ],
 ];

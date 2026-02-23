@@ -17,14 +17,14 @@ use Spatie\TranslationLoader\LanguageLine;
  * Translation model for managing language translations in the application.
  * Extends LanguageLine to provide advanced translation management capabilities.
  *
- * @property string     $id UUID identifier for the translation
- * @property string     $group Translation group name (e.g., 'single', 'validation', etc.)
- * @property string     $key Translation key within the group
- * @property string     $group_key Translation group and key concatenated.
+ * @property string $id UUID identifier for the translation
+ * @property string $group Translation group name (e.g., 'single', 'validation', etc.)
+ * @property string $key Translation key within the group
+ * @property string $group_key Translation group and key concatenated.
  * @property LinguaType $type Type of translation (text, html, etc.)
- * @property array      $text Associative array of translations (locale => translation)
- * @property Carbon     $created_at Creation timestamp
- * @property Carbon     $updated_at Last update timestamp
+ * @property array $text Associative array of translations (locale => translation)
+ * @property Carbon $created_at Creation timestamp
+ * @property Carbon $updated_at Last update timestamp
  */
 class Translation extends LanguageLine
 {
@@ -186,7 +186,7 @@ class Translation extends LanguageLine
         $langPath = config('lingua.lang_dir');
         $translations = [];
 
-        Artisan::call('lang:add ' . config('lingua.default_locale'));
+        Artisan::call('lang:add '.config('lingua.default_locale'));
 
         foreach (Locales::installed() as $installedLocale) {
             $locale = $installedLocale->code;

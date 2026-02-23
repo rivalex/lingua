@@ -59,18 +59,17 @@ use Illuminate\Support\Carbon;
  *  ```
  *
  *
- * @property int        $id                    ID primary key
- * @property string     $code                  ISO 639-1 language code (e.g., 'en', 'es', 'fr')
- * @property string     $regional              Regional variant code (e.g., 'US', 'GB', 'MX')
- * @property string     $type                  Language type classification
- * @property string     $name                  English name of the language (e.g., 'English', 'Spanish')
- * @property string     $native                Native name of the language (e.g., 'English', 'Español')
- * @property string     $direction             Text direction: 'ltr' (left-to-right) or 'rtl' (right-to-left)
- * @property bool       $is_default            Indicates if this is the default system language
- * @property int        $sort                  Display order position (lower numbers appear first)
- * @property Carbon     $created_at            Creation timestamp
- * @property Carbon     $updated_at            Last update timestamp
- *
+ * @property int $id ID primary key
+ * @property string $code ISO 639-1 language code (e.g., 'en', 'es', 'fr')
+ * @property string $regional Regional variant code (e.g., 'US', 'GB', 'MX')
+ * @property string $type Language type classification
+ * @property string $name English name of the language (e.g., 'English', 'Spanish')
+ * @property string $native Native name of the language (e.g., 'English', 'Español')
+ * @property string $direction Text direction: 'ltr' (left-to-right) or 'rtl' (right-to-left)
+ * @property bool $is_default Indicates if this is the default system language
+ * @property int $sort Display order position (lower numbers appear first)
+ * @property Carbon $created_at Creation timestamp
+ * @property Carbon $updated_at Last update timestamp
  * @property-read int   $total_strings         Total number of translatable strings (computed)
  * @property-read int   $translated_strings    Number of translated strings for this language (computed)
  * @property-read int   $missing_strings       Number of untranslated strings (computed)
@@ -146,8 +145,7 @@ class Language extends Model
      *   $ltrLanguages = Language::query()->active()->where('direction', 'ltr')->get();
      *   ```
      *
-     * @param Builder $query Query builder instance
-     *
+     * @param  Builder  $query  Query builder instance
      * @return Builder Modified query builder
      */
     public function scopeActive(Builder $query): Builder
@@ -196,9 +194,8 @@ class Language extends Model
      *  $count = DB::table('language_lines')->whereRaw($expression)->count();
      *  ```
      *
-     * @param string $jsonColumn The name of the JSON column to check (e.g., 'language_lines.text')
-     * @param string $keyColumn  The column name or value containing the key to search for (e.g., 'languages.code' or "'en'")
-     *
+     * @param  string  $jsonColumn  The name of the JSON column to check (e.g., 'language_lines.text')
+     * @param  string  $keyColumn  The column name or value containing the key to search for (e.g., 'languages.code' or "'en'")
      * @return string Raw SQL expression string that evaluates to true if the key exists
      */
     protected function jsonKeyExistsExpression(string $jsonColumn, string $keyColumn): string
@@ -246,8 +243,7 @@ class Language extends Model
      *      ->get();
      *  ```
      *
-     * @param Builder $query Query builder instance
-     *
+     * @param  Builder  $query  Query builder instance
      * @return Builder Modified query builder with statistics
      */
     public function scopeWithStatistics(Builder $query): Builder
@@ -260,13 +256,13 @@ class Language extends Model
         $total = DB::table('language_lines')->selectRaw('COUNT(*)');
         $translated = DB::table('language_lines')->whereRaw($keyExists)->selectRaw('COUNT(*)');
         $missing = DB::table('language_lines')->whereRaw("NOT ($keyExists)")->selectRaw('COUNT(*)');
-        $percentage = DB::table('language_lines')->selectRaw('ROUND(COUNT(CASE WHEN ' . $keyExists . ' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2)');
+        $percentage = DB::table('language_lines')->selectRaw('ROUND(COUNT(CASE WHEN '.$keyExists.' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2)');
 
         return $query->addSelect([
             'total_strings' => $total,
             'translated_strings' => $translated,
             'missing_strings' => $missing,
-            'completion_percentage' => $percentage
+            'completion_percentage' => $percentage,
         ]);
     }
 
@@ -345,12 +341,11 @@ class Language extends Model
      *  session()->put('locale', $newDefault->code);
      *  ```
      *
-     * @param self $language The language instance to set as default
+     * @param  self  $language  The language instance to set as default
      */
     public static function setDefault(self $language): void
     {
         self::where('is_default', true)->update(['is_default' => false]);
         $language->update(['is_default' => true]);
     }
-
 }

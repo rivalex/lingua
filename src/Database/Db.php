@@ -14,7 +14,7 @@ class Db extends \Spatie\TranslationLoader\TranslationLoaders\Db
     {
         $modelClass = config('lingua.model');
 
-        if (! is_a(new $modelClass(), LanguageLine::class)) {
+        if (! is_a(new $modelClass, LanguageLine::class)) {
             throw InvalidConfiguration::invalidModel($modelClass);
         }
 

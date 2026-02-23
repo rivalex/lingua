@@ -11,20 +11,17 @@ class SyncToLocalCommand extends Command
      *
      * @var string
      */
-	protected $signature = 'lingua:sync-to-local';
+    protected $signature = 'lingua:sync-to-local';
 
     /**
      * The console command description.
      *
      * @var string
      */
-	protected $description = 'Sync translations from remote Database to local files';
+    protected $description = 'Sync translations from remote Database to local files';
 
     /**
      * Execute the console command.
      */
-	public function handle(): void
-	{
-
-	}
+    public function handle(): void {}
 }
