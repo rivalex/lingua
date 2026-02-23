@@ -7,6 +7,13 @@ if (! function_exists('defaultLocale')) {
     }
 }
 
+if (! function_exists('languageCode')) {
+    function languageCode(?string $locale = null): string
+    {
+        return \Illuminate\Support\Str::of($locale ?? defaultLocale())->lower()->replace('_', '-');
+    }
+}
+
 if (! function_exists('lt_asset')) {
     function lt_asset(string $path): string
     {

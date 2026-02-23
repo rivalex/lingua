@@ -93,8 +93,7 @@ class extends Component {
     <div class="relative w-full">
         <flux:heading size="xl" level="1">
             <div class="flex flex-row gap-2 items-center">
-                @svg('flag-language-'.$language->code, 'w-8 h-8')
-{{--                <x-icon name="flag-language-{{ $language->code }}" class="w-8 h-8"/>--}}
+                @svg('flag-language-'.languageCode($language->code), 'w-8 h-8')
                 <p>@lang('lingua::lingua.translations.header', ['locale' => $language->native])</p>
             </div>
         </flux:heading>
@@ -222,13 +221,13 @@ class extends Component {
                 <flux:table.column style="width: 30%;">
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.default')</p>
-                        <x-icon name="flag-language-{{ defaultLocale() }}" style="width: 1rem; height: 1rem;"/>
+                        @svg('flag-language-'.languageCode(), "h-4")
                     </div>
                 </flux:table.column>
                 <flux:table.column>
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.translation')</p>
-                        <x-icon name="flag-language-{{ $currentLocale }}" style="width: 1rem; height: 1rem;"/>
+                        @svg('flag-language-'.languageCode($currentLocale), "h-4")
                     </div>
                 </flux:table.column>
                 <flux:table.column style="width: 10%" align="center">

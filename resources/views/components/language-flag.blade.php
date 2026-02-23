@@ -7,7 +7,7 @@
 @if(Flux::pro())
     <div class="flex flex-row gap-2 items-center w-full">
         @if(!empty($code))
-            @svg('flag-circle-language-'.\Illuminate\Support\Str::of($code)->lower()->replace('_', '-'), "w-{$size} h-{$size}")
+            @svg('flag-circle-language-'.languageCode($code), "w-{$size} h-{$size}")
         @endif
         <div class="flex flex-col grow leading-5 truncate">
             <div class="truncate">{{ $name }}</div>

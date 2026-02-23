@@ -89,7 +89,7 @@ new class extends Component {
                                 <circle cx="15" cy="5" r="1"/>
                                 <circle cx="15" cy="19" r="1"/>
                             </svg>
-                            @svg('flag-circle-language-'.$language->code, 'w-6 h-6')
+                            @svg('flag-circle-language-'.languageCode($language->code), 'w-6 h-6')
                         </flux:badge>
                     </li>
                 @endforeach
