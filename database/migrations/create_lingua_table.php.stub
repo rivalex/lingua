@@ -1,0 +1,94 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use LaravelLang\Locales\Facades\Locales;
+use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Models\Language;
+use Rivalex\Lingua\Models\Translation;
+
+class CreateLinguaTable extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::dropIfExists('language_lines');
+        Schema::create('language_lines', function (Blueprint $table) {
+            $table->id();
+            $table->string('group')->index('index_group')->comment('The translation\'s group.');
+            $table->string('key')->comment('The translation\'s key.');
+            $table->string('group_key')->unique()->comment('The UNIQUE group.key translation reference.');
+            $table->string('type', 10)->default(LinguaType::text)->comment('The translation\'s type such as text, html or markdown.');
+            $table->json('text')->comment('The translation\'s JSON localized text');
+            $table->boolean('is_vendor')->default(false)->comment('Whether the translation came from a vendor package.');
+            $table->string('vendor')->nullable()->comment('Vendor package name if translation comes from vendor.');
+            $table->timestamps();
+
+            $table->index(['group', 'key'], 'unique_language_line');
+        });
+
+        Schema::dropIfExists('languages');
+        Schema::create('languages', function (Blueprint $table) {
+            $table->id();
+            $table->string('code', 10)->comment('ISO 639-1 language code (e.g., \'en\', \'es\', \'fr\')');
+            $table->string('regional', 10)->comment('Regional variant code (e.g., \'US\', \'GB\', \'MX\')');
+            $table->string('type', 10)->comment('Language type classification');
+            $table->string('name', 100)->comment('English name of the language (e.g., \'English\', \'Spanish\')');
+            $table->string('native', 100)->comment('Native name of the language (e.g., \'English\', \'Español\')');
+            $table->string('direction', 5)->comment('Text direction: \'ltr\' (left-to-right) or \'rtl\' (right-to-left)');
+            $table->boolean('is_default')->default(false)->comment('Whether the language is the default language for the application.');
+            $table->integer('sort')->default(0)->comment('Sort order of the language in the list of languages.');
+            $table->timestamps();
+
+            $table->index(['code', 'regional', 'native'], 'unique_language');
+        });
+
+        $defaultLocale = app()->getFallbackLocale() ?? config('translate.default_locale');
+        if (! Locales::installed()->contains($defaultLocale)) {
+            Artisan::call('lang:add '.$defaultLocale);
+        }
+
+        $defaultLanguage = Locales::info($defaultLocale);
+        Language::create(
+            [
+                'code' => $defaultLanguage->code,
+                'regional' => $defaultLanguage->regional,
+                'type' => $defaultLanguage->type,
+                'name' => $defaultLanguage->locale->name,
+                'native' => $defaultLanguage->native,
+                'direction' => $defaultLanguage->direction->value,
+                'is_default' => true,
+            ]
+        );
+
+        foreach (Locales::installed() as $locale) {
+            if ($locale->code !== $defaultLocale) {
+                Language::create(
+                    [
+                        'code' => $locale->code,
+                        'regional' => $locale->regional,
+                        'type' => $locale->type,
+                        'name' => $locale->locale->name,
+                        'native' => $locale->native,
+                        'direction' => $locale->direction->value,
+                        'is_default' => false,
+                    ]
+                );
+            }
+        }
+
+        Translation::syncToDatabase();
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('language_lines');
+        Schema::dropIfExists('languages');
+    }
+};

@@ -1,13 +1,14 @@
 <?php
 
-namespace VendorName\Skeleton\Database\Factories;
+namespace Rivalex\Lingua\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Rivalex\Lingua\Models\Language;
 
-/*
+
 class ModelFactory extends Factory
 {
-    protected $model = YourModel::class;
+    protected $model = Language::class;
 
     public function definition()
     {
@@ -16,4 +17,3 @@ class ModelFactory extends Factory
         ];
     }
 }
-*/

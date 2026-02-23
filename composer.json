@@ -1,24 +1,32 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "rivalex/lingua",
+    "description": "Multilingual package for Laravel with translation support",
     "keywords": [
-        ":vendor_name",
+        "Alessandro Rivolta",
+        "rivalex",
         "laravel",
-        ":package_slug"
+        "lingua"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/rivalex/lingua",
+    "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Alessandro Rivolta",
+            "email": "alessandro@rivalex.com",
             "role": "Developer"
         }
     ],
     "require": {
         "php": "^8.4",
+        "illuminate/contracts": "^11.0||^12.0",
+        "laravel-lang/common": "^6.7",
+        "league/html-to-markdown": "^5.1",
+        "livewire/flux": "^2.11",
+        "livewire/livewire": "^4.1",
+        "outhebox/blade-flags": "^1.5",
         "spatie/laravel-package-tools": "^1.16",
-        "illuminate/contracts": "^11.0||^12.0"
+        "spatie/laravel-translation-loader": "^2.8"
     },
     "require-dev": {
         "laravel/pint": "^1.14",
@@ -35,13 +43,16 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories/"
-        }
+            "Rivalex\\Lingua\\": "src/",
+            "Rivalex\\Lingua\\Database\\Factories\\": "database/factories/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/",
+            "Rivalex\\Lingua\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -63,10 +74,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Rivalex\\Lingua\\LinguaServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
+                "Lingua": "Rivalex\\Lingua\\Facades\\Lingua"
             }
         }
     },
