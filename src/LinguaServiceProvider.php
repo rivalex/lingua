@@ -5,7 +5,6 @@ namespace Rivalex\Lingua;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Translation\Translator;
 use Livewire\Livewire;
 use Rivalex\Lingua\Commands\SyncToDatabaseCommand;
@@ -36,7 +35,7 @@ class LinguaServiceProvider extends PackageServiceProvider
             ->hasCommands(SyncToLocalCommand::class, SyncToDatabaseCommand::class)
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
-                    ->startWith(function(InstallCommand $command) {
+                    ->startWith(function (InstallCommand $command) {
                         $command->info('Hello, and welcome to Lingua new package!');
                     })
                     ->publishAssets()
@@ -44,7 +43,7 @@ class LinguaServiceProvider extends PackageServiceProvider
                     ->publishMigrations()
                     ->askToRunMigrations()
                     ->askToStarRepoOnGitHub('rivalex/lingua')
-                    ->endWith(function(InstallCommand $command) {
+                    ->endWith(function (InstallCommand $command) {
                         $command->info('Lingua package installed successfully!');
                     });
             });
@@ -78,9 +77,6 @@ class LinguaServiceProvider extends PackageServiceProvider
         });
     }
 
-    /**
-     * @return void
-     */
     protected function registerTranslator(): void
     {
         $this->app->singleton('translator', function ($app) {
@@ -92,14 +88,13 @@ class LinguaServiceProvider extends PackageServiceProvider
             $locale = $app->getLocale();
             $trans = new Translator($loader, $locale);
             $trans->setFallback($defaultLocale);
+
             return $trans;
         });
     }
 
     /**
      * Get the services provided by the provider.
-     *
-     * @return array
      */
     public function provides(): array
     {
@@ -108,8 +103,8 @@ class LinguaServiceProvider extends PackageServiceProvider
 
     protected function getViewPath(): string
     {
-        $publishedPath = resource_path("views/vendor/rivalex/lingua");
-        $packagePath = __DIR__ . "/../resources/views/lingua";
+        $publishedPath = resource_path('views/vendor/rivalex/lingua');
+        $packagePath = __DIR__.'/../resources/views/lingua';
 
         return file_exists($publishedPath) ? $publishedPath : $packagePath;
     }
@@ -117,19 +112,19 @@ class LinguaServiceProvider extends PackageServiceProvider
     protected function registerLivewireComponent(string $name, string $fileName): void
     {
         $publishedPath = resource_path("views/vendor/rivalex/lingua/{$fileName}");
-        $packagePath = __DIR__ . "/../resources/views/lingua/{$fileName}";
+        $packagePath = __DIR__."/../resources/views/lingua/{$fileName}";
 
         $componentPath = file_exists($publishedPath) ? $publishedPath : $packagePath;
 
         Livewire::addComponent($name, $componentPath);
     }
 
-//    public function register(): void
-//    {
-//        parent::register();
-//
-//        $this->app->singleton(Lingua::class, function () {
-//           return new Lingua();
-//        });
-//    }
+    //    public function register(): void
+    //    {
+    //        parent::register();
+    //
+    //        $this->app->singleton(Lingua::class, function () {
+    //           return new Lingua();
+    //        });
+    //    }
 }
