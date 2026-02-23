@@ -17,16 +17,16 @@ use Spatie\TranslationLoader\LanguageLine;
  * Translation model for managing language translations in the application.
  * Extends LanguageLine to provide advanced translation management capabilities.
  *
- * @property string     $id UUID identifier for the translation
- * @property string     $group Translation group name (e.g., 'single', 'validation', etc.)
- * @property string     $key Translation key within the group
- * @property string     $group_key Translation group and key concatenated.
+ * @property string $id UUID identifier for the translation
+ * @property string $group Translation group name (e.g., 'single', 'validation', etc.)
+ * @property string $key Translation key within the group
+ * @property string $group_key Translation group and key concatenated.
  * @property LinguaType $type Type of translation (text, html, etc.)
- * @property array      $text Associative array of translations (locale => translation)
- * @property bool       $is_vendor Indicates if the translation is a vendor translation
- * @property string     $vendor Vendor name if the translation is a vendor translation
- * @property Carbon     $created_at Creation timestamp
- * @property Carbon     $updated_at Last update timestamp
+ * @property array $text Associative array of translations (locale => translation)
+ * @property bool $is_vendor Indicates if the translation is a vendor translation
+ * @property string $vendor Vendor name if the translation is a vendor translation
+ * @property Carbon $created_at Creation timestamp
+ * @property Carbon $updated_at Last update timestamp
  */
 class Translation extends LanguageLine
 {
@@ -51,7 +51,7 @@ class Translation extends LanguageLine
         'is_vendor' => 'boolean',
         'vendor' => 'string',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -65,7 +65,7 @@ class Translation extends LanguageLine
         'type',
         'text',
         'is_vendor',
-        'vendor'
+        'vendor',
     ];
 
     /**
@@ -76,7 +76,7 @@ class Translation extends LanguageLine
     {
         parent::boot();
         static::creating(function ($model) {
-//            $model->group_key = Str::wrap('.', before: Str::squish($model->group), after: Str::squish($model->key));
+            //            $model->group_key = Str::wrap('.', before: Str::squish($model->group), after: Str::squish($model->key));
             $model->group_key = self::buildGroupKey(
                 $model->group,
                 $model->key,
@@ -85,9 +85,9 @@ class Translation extends LanguageLine
             );
         });
         static::saving(function ($model) {
-//            if ($model->isDirty('group') || $model->isDirty('key')) {
-//                $model->group_key = Str::wrap('.', before: Str::squish($model->group), after: Str::squish($model->key));
-//            }
+            //            if ($model->isDirty('group') || $model->isDirty('key')) {
+            //                $model->group_key = Str::wrap('.', before: Str::squish($model->group), after: Str::squish($model->key));
+            //            }
             if ($model->isDirty('group') || $model->isDirty('key') || $model->isDirty('is_vendor') || $model->isDirty('vendor')) {
                 $model->group_key = self::buildGroupKey(
                     $model->group,
@@ -255,8 +255,8 @@ class Translation extends LanguageLine
         $langPath = config('lingua.lang_dir');
         $translations = [];
 
-        if(Locales::installed()->count() === 0) {
-            Artisan::call('lang:add ' . config('lingua.default_locale'));
+        if (Locales::installed()->count() === 0) {
+            Artisan::call('lang:add '.config('lingua.default_locale'));
         }
 
         $locales = array_values(array_unique(array_merge(
@@ -359,10 +359,10 @@ class Translation extends LanguageLine
             }
 
             $existing = self::where('group', $translation['group'])
-                            ->where('key', $translation['key'])
-                            ->where('is_vendor', $translation['is_vendor'])
-                            ->where('vendor', $translation['vendor'])
-                            ->first();
+                ->where('key', $translation['key'])
+                ->where('is_vendor', $translation['is_vendor'])
+                ->where('vendor', $translation['vendor'])
+                ->first();
 
             Translation::updateOrCreate([
                 'group' => $translation['group'],
