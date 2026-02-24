@@ -3,10 +3,12 @@
 namespace Rivalex\Lingua\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use LaravelLang\Locales\Facades\Locales;
+use Rivalex\Lingua\Database\Factories\TranslationFactory;
 use Rivalex\Lingua\Enums\LinguaType;
 use Spatie\TranslationLoader\LanguageLine;
 
@@ -27,7 +29,10 @@ use Spatie\TranslationLoader\LanguageLine;
  * @property string $vendor Vendor name if the translation is a vendor translation
  * @property Carbon $created_at Creation timestamp
  * @property Carbon $updated_at Last update timestamp
+ *
+ * @property-read string $lang_key Get the full group key (e.g., 'single.welcome')
  */
+#[UseFactory(TranslationFactory::class)]
 class Translation extends LanguageLine
 {
     /**
@@ -76,7 +81,6 @@ class Translation extends LanguageLine
     {
         parent::boot();
         static::creating(function ($model) {
-            //            $model->group_key = Str::wrap('.', before: Str::squish($model->group), after: Str::squish($model->key));
             $model->group_key = self::buildGroupKey(
                 $model->group,
                 $model->key,
@@ -85,9 +89,6 @@ class Translation extends LanguageLine
             );
         });
         static::saving(function ($model) {
-            //            if ($model->isDirty('group') || $model->isDirty('key')) {
-            //                $model->group_key = Str::wrap('.', before: Str::squish($model->group), after: Str::squish($model->key));
-            //            }
             if ($model->isDirty('group') || $model->isDirty('key') || $model->isDirty('is_vendor') || $model->isDirty('vendor')) {
                 $model->group_key = self::buildGroupKey(
                     $model->group,
@@ -115,6 +116,16 @@ class Translation extends LanguageLine
         $prefix = $isVendor && $vendor ? $vendor.'::' : '';
 
         return Str::wrap('.', before: $prefix.Str::squish($group), after: Str::squish($key));
+    }
+
+    public static function getGroupKey(string $group, string $key, bool $isVendor, ?string $vendor): string
+    {
+        return static::buildGroupKey($group, $key, $isVendor, $vendor);
+    }
+
+    public function getLangKeyAttribute(): string
+    {
+        return self::buildGroupKey($this->group, $this->key, $this->is_vendor ?? false, $this->vendor);
     }
 
     /**

@@ -2,7 +2,7 @@
 
 return [
     'global' => [
-        'search' => 'Search...',
+        'search' => 'Search ...',
         'saved' => 'Saved',
         'save' => 'Save',
         'required' => 'Required',

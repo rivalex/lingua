@@ -3,9 +3,11 @@
 namespace Rivalex\Lingua\Models;
 
 use DB;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Rivalex\Lingua\Database\Factories\LanguageFactory;
 
 /**
  * # Language Model
@@ -75,6 +77,7 @@ use Illuminate\Support\Carbon;
  * @property-read int   $missing_strings       Number of untranslated strings (computed)
  * @property-read float $completion_percentage Translation completion percentage (0-100) (computed)
  */
+#[UseFactory(LanguageFactory::class)]
 class Language extends Model
 {
     protected $table = 'languages';

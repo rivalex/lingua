@@ -53,10 +53,10 @@ class extends Component {
     {
         $this->reset('showOnlyMissing');
         if ($this->search) {
-            $this->queryString['search'] = $this->search;
+            $this->queryString['s'] = $this->search;
         }
         if ($this->group) {
-            $this->queryString['group'] = $this->group;
+            $this->queryString['g'] = $this->group;
         }
         $this->redirect(route('lingua.translations',
             array_merge(['locale' => $this->currentLocale], $this->queryString)), true);

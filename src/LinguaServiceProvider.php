@@ -57,7 +57,7 @@ class LinguaServiceProvider extends PackageServiceProvider
         parent::boot();
 
         /* Register Blade Namespace components */
-        Blade::componentNamespace('Rivalex\\Views\\Components', 'lingua');
+        Blade::anonymousComponentPath(__DIR__.'/Views/Components', 'lingua');
 
         /* Add Livewire Namespace for components */
         Livewire::addNamespace('lingua', $this->getViewPath());
@@ -103,28 +103,9 @@ class LinguaServiceProvider extends PackageServiceProvider
 
     protected function getViewPath(): string
     {
-        $publishedPath = resource_path('views/vendor/rivalex/lingua');
-        $packagePath = __DIR__.'/../resources/views/lingua';
+        $publishedPath = resource_path('views/vendor/lingua');
+        $packagePath = __DIR__.'/../resources/views';
 
         return file_exists($publishedPath) ? $publishedPath : $packagePath;
     }
-
-    protected function registerLivewireComponent(string $name, string $fileName): void
-    {
-        $publishedPath = resource_path("views/vendor/rivalex/lingua/{$fileName}");
-        $packagePath = __DIR__."/../resources/views/lingua/{$fileName}";
-
-        $componentPath = file_exists($publishedPath) ? $publishedPath : $packagePath;
-
-        Livewire::addComponent($name, $componentPath);
-    }
-
-    //    public function register(): void
-    //    {
-    //        parent::register();
-    //
-    //        $this->app->singleton(Lingua::class, function () {
-    //           return new Lingua();
-    //        });
-    //    }
 }
