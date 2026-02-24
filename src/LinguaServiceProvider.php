@@ -60,7 +60,14 @@ class LinguaServiceProvider extends PackageServiceProvider
         Blade::anonymousComponentPath(__DIR__.'/Views/Components', 'lingua');
 
         /* Add Livewire Namespace for components */
-        Livewire::addNamespace('lingua', $this->getViewPath());
+//        Livewire::addNamespace('lingua', $this->getViewPath());
+
+        Livewire::addNamespace(
+            namespace: 'lingua',
+            classNamespace: 'Rivalex\\Lingua\\Livewire',
+            classPath: __DIR__ . '/Livewire',
+            classViewPath: $this->getViewPath(),
+        );
 
         $this->app->make(Kernel::class)->appendMiddlewareToGroup('web', LinguaMiddleware::class);
 
