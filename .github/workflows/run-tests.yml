@@ -58,4 +58,8 @@ jobs:
         run: vendor/bin/pest --ci
 
       - name: Publish Test Summary Results
-        run: npx github-actions-ctrf ctrf/ctrf-report.json
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: './ctrf/*.json'
+          github-report: true
+        if: always()
