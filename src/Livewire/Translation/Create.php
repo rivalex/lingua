@@ -92,13 +92,12 @@ class Create extends Component
             $this->closeModal();
             $this->reset('group', 'key', 'translationType');
             $this->getGroupsList();
-            $this->dispatch('refreshTranslationsTable');
             $this->dispatch('refreshTranslationsTableDefaults');
             $this->dispatch('translation_added');
         } catch (\Throwable $th) {
             $this->closeModal();
-            $this->dispatch('translation_added_fail');
-            Log::error('Languages reorder failed! {error}', ['error' => $th->getMessage()]);
+            $this->dispatch('translation_add_fail');
+            Log::error('Translation creation failed! {error}', ['error' => $th->getMessage()]);
         }
 
     }

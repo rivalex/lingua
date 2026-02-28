@@ -4,15 +4,18 @@
 	</flux:modal.trigger>
 	<flux:modal name="{{ $modalName }}" class="lingua-modal">
 		<div class="flex flex-col gap-4" x-data="{ control: '' }">
-			<h2 class="text-lg">@lang('lingua::lingua.languages.delete.header', ['language' => $language->name])</h2>
+            <flux:heading size="xl" level="1">
+                @lang('lingua::lingua.languages.delete.header', ['language' => $language->name])
+            </flux:heading>
 			<flux:separator/>
 			<form wire:submit.prevent="deleteLanguage" id="deleteLanguageForm" class="flex flex-col gap-4">
 				@csrf
 				<p>@lang('lingua::lingua.languages.delete.alert', ['language' => $language->name])</p>
 				<p>@lang('lingua::lingua.languages.delete.alert_translations', ['language' => $language->name])</p>
 				<p>@lang('lingua::lingua.global.confirm.delete', ['confirm' => $confirm])</p>
-				<strong
-						class="text-red-500 text-lg">@lang('lingua::lingua.global.confirm.irreversible_action')</strong>
+                <flux:heading size="xl" level="2" class="text-red-500 dark:text-red-400">
+                    @lang('lingua::lingua.global.confirm.irreversible_action')
+                </flux:heading>
 				<flux:input type="text" x-model="control" wire:model.blur="control" required
 				            :placeholder="__('lingua::lingua.global.confirm_placeholder', ['confirm' => $confirm])"/>
 				<flux:separator/>

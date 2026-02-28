@@ -6,13 +6,11 @@ use Illuminate\Support\Facades\Log;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\ModalsConfirm;
-use Rivalex\Lingua\Traits\NotificationService;
 use Livewire\Component;
 
 class Delete extends Component
 {
     use ModalsConfirm;
-    use NotificationService;
 
     public string $currentLocale;
     public string $localName;
@@ -26,15 +24,15 @@ class Delete extends Component
     public function mount(): void
     {
         $this->isDefaultLocale = $this->currentLocale === defaultLocale();
-        $this->localName = Language::where('code', $this->currentLocale)->first()->native;
+        $this->localName = Language::where('code', $this->currentLocale)->first()->name;
         if ($this->isDefaultLocale) {
-            $this->deleteHeader = __('translations.delete.header');
-            $this->confirm = __('translations.delete.confirm');
-            $this->deleteAction = __('translations.delete.action');
+            $this->deleteHeader = __('lingua::lingua.translations.delete.header');
+            $this->confirm = __('lingua::lingua.translations.delete.confirm');
+            $this->deleteAction = __('lingua::lingua.translations.delete.action');
         } else {
-            $this->deleteHeader = __('translations.delete.header_locale', ['locale' => strtoupper($this->localName)]);
-            $this->confirm = __('translations.delete.confirm_locale', ['locale' => strtoupper($this->localName)]);
-            $this->deleteAction = __('translations.delete.action_translation_locale', ['locale' => $this->localName]);
+            $this->deleteHeader = __('lingua::lingua.translations.delete.header_locale', ['locale' => strtoupper($this->localName)]);
+            $this->confirm = __('lingua::lingua.translations.delete.confirm_locale', ['locale' => strtoupper($this->localName)]);
+            $this->deleteAction = __('lingua::lingua.translations.delete.action_translation_locale', ['locale' => $this->localName]);
         }
     }
 
@@ -44,14 +42,20 @@ class Delete extends Component
             $this->closeModal();
             if ($this->isDefaultLocale) {
                 $this->translation->delete();
-                $this->dispatch('refreshTranslationsTable');
-                $this->dispatch('refreshTranslationsTable');
+                $this->dispatch('translation_deleted');
+                $this->dispatch('refreshTranslationsTableDefaults');
             } else {
                 $this->translation->forgetTranslation($this->currentLocale);
+                $this->dispatch('translation_locale_deleted');
                 $this->dispatch('refreshTranslationRow.' . $this->translation->id);
             }
         } catch (\Exception $e) {
             $this->closeModal();
+            if ($this->isDefaultLocale) {
+                $this->dispatch('translation_delete_fail');
+            } else {
+                $this->dispatch('translation_locale_delete_fail');
+            }
             Log::error('Translation delete failed! {error}', ['error' => $e->getMessage()]);
         }
     }

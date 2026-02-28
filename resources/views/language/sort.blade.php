@@ -5,13 +5,17 @@
         <div class="language-sort-container">
             <div class="flex w-full justify-between items-center">
                 <div class="flex flex-col gap-1">
-                    <h1 class="font-bold">@lang('lingua::lingua.languages.sort.title')</h1>
-                    <h3 class="text-xs">@lang('lingua::lingua.languages.sort.subtitle')</h3>
+                    <flux:heading size="lg" level="2" style="margin: 0">
+                        @lang('lingua::lingua.languages.sort.title')
+                    </flux:heading>
+                    <flux:subheading>
+                        @lang('lingua::lingua.languages.sort.subtitle')
+                    </flux:subheading>
                 </div>
                 <x-lingua::message on="languages_sorted">
                     <flux:badge color="green">
                         <div class="flex items-center gap-2">
-                            <flux:icon icon="check-circle" size="sm"/>
+                            <flux:icon.check-circle size="sm"/>
                             <p>@lang('lingua::lingua.languages.sort.sorted')</p>
                         </div>
                     </flux:badge>
@@ -19,7 +23,7 @@
                 <x-lingua::message on="languages_sorted_fail">
                     <flux:badge color="red">
                         <div class="flex items-center gap-2">
-                            <flux:icon icon="exclamation-circle" size="sm"/>
+                            <flux:icon.exclamation-circle size="sm"/>
                             <p>@lang('lingua::lingua.languages.sort.sorted_fail')</p>
                         </div>
                     </flux:badge>
@@ -41,7 +45,7 @@
                                 <circle cx="15" cy="5" r="1"/>
                                 <circle cx="15" cy="19" r="1"/>
                             </svg>
-                            @svg('flag-circle-language-'.languageCode($language->code), 'w-6 h-6')
+                            <livewire:lingua::selector.icon :locale="languageCode($language->code)"/>
                         </flux:badge>
                     </li>
                 @endforeach

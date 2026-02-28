@@ -9,6 +9,7 @@ use Livewire\Component;
 class Row extends Component
 {
     public Language $language;
+    public bool $showFlags = true;
 
     public function mount(int $languageId): void
     {

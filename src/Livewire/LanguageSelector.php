@@ -13,13 +13,18 @@ class LanguageSelector extends Component
 {
     use Modals;
 
-    public
-    bool $modal = false;
+    public bool $modal = false;
+    public string $mode = ''; // modal | sidebar | dropdown
+    public bool $showFlags = true;
+    public string $currentLocale = '';
     public string $currentUrl = '';
 
-    public function mount(): void
+    public function mount($mode = null): void
     {
+        $this->mode = $mode ?? config('lingua.selector.mode');
+        $this->showFlags = config('lingua.selector.show_flags' ?? true);
         $this->modalName = 'language-selector-modal';
+        $this->currentLocale = app()->currentLocale();
         $this->currentUrl = url()->current();
     }
 
@@ -48,6 +53,10 @@ class LanguageSelector extends Component
 
 	public function render()
 	{
-		return view('lingua::language_selector');
+		return match ($this->mode) {
+            'modal' => view('lingua::selector.modal'),
+            'dropdown' => view('lingua::selector.dropdown'),
+            default => view('lingua::selector.sidebar'),
+        };
 	}
 }

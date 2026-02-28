@@ -3,6 +3,7 @@
 namespace Rivalex\Lingua\Livewire;
 
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -43,11 +44,17 @@ class Translations extends Component
         $this->queryString = request()->query();
     }
 
-    #[On('refreshTranslationsTableDefaults')]
-    public function setDefaults(): void
+    protected function setDefaults(): void
     {
         $this->availableLocale = Language::query()->active()->pluck('native', 'code')->toArray();
         $this->availableGroups = Translation::orderBy('group')->groupBy('group')->pluck('group')->toArray();
+    }
+
+    #[On('refreshTranslationsTableDefaults')]
+    public function refreshTranslationsTableDefaults(): void
+    {
+        $this->setDefaults();
+        $this->forceRender();
     }
 
     public function updatedCurrentLocale(): void

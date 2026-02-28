@@ -12,15 +12,17 @@ class LanguageFactory extends Factory
 
     public function definition(): array
     {
-        $locale = fake()->locale();
+        $safeLocales = ['fr', 'es', 'de', 'it'];
+        $locale = fake()->randomElement($safeLocales);
         $localeData = Locales::info($locale);
+
         return [
             'code' => $localeData->code,
             'regional' => $localeData->regional,
             'type' => $localeData->type,
-            'name' => $localeData->locale->name,
+            'name' => $localeData->localized,
             'native' => $localeData->native,
-            'direction' => $localeData->direction->value,
+            'direction' => $localeData->direction,
             'is_default' => false,
             'sort' => fake()->numberBetween(1, 100),
             'created_at' => now(),

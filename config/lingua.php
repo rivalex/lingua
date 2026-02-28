@@ -12,6 +12,11 @@ return [
 
     'session_variable' => 'locale',
 
+    'selector' => [
+        'mode' => 'sidebar', // modal | sidebar | dropdown
+        'show_flags' => true,
+    ],
+
     /*
      * Language lines will be fetched by these loaders. You can put any class here that implements
      * the Spatie\TranslationLoader\TranslationLoaders\TranslationLoader-interface.

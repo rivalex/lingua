@@ -5,23 +5,25 @@
     </flux:modal.trigger>
     <flux:modal name="{{ $modalName }}" class="lingua-modal">
         <div class="flex flex-col gap-4">
-            <h2 class="text-lg">@lang('lingua::lingua.translations.create.header')</h2>
+            <flux:heading size="xl" level="1">
+                @lang('lingua::lingua.translations.create.header')
+            </flux:heading>
+            <flux:separator/>
             <x-lingua::validation-errors class="text-start"/>
             <form wire:submit.prevent="addNewTranslation" id="addNewTranslationForm" class="flex flex-col gap-4">
                 @csrf
                 <div class="grid grid-cols-3 gap-2 items-start">
                     <div class="col-span-2">
                         <x-lingua::autocomplete wire:model.blur.live="group" required :options="$groups"
-                                                :label="__('lingua::lingua.translations.create.fields.group')"
-                                                :placeholder="__('lingua::lingua.translations.create.fields.group_placeholder')"/>
+                                                :label="__('lingua::lingua.translations.fields.group')"
+                                                :placeholder="__('lingua::lingua.translations.fields.group_placeholder')"/>
                     </div>
                     <div class="col-span-1">
-                        @json($translationType)
                         <flux:select wire:model.change.live="translationType"
                                      required
                                      :badge="__('lingua::lingua.global.required')"
-                                     :label="__('lingua::lingua.translations.create.fields.type')"
-                                     :placeholder="__('lingua::lingua.translations.create.fields.type_placeholder')"
+                                     :label="__('lingua::lingua.translations.fields.type')"
+                                     :placeholder="__('lingua::lingua.translations.fields.type_placeholder')"
                                      :variant="Flux::pro() ? 'listbox' : null">
                             @foreach($translationsTypes as $translationTypeItem)
                                 <flux:select.option value="{{ $translationTypeItem['value'] }}"
@@ -33,25 +35,25 @@
                     </div>
                     <div class="col-span-3">
                         <flux:input wire:model.blur.live="key" type="text" icon="key"
-                                    :label="__('lingua::lingua.translations.create.fields.key')"
-                                    :placeholder="__('lingua::lingua.translations.create.fields.key_placeholder')"
+                                    :label="__('lingua::lingua.translations.fields.key')"
+                                    :placeholder="__('lingua::lingua.translations.fields.key_placeholder')"
                                     required :badge="__('lingua::lingua.global.required')"/>
                     </div>
                     <div class="col-span-3">
                         <div x-cloak x-show="$wire.translationType === 'text'">
                             <x-lingua::editor wire:model.blur="textValue" type="text" :helper="false"
-                                              :label="__('lingua::lingua.translations.create.fields.textValue')"
-                                              :placeholder="__('lingua::lingua.translations.create.fields.textValue_placeholder')"/>
+                                              :label="__('lingua::lingua.translations.fields.textValue')"
+                                              :placeholder="__('lingua::lingua.translations.fields.textValue_placeholder')"/>
                         </div>
                         <div x-cloak x-show="$wire.translationType === 'html'">
                             <x-lingua::editor wire:model.blur="htmlValue" type="html" :helper="false"
-                                                 :label="__('lingua::lingua.translations.create.fields.htmlValue')"
-                                                 :placeholder="__('lingua::lingua.translations.create.fields.htmlValue_placeholder')"/>
+                                                 :label="__('lingua::lingua.translations.fields.htmlValue')"
+                                                 :placeholder="__('lingua::lingua.translations.fields.htmlValue_placeholder')"/>
                         </div>
                         <div x-cloak x-show="$wire.translationType === 'markdown'">
                             <x-lingua::editor wire:model.blur="mdValue" type="markdown" :helper="false"
-                                                 :label="__('lingua::lingua.translations.create.fields.mdValue')"
-                                                 :placeholder="__('lingua::lingua.translations.create.fields.mdValue_placeholder')"/>
+                                                 :label="__('lingua::lingua.translations.fields.mdValue')"
+                                                 :placeholder="__('lingua::lingua.translations.fields.mdValue_placeholder')"/>
                         </div>
                     </div>
                 </div>

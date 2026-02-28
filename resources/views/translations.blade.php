@@ -2,7 +2,7 @@
     <div class="relative w-full">
         <flux:heading size="xl" level="1">
             <div class="flex flex-row gap-2 items-center">
-                @svg('flag-language-'.languageCode($language->code), 'w-8 h-8')
+                <livewire:lingua::selector.icon :locale="languageCode($language->code)" size="8" square/>
                 <p>@lang('lingua::lingua.translations.header', ['locale' => $language->native])</p>
             </div>
         </flux:heading>
@@ -16,14 +16,15 @@
         <div class="flex flex-col lg:flex-row w-full lg:w-max items-center gap-4">
             <flux:input type="search" wire:model.live.debounce.1000ms="search" class="search-input"
                         :placeholder="__('lingua::lingua.global.search')"
-                        icon="magnifying-glass" wire:island="translationTable"
+                        icon="magnifying-glass"
+                        wire:island="translationTable"
                         name="searchTranslations" id="searchTranslations"/>
             <flux:select wire:model.change.live="currentLocale"
                          :variant="Flux::pro() ? 'listbox' : null"
                          :searchable="Flux::pro()"
                          wire:island="translationTable">
                 @foreach($availableLocale as $code => $localeItem)
-                    <flux:select.option :value="$code" wire:key="{{ $code }}">{{ $localeItem }}</flux:select.option>
+                    <flux:select.option :value="$code" :key="$code">{{ $localeItem }}</flux:select.option>
                 @endforeach
             </flux:select>
             <flux:select wire:model.change.live="group"
@@ -37,8 +38,7 @@
                         value="">@lang('lingua::lingua.translations.group.all_groups')</flux:select.option>
                 @endif
                 @foreach($availableGroups as $groupItem)
-                    <flux:select.option value="{{ $groupItem }}"
-                                        wire:key="{{ $groupItem }}">{{ $groupItem }}</flux:select.option>
+                    <flux:select.option :value="$groupItem" :key="$groupItem">{{ $groupItem }}</flux:select.option>
                 @endforeach
             </flux:select>
             @if($currentLocale !== defaultLocale())
@@ -59,64 +59,64 @@
         <x-lingua::message on="translation_added">
             <flux:badge color="green">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="check-circle" size="sm"/>
-                    <p>@lang('language.new_language_added')</p>
+                    <flux:icon.check-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_added')</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
-        <x-lingua::message on="translation_added_fail">
+        <x-lingua::message on="translation_add_fail">
             <flux:badge color="red">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="exclamation-circle" size="sm"/>
-                    <p>@lang('language.new_language_added_fail')</p>
+                    <flux:icon.exclamation-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_add_fail')</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
         <x-lingua::message on="translation_updated">
             <flux:badge color="green">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="check-circle" size="sm"/>
-                    <p>@lang('language.sync_local_done')</p>
+                    <flux:icon.check-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_updated')</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
-        <x-lingua::message on="translation_updated_fail">
+        <x-lingua::message on="translation_update_fail">
             <flux:badge color="red">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="exclamation-circle" size="sm"/>
-                    <p>@lang('language.sync_local_fail')</p>
+                    <flux:icon.exclamation-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_update_fail')</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
         <x-lingua::message on="translation_deleted">
             <flux:badge color="green">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="check-circle" size="sm"/>
-                    <p>@lang('language.sync_database_done')</p>
+                    <flux:icon.check-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_deleted')</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
-        <x-lingua::message on="translation_deleted_fail">
+        <x-lingua::message on="translation_delete_fail">
             <flux:badge color="red">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="exclamation-circle" size="sm"/>
-                    <p>@lang('language.lang_updated')</p>
+                    <flux:icon.exclamation-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_delete_fail')</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
-        <x-lingua::message on="translation_deleted_local">
+        <x-lingua::message on="translation_locale_deleted">
             <flux:badge color="green">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="check-circle" size="sm"/>
-                    <p>@lang('language.lang_updated')</p>
+                    <flux:icon.check-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_locale_deleted', ['locale' => $language->native])</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
-        <x-lingua::message on="translation_deleted_local_fail">
+        <x-lingua::message on="translation_locale_delete_fail">
             <flux:badge color="red">
                 <div class="flex items-center gap-2" style="white-space: normal;">
-                    <flux:icon icon="exclamation-circle" size="sm"/>
-                    <p>@lang('language.lang_updated')</p>
+                    <flux:icon.exclamation-circle size="sm"/>
+                    <p>@lang('lingua::lingua.translations.status.translation_locale_delete_fail', ['locale' => $language->native])</p>
                 </div>
             </flux:badge>
         </x-lingua::message>
@@ -130,17 +130,34 @@
                 <flux:table.column style="width: 30%;">
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.default')</p>
-                        @svg('flag-language-'.languageCode(), "h-4")
+{{--                        <livewire:lingua::selector.icon :locale="languageCode()" size="sm" square/>--}}
                     </div>
                 </flux:table.column>
                 <flux:table.column>
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.translation')</p>
-                        @svg('flag-language-'.languageCode($currentLocale), "h-4")
+{{--                        <livewire:lingua::selector.icon :locale="$currentLocale" size="sm" square/>--}}
                     </div>
                 </flux:table.column>
                 <flux:table.column style="width: 10%" align="center">
-                    <flux:icon.cog/>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         class="lucide lucide-cog-icon lucide-cog">
+                        <path d="M11 10.27 7 3.34"/>
+                        <path d="m11 13.73-4 6.93"/>
+                        <path d="M12 22v-2"/>
+                        <path d="M12 2v2"/>
+                        <path d="M14 12h8"/>
+                        <path d="m17 20.66-1-1.73"/>
+                        <path d="m17 3.34-1 1.73"/>
+                        <path d="M2 12h2"/>
+                        <path d="m20.66 17-1.73-1"/>
+                        <path d="m20.66 7-1.73 1"/>
+                        <path d="m3.34 17 1.73-1"/>
+                        <path d="m3.34 7 1.73 1"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="12" cy="12" r="8"/>
+                    </svg>
                 </flux:table.column>
             </flux:table.columns>
 
@@ -148,7 +165,7 @@
             <flux:table.rows>
                 @foreach ($this->translations as $translation)
                     <livewire:lingua::translation.row :$currentLocale :$translation
-                                                         :key="'translationRow_'. $translation->id"/>
+                                                      :key="'translationRow_'. $translation->id"/>
                 @endforeach
             </flux:table.rows>
             @endisland

@@ -21,11 +21,12 @@ class Languages extends Component
     {
         try {
             Artisan::call('lang:update');
-            Translation::syncToDatabase();
+            app(Translation::class)->syncToDatabase();
             Artisan::call('optimize:clear');
             $this->dispatch('lang_updated');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
+            $this->addError('updateLanguages', $e->getMessage());
             $this->dispatch('lang_updated_fail');
             Log::error('Translations UPDATE failed! {error}', ['error' => $e->getMessage()]);
         }
@@ -35,11 +36,12 @@ class Languages extends Component
     public function syncToDatabase(): void
     {
         try {
-            Translation::syncToDatabase();
+            app(Translation::class)->syncToDatabase();
             Artisan::call('optimize:clear');
             $this->dispatch('synced_database');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
+            $this->addError('syncToDatabase', $e->getMessage());
             $this->dispatch('synced_database_fail');
             Log::error('Translations DATABASE sync failed! {error}', ['error' => $e->getMessage()]);
         }
@@ -49,11 +51,12 @@ class Languages extends Component
     public function syncToLocal(): void
     {
         try {
-            Translation::syncToLocal();
+            app(Translation::class)->syncToLocal();
             Artisan::call('optimize:clear');
             $this->dispatch('synced_local');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
+            $this->addError('syncToLocal', $e->getMessage());
             $this->dispatch('synced_local_fail');
             Log::error('Translations LOCAL sync failed! {error}', ['error' => $e->getMessage()]);
         }

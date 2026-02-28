@@ -30,6 +30,7 @@ class Sort extends Component
             $this->dispatch('refreshLanguages');
             $this->dispatch('refreshLanguageSelector');
         } catch (\Throwable $e) {
+            $this->addError('updateLanguageOrder', $e->getMessage());
             $this->dispatch('languages_sorted_fail');
             Log::error('Languages reorder failed! {error}', ['error' => $e->getMessage()]);
         }

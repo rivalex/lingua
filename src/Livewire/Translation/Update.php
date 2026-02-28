@@ -116,11 +116,11 @@ class Update extends Component
             $this->setDefaults();
             $this->dispatch('refreshTranslationRow.' . $this->translation->id);
             $this->dispatch($this->translation->group_key . '_updated');
-            $this->dispatch('translation_updated' . $this->translation->id);
+            $this->dispatch('translation_updated');
             $this->closeModal();
         } catch (\Throwable $e) {
             $this->closeModal();
-            $this->dispatch('translation_updated_fail');
+            $this->dispatch('translation_update_fail');
             Log::error('Translation update failed! {error}', ['error' => $e->getMessage()]);
         }
     }

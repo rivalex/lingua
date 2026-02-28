@@ -5,8 +5,10 @@
 	</flux:modal.trigger>
 	<flux:modal name="{{ $modalName }}" class="lingua-modal">
 		<div class="flex flex-col gap-4" x-data="{ control: '' }">
-			<h2 style="font-size: 1.5rem">@lang('lingua::lingua.languages.default.header', ['language' => $language->name])</h2>
-			<flux:separator/>
+            <flux:heading size="xl" level="1">
+                @lang('lingua::lingua.languages.default.header', ['language' => $language->name])
+            </flux:heading>
+            <flux:separator/>
 			<form wire:submit.prevent="setDefaultLanguage" id="setDefaultLanguage" class="flex flex-col gap-4">
 				@csrf
 				<p style="font-size: 0.9rem">@lang('lingua::lingua.languages.default.alert', ['language' => $language->name])</p>

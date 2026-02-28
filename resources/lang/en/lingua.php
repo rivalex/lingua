@@ -17,9 +17,14 @@ return [
         'per_page' => 'Par page',
         'confirm_placeholder' => 'Type :confirm to proceed',
     ],
+    'selector' => [
+        'menu_title' => 'Change language',
+        'modal_header' => 'Select a language',
+    ],
     'languages' => [
         'title' => 'Languages',
         'subtitle' => 'Manage system languages',
+        'default_language' => 'App Default language',
         'actions' => [
             'update_lang' => 'Update LANG',
             'sync' => [
@@ -28,11 +33,11 @@ return [
             ],
             'status' => [
                 'sync_local_done' => 'All languages and translations have been successfully synced to Local files!',
-                'sync_local_fail' => 'Error occurred while syncing to local files! Please check the error logs.',
+                'sync_local_fail' => 'Error occurred while syncing to local files! Please check the error logs for details.',
                 'sync_database_done' => 'All languages and translations have been successfully synced to Database!',
-                'sync_database_done_fail' => 'Error occurred while syncing to Database! Please check the error logs.',
+                'sync_database_done_fail' => 'Error occurred while syncing to Database! Please check the error logs for details.',
                 'lang_updated' => 'All languages and translations have been successfully updated!',
-                'lang_updated_fail' => 'Error occurred while updating languages! Please check the error logs.',
+                'lang_updated_fail' => 'Error occurred while updating languages! Please check the error logs for details.',
             ],
         ],
         'default' => [
@@ -74,7 +79,7 @@ return [
             ],
         ],
         'sort' => [
-            'title' => 'Sort Languages.',
+            'title' => 'Sort Languages',
             'subtitle' => 'Drag and drop languages to reorder them.',
             'sorted' => 'Languages reordered successfully!',
             'sorted_fail' => 'Languages reorder failed!',
@@ -93,6 +98,16 @@ return [
         'group' => [
             'placeholder' => 'Select a group...',
             'all_groups' => 'All groups',
+        ],
+        'status' => [
+            'translation_added' => 'The new translation has been added successfully!',
+            'translation_add_fail' => 'Error occurred while adding new translation! Please check the error logs for details.',
+            'translation_updated' => 'The translation has been updated successfully!',
+            'translation_update_fail' => 'Error occurred while updating translation! Please check the error logs for details.',
+            'translation_locale_deleted' => 'The translation for :locale has been deleted successfully!',
+            'translation_locale_delete_fail' => 'Error occurred while deleting translation for :locale! Please check the error logs for details.',
+            'translation_deleted' => 'The translation has been deleted successfully!',
+            'translation_delete_fail' => 'Error occurred while deleting translation! Please check the error logs for details.',
         ],
         'table' => [
             'columns' => [
@@ -147,23 +162,27 @@ return [
             'min' => 'This :attribute must be at least :min characters',
             'lang_updated_fail' => 'Failed to update language translation',
         ],
+        'fields' => [
+            'group' => 'Translations Group',
+            'group_placeholder' => 'Select/Create a group...',
+            'type' => 'Type',
+            'type_placeholder' => 'Select a translation type...',
+            'key' => 'Translation Key',
+            'key_placeholder' => 'Enter a UNIQUE translation key...',
+            'textValue' => 'Translation Value',
+            'textValue_placeholder' => 'Enter a text translation...',
+            'htmlValue' => 'Translation HTML Value',
+            'htmlValue_placeholder' => 'Enter an HTML translation...',
+            'mdValue' => 'Translation Markdown Value',
+            'mdValue_placeholder' => 'Enter a Markdown translation...',
+        ],
         'create' => [
             'action' => 'Add a new translation',
-            'header' => 'Create new translation',
-            'fields' => [
-                'group' => 'Translations Group',
-                'group_placeholder' => 'Select/Create a group...',
-                'type' => 'Type',
-                'type_placeholder' => 'Select a translation type...',
-                'key' => 'Translation Key',
-                'key_placeholder' => 'Enter a UNIQUE translation key...',
-                'textValue' => 'Translation Value',
-                'textValue_placeholder' => 'Enter a text translation...',
-                'htmlValue' => 'Translation HTML Value',
-                'htmlValue_placeholder' => 'Enter an HTML translation...',
-                'mdValue' => 'Translation Markdown Value',
-                'mdValue_placeholder' => 'Enter a Markdown translation...',
-            ],
+            'header' => 'Create new translation'
+        ],
+        'update' => [
+            'header' => 'Update translation',
+            'action' => 'Update translation',
         ],
         'delete' => [
             'confirm_locale' => 'DELETE :locale TRANSLATION',

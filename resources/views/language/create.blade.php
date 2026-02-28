@@ -5,8 +5,8 @@
     </flux:modal.trigger>
     <flux:modal name="{{ $modalName }}" class="lingua-modal">
         <div class="flex flex-col gap-4">
-            <h2 class="text-lg">@lang('lingua::lingua.languages.create.header')</h2>
-            <x-lingua::validation-errors class="text-start"/>
+            <flux:heading size="xl" level="1">@lang('lingua::lingua.languages.create.header')</flux:heading>
+            <flux:separator/>
             <form wire:submit.prevent="addNewLanguage" id="addNewLanguageForm" class="flex flex-col gap-4">
                 @csrf
                 <flux:select required wire:model.live="language"
@@ -16,7 +16,7 @@
                              id="new_language" :placeholder="__('lingua::lingua.languages.create.placeholder')"
                              label="New Language">
                     @foreach($availableLanguages as $lang)
-                        <flux:select.option :value="$lang['code']" wire:key="oprion_{{ $lang['code'] }}">
+                        <flux:select.option :value="$lang['code']" :key="'option_' . $lang['code']">
                             <x-lingua::language-flag :size="8" :code="$lang['code']" :name="$lang['label']"
                                                      :description="$lang['description']"/>
                         </flux:select.option>

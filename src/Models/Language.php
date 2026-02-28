@@ -5,6 +5,7 @@ namespace Rivalex\Lingua\Models;
 use DB;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Rivalex\Lingua\Database\Factories\LanguageFactory;
@@ -80,6 +81,7 @@ use Rivalex\Lingua\Database\Factories\LanguageFactory;
 #[UseFactory(LanguageFactory::class)]
 class Language extends Model
 {
+    use HasFactory;
     protected $table = 'languages';
 
     protected $fillable = [

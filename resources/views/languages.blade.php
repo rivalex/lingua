@@ -1,7 +1,15 @@
 <section class="flex flex-col gap-4">
     <div class="relative w-full">
         <flux:heading size="xl" level="1">@lang('lingua::lingua.languages.title')</flux:heading>
-        <flux:subheading size="lg" class="mb-6">@lang('lingua::lingua.languages.subtitle')</flux:subheading>
+        <flux:subheading size="lg" class="mb-6">
+            <div class="flex-col gap-2">
+                <p>@lang('lingua::lingua.languages.subtitle')</p>
+                <div class="flex items-center gap-2 text-sm">
+                    <p>@lang('lingua::lingua.languages.default_language'):</p>
+                    <livewire:lingua::selector.icon class="default_language" :locale="app()->currentLocale()" square size="md"/>
+                </div>
+            </div>
+        </flux:subheading>
     </div>
     @island(name: 'languageSort', always: true)
         <livewire:lingua::language.sort :key="'sortLanguages_'. uniqid()"/>
@@ -100,5 +108,6 @@
 @assets
 @once
     <link rel="stylesheet" href="{{ asset('vendor/lingua/css/lingua.min.css') }}">
+    <script type="module" src="{{ asset('vendor/lingua/js/lingua.min.js') }}"></script>
 @endonce
 @endassets
