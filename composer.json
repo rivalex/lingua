@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^8.4",
-        "illuminate/contracts": "^11.0||^12.0",
+        "illuminate/contracts": "^12.0",
         "laravel-lang/common": "^6.7",
         "league/html-to-markdown": "^5.1",
         "livewire/flux": "^2.12",
@@ -37,9 +37,6 @@
         "pestphp/pest-plugin-arch": "^4.0",
         "pestphp/pest-plugin-browser": "^4.3",
         "pestphp/pest-plugin-laravel": "^4.0",
-        "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.0",
         "phpunit/phpunit": "^12.5",
         "spatie/laravel-ray": "^1.35"
     },
@@ -64,7 +61,6 @@
             "@composer run prepare"
         ],
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
-        "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint",
@@ -76,15 +72,13 @@
             "@php vendor/bin/testbench serve --ansi"
         ],
         "lint": [
-            "@php vendor/bin/pint --ansi",
-            "@php vendor/bin/phpstan analyse --verbose --ansi"
+            "@php vendor/bin/pint --ansi"
         ]
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "phpstan/extension-installer": true
+            "pestphp/pest-plugin": true
         }
     },
     "extra": {
