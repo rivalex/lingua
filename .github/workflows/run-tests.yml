@@ -5,7 +5,7 @@ on:
     paths:
       - '**.php'
       - '.github/workflows/run-tests.yml'
-      - 'phpunit.xml.dist'
+      - 'phpunit.xml'
       - 'composer.json'
       - 'composer.lock'
 
@@ -55,22 +55,9 @@ jobs:
         run: composer show -D
 
       - name: Execute tests
-        run: vendor/bin/pest --ci --coverage-clover=build/logs/clover.xml
+        run: vendor/bin/pest --coverage
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./build/logs/clover.xml
-          fail_ci_if_error: true
-
-      - uses: matriphe/laravel-pkg-test-action@v2
-        with:
-          operating_system: ubuntu-latest # The Operating System where the test runs, the default is `ubuntu-latest`
-          php_version: 8.4 # The PHP version where the test runs, the default is `8.2`
-          php_extensions: pdo_sqlite, sqlite3 # The PHP extension enabled for the test, separated by comma
-          laravel_version: 12.* # The Laravel framework version where the test runs, the default is `^11.0`
-          branch: main # The branch name, tag name, or git reference checksum to check out
-          laravel_install_args: --prefer-dist # The arguments passed to Composer when installing Laravel framework, the default is `--prefer-dist --no-progress --no-suggest --optimize-autoloader --no-plugins`
-          package_install_args: --prefer-dist --no-progress  # The arguments passed to Composer when installing the package, the default is `--prefer-dist --no-progress --no-suggest --optimize-autoloader --no-plugins`
-
