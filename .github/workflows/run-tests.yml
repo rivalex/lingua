@@ -55,10 +55,7 @@ jobs:
         run: composer show -D
 
       - name: Execute tests
-        run: vendor/bin/pest --ci
-
-      - name: Execute Tests
-        run: vendor/bin/phpunit --coverage-clover=build/logs/clover.xml
+        run: vendor/bin/pest --ci --coverage-clover clover.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
