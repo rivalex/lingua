@@ -26,7 +26,7 @@ class LanguageFactory extends Factory
             'is_default' => false,
             'sort' => fake()->numberBetween(1, 100),
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
     }
 }

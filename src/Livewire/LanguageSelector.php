@@ -14,9 +14,13 @@ class LanguageSelector extends Component
     use Modals;
 
     public bool $modal = false;
+
     public string $mode = ''; // modal | sidebar | dropdown
+
     public bool $showFlags = true;
+
     public string $currentLocale = '';
+
     public string $currentUrl = '';
 
     public function mount($mode = null): void
@@ -31,7 +35,7 @@ class LanguageSelector extends Component
     #[On('refreshLanguages')]
     public function refreshLanguagesSelector(): void
     {
-        if($this->modal) {
+        if ($this->modal) {
             $this->renderIsland('languageSelectorModal');
         } else {
             $this->renderIsland('languageSelectorMenu');
@@ -51,12 +55,12 @@ class LanguageSelector extends Component
         $this->redirect(url: $this->currentUrl, navigate: true);
     }
 
-	public function render()
-	{
-		return match ($this->mode) {
+    public function render()
+    {
+        return match ($this->mode) {
             'modal' => view('lingua::selector.modal'),
             'dropdown' => view('lingua::selector.dropdown'),
             default => view('lingua::selector.sidebar'),
         };
-	}
+    }
 }

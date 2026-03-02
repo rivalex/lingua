@@ -29,7 +29,6 @@ use Spatie\TranslationLoader\LanguageLine;
  * @property string $vendor Vendor name if the translation is a vendor translation
  * @property Carbon $created_at Creation timestamp
  * @property Carbon $updated_at Last update timestamp
- *
  * @property-read string $lang_key Get the full group key (e.g., 'single.welcome')
  */
 #[UseFactory(TranslationFactory::class)]

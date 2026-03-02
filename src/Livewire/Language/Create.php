@@ -17,6 +17,7 @@ class Create extends Component
     use Modals;
 
     public array $availableLanguages = [];
+
     #[Validate('required|string')]
     public string $language = '';
 
@@ -39,7 +40,7 @@ class Create extends Component
             $this->availableLanguages[] = [
                 'code' => $lang->code,
                 'label' => $lang->locale->name,
-                'description' => $lang->native
+                'description' => $lang->native,
             ];
         }
     }
@@ -55,7 +56,7 @@ class Create extends Component
         $this->validate();
         try {
             $newLanguage = Locales::info($this->language);
-            Artisan::call('lang:add ' . $this->language);
+            Artisan::call('lang:add '.$this->language);
             Language::create([
                 'code' => $newLanguage->code,
                 'regional' => $newLanguage->regional,
@@ -63,7 +64,7 @@ class Create extends Component
                 'name' => $newLanguage->locale->name,
                 'native' => $newLanguage->native,
                 'direction' => $newLanguage->direction,
-                'is_default' => false
+                'is_default' => false,
             ]);
             Translation::syncToDatabase();
             $this->dispatch('refreshLanguages');
@@ -78,8 +79,8 @@ class Create extends Component
         }
     }
 
-	public function render()
-	{
-		return view('lingua::language.create');
-	}
+    public function render()
+    {
+        return view('lingua::language.create');
+    }
 }

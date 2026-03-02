@@ -8,8 +8,8 @@ use Illuminate\Config\Repository;
 use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Rivalex\Lingua\LinguaServiceProvider;
 use OutheBox\BladeFlags\BladeFlagsServiceProvider;
+use Rivalex\Lingua\LinguaServiceProvider;
 use Spatie\TranslationLoader\TranslationServiceProvider;
 
 class TestCase extends Orchestra
@@ -34,7 +34,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         include_once __DIR__.'/../database/migrations/create_lingua_table.php.stub';
-        (new \CreateLinguaTable())->up();
+        (new \CreateLinguaTable)->up();
     }
 
     protected function getPackageAliases($app): array
@@ -60,10 +60,10 @@ class TestCase extends Orchestra
     protected function defineRoutes($router): void
     {
         Route::livewire('languages', 'lingua::languages')
-             ->name('lingua.languages');
+            ->name('lingua.languages');
 
         Route::livewire('translations/{locale?}', 'lingua::translations')
-             ->name('lingua.translations');
+            ->name('lingua.translations');
 
         Route::get('assets/{path}', function (string $path) {
             // Serve built assets directly from the package when they are not published

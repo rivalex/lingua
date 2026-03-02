@@ -2,7 +2,7 @@
 
 it('can access the app configuration', function () {
     expect(config('lingua'))->toBeArray()
-                            ->and(config('lingua.routes_prefix'))->toBe('lingua');
+        ->and(config('lingua.routes_prefix'))->toBe('lingua');
 });
 
 test('The helper linguaDefaultLocale function exists', function () {
@@ -19,7 +19,7 @@ test('The helper linguaLanguageCode function exists', function () {
 
 it('formats the locale as a lowercase language code with hyphen', function () {
     expect(linguaLanguageCode('EN_US'))->toBe('en-us')
-                                       ->and(linguaLanguageCode('pt_BR'))->toBe('pt-br');
+        ->and(linguaLanguageCode('pt_BR'))->toBe('pt-br');
 });
 
 it('uses the actual locale code when none is provided', function () {

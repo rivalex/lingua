@@ -18,7 +18,7 @@ class Sort extends Component
         try {
             $languages = Language::orderBy('sort')->get();
             $movedLanguage = $languages->firstWhere('id', $item);
-            if (!$movedLanguage) {
+            if (! $movedLanguage) {
                 return;
             }
             $languages = $languages->except($item);
@@ -48,8 +48,8 @@ class Sort extends Component
         $this->forceRender();
     }
 
-	public function render()
-	{
-		return view('lingua::language.sort');
-	}
+    public function render()
+    {
+        return view('lingua::language.sort');
+    }
 }

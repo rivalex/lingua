@@ -5,10 +5,10 @@ namespace Rivalex\Lingua\Livewire\Language;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Livewire\Component;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\ModalsConfirm;
-use Livewire\Component;
 
 class Delete extends Component
 {
@@ -18,10 +18,10 @@ class Delete extends Component
 
     public function mount(): void
     {
-        $this->modalName = 'language-delete-modal-' . $this->language->code;
+        $this->modalName = 'language-delete-modal-'.$this->language->code;
         $this->confirm = Str::of(__('lingua::lingua.languages.delete.confirm',
             ['language' => $this->language->name]))
-                            ->upper()->squish()->trim();
+            ->upper()->squish()->trim();
     }
 
     public function deleteLanguage(): void
@@ -29,8 +29,8 @@ class Delete extends Component
         $this->validate();
         try {
             $locale = $this->language->code;
-            Artisan::call('lang:rm ' . $locale . ' --force');
-            $translations = Translation::whereNotNull('text->' . $locale)->get();
+            Artisan::call('lang:rm '.$locale.' --force');
+            $translations = Translation::whereNotNull('text->'.$locale)->get();
             foreach ($translations as $translation) {
                 $translation->forgetTranslation($locale);
             }
@@ -45,8 +45,8 @@ class Delete extends Component
         }
     }
 
-	public function render()
-	{
-		return view('lingua::language.delete');
-	}
+    public function render()
+    {
+        return view('lingua::language.delete');
+    }
 }

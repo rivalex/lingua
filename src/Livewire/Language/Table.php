@@ -20,6 +20,7 @@ class Table extends Component
     public string $search = '';
 
     public bool $syncDatabase = true;
+
     public int $totalStrings;
 
     #[On('refreshLanguages')]
@@ -44,14 +45,14 @@ class Table extends Component
         };
 
         return Language::query()->active()
-                       ->when(!empty($this->search),
-                           fn($query) => $query->whereAny(['code', 'regional', 'name', 'native'],
-                               $like,
-                               "%$this->search%"))->paginate(5);
+            ->when(! empty($this->search),
+                fn ($query) => $query->whereAny(['code', 'regional', 'name', 'native'],
+                    $like,
+                    "%$this->search%"))->paginate(5);
     }
 
-	public function render()
-	{
-		return view('lingua::language.table');
-	}
+    public function render()
+    {
+        return view('lingua::language.table');
+    }
 }

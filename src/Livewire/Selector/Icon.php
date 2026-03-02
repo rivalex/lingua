@@ -2,17 +2,22 @@
 
 namespace Rivalex\Lingua\Livewire\Selector;
 
-use Blade;
 use Livewire\Component;
 
 class Icon extends Component
 {
     public string $locale;
+
     public bool $showFlags = true;
+
     public bool $square = false;
+
     public string $languageFlag = '';
+
     public string $size = 'md';
+
     public string $customIcon = '';
+
     public array $textIconClasses = [];
 
     public function mount(): void
@@ -34,15 +39,15 @@ class Icon extends Component
             $this->getTextSize(),
             'bg-gray-200',
             'border border-gray-300',
-            $this->getIconSize()
+            $this->getIconSize(),
         ];
     }
 
     protected function getFlagName(): string
     {
         return match ($this->square) {
-            true => 'flag-language-' . strtolower($this->locale),
-            false => 'flag-circle-language-' . strtolower($this->locale)
+            true => 'flag-language-'.strtolower($this->locale),
+            false => 'flag-circle-language-'.strtolower($this->locale)
         };
     }
 
@@ -64,7 +69,7 @@ class Icon extends Component
     protected function getIconSize(): string
     {
         return match ($this->size) {
-            'sm' => 'h-4 ' . ($this->showFlags ? 'w-4' : 'px-1'),
+            'sm' => 'h-4 '.($this->showFlags ? 'w-4' : 'px-1'),
             'md' => 'h-6 w-6',
             'lg' => 'h-10 w-10',
             default => 'h-8 w-8'
