@@ -49,17 +49,17 @@ class Update extends Component
             'translationType' => 'required|string',
             'textValue' => [
                 Rule::requiredIf($this->translationType === 'text'),
-                Rule::requiredIf($this->currentLocale === defaultLocale()),
+                Rule::requiredIf($this->currentLocale === linguaDefaultLocale()),
                 'string',
             ],
             'htmlValue' => [
                 Rule::requiredIf($this->translationType === 'html'),
-                Rule::requiredIf($this->currentLocale === defaultLocale()),
+                Rule::requiredIf($this->currentLocale === linguaDefaultLocale()),
                 'string',
             ],
             'mdValue' => [
                 Rule::requiredIf($this->translationType === 'markdown'),
-                Rule::requiredIf($this->currentLocale === defaultLocale()),
+                Rule::requiredIf($this->currentLocale === linguaDefaultLocale()),
                 'string',
             ]
         ];
@@ -81,8 +81,8 @@ class Update extends Component
         $this->htmlValue = $this->translation->text[$this->currentLocale] ?? '';
         $this->mdValue = $this->translation->text[$this->currentLocale] ?? '';
         $this->translationType = $this->translation->type->value;
-        $this->required = $this->currentLocale === defaultLocale();
-        $this->locked = $this->currentLocale !== defaultLocale();
+        $this->required = $this->currentLocale === linguaDefaultLocale();
+        $this->locked = $this->currentLocale !== linguaDefaultLocale();
     }
 
     protected function getGroupsList(): void

@@ -13,7 +13,7 @@
                         <div class="truncate">{{ $locale->name }}</div>
                         <div class="text-xs font-light text-gray-500 truncate italic">{{ $locale->native }}</div>
                     </div>
-                    <livewire:lingua::selector.icon :locale="languageCode($locale->code)" :showFlags="$showFlags"/>
+                    <livewire:lingua::selector.icon :locale="linguaLanguageCode($locale->code)" :showFlags="$showFlags"/>
                 </div>
             </flux:sidebar.item>
         @endforeach

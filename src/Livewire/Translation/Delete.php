@@ -23,7 +23,7 @@ class Delete extends Component
 
     public function mount(): void
     {
-        $this->isDefaultLocale = $this->currentLocale === defaultLocale();
+        $this->isDefaultLocale = $this->currentLocale === linguaDefaultLocale();
         $this->localName = Language::where('code', $this->currentLocale)->first()->name;
         if ($this->isDefaultLocale) {
             $this->deleteHeader = __('lingua::lingua.translations.delete.header');

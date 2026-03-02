@@ -1,6 +1,6 @@
 <flux:table.row>
 	<flux:table.cell class="flex items-center gap-2">
-        <livewire:lingua::selector.icon :locale="languageCode($language->code)" size="lg"/>
+        <livewire:lingua::selector.icon :locale="linguaLanguageCode($language->code)" size="lg"/>
 		<div class="flex flex-col gap-0.5">
 			<flux:link variant="ghost" wire:navigate
 			           href="{{ route('lingua.translations', ['locale' => $language->code]) }}">

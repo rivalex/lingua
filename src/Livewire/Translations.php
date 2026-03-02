@@ -38,7 +38,7 @@ class Translations extends Component
         $this->group = request('g', '');
         $this->showOnlyMissing = request('m', false);
 
-        $this->language = Language::where('code', $locale ?? defaultLocale())->first();
+        $this->language = Language::where('code', $locale ?? linguaDefaultLocale())->first();
         $this->currentLocale = $this->language->code ?? $locale ?? app()->currentLocale();
         $this->setDefaults();
         $this->queryString = request()->query();
@@ -80,7 +80,7 @@ class Translations extends Component
     public function translations()
     {
         $locale = $this->currentLocale;
-        $defaultLocale = defaultLocale();
+        $defaultLocale = linguaDefaultLocale();
 
         return Translation::query()
                           ->when(!empty($this->search),

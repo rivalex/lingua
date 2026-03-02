@@ -8,13 +8,16 @@ beforeEach(function () {
 });
 
 it('can access the app configuration', function () {
-    expect(config('lingua'))->toBeArray();
-    expect(config('lingua.routes_prefix'))->toBe('lingua');
+    expect(config('lingua'))->toBeArray()
+                            ->and(config('lingua.routes_prefix'))->toBe('lingua');
 });
 
 it('can migrate all the package tables', function () {
-    expect(\Illuminate\Support\Facades\DB::table('languages')->exists())->toBeTrue();
-    expect(\Illuminate\Support\Facades\DB::table('language_lines')->exists())->toBeTrue();
+    expect(\Illuminate\Support\Facades\DB::table('languages')
+                                         ->exists())->toBeTrue()
+                                                    ->and(\Illuminate\Support\Facades\DB::table('language_lines')
+                                                                                        ->exists())
+                                                    ->toBeTrue();
 });
 
 it('can seed the default language', function () {

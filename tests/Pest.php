@@ -14,8 +14,11 @@
 use Rivalex\Lingua\Tests\TestCase;
 
 pest()->extend(TestCase::class)
-      ->in('Feature', '../resources/views')
-;
+      ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+      ->in('Feature', '../resources/views');
+
+pest()->extend(TestCase::class)
+      ->in('Unit');
 
 /*
 |--------------------------------------------------------------------------

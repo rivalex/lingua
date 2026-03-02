@@ -359,7 +359,7 @@ class Translation extends LanguageLine
             );
 
             $stringType = LinguaType::text;
-            if ($translation['locale'] === defaultLocale()) {
+            if ($translation['locale'] === linguaDefaultLocale()) {
                 $string = Str::of($translation['value'])->trim();
                 if (preg_match('#(?<=<)\w+(?=[^<]*?>)#', $string->toString())) {
                     $stringType = LinguaType::html;

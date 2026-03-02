@@ -1,11 +1,17 @@
 {
     "name": "rivalex/lingua",
-    "description": "Multilingual package for Laravel with translation support",
+    "description": "Laravel package for multilingual management with database, Livewire UI and translation synchronization",
     "keywords": [
-        "Alessandro Rivolta",
-        "rivalex",
         "laravel",
-        "lingua"
+        "translation",
+        "multilingual",
+        "localization",
+        "i18n",
+        "livewire",
+        "language",
+        "locale",
+        "laravel-package",
+        "translation-management"
     ],
     "homepage": "https://github.com/rivalex/lingua",
     "type": "library",

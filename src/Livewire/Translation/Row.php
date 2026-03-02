@@ -23,7 +23,7 @@ class Row extends Component
     {
         return [
             'currentLocale' => 'sometimes|string',
-            'value' => 'required_if:currentLocale,' . defaultLocale() . '|string|min:1'
+            'value' => 'required_if:currentLocale,' . linguaDefaultLocale() . '|string|min:1'
         ];
     }
 
@@ -54,7 +54,7 @@ class Row extends Component
     {
         $this->translation->refresh();
         $this->value = $this->translation->text[$this->currentLocale] ?? '';
-        $this->defaultValue = $this->translation->text[defaultLocale()] ?? '';
+        $this->defaultValue = $this->translation->text[linguaDefaultLocale()] ?? '';
         $this->translationType = $this->translation->type->value;
     }
 
@@ -74,7 +74,7 @@ class Row extends Component
         if (empty($testValue)) {
             $this->reset('value');
             $this->validateOnly('value');
-            if ($this->currentLocale != defaultLocale()) {
+            if ($this->currentLocale != linguaDefaultLocale()) {
                 $this->translation->forgetTranslation($this->currentLocale);
             }
         } else {

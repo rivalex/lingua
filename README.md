@@ -1,11 +1,12 @@
 # Multilingual package for Laravel with translation support
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/rivalex/lingua.svg?style=flat-square)](https://packagist.org/packages/rivalex/lingua)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/rivalex/lingua/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/rivalex/lingua/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/rivalex/lingua/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/rivalex/lingua/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/rivalex/lingua.svg?style=flat-square)](https://packagist.org/packages/rivalex/lingua)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/rivalex/lingua.svg)](https://packagist.org/packages/rivalex/lingua)
+[![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
+[![run-tests](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml/badge.svg)](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/rivalex/lingua/fix-php-code-style-issues.yml?branch=main&label=code%20style)](https://github.com/rivalex/lingua/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/rivalex/lingua.svg?style)](https://packagist.org/packages/rivalex/lingua)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+Lingua is a Laravel package for complete translation management: database, locale files, Livewire UI for languages and phrases, locale middleware, artisan synchronization commands, and UI tools for language selection. Ideal for modern multilingual applications.
 
 ## Support us
 

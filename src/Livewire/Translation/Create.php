@@ -87,7 +87,7 @@ class Create extends Component
                 'group' => $this->group,
                 'key' => $this->key,
                 'type' => $this->translationType,
-                'text' => [defaultLocale() => $translationValue],
+                'text' => [linguaDefaultLocale() => $translationValue],
             ]);
             $this->closeModal();
             $this->reset('group', 'key', 'translationType');

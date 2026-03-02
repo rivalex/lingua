@@ -2,7 +2,7 @@
     <div class="relative w-full">
         <flux:heading size="xl" level="1">
             <div class="flex flex-row gap-2 items-center">
-                <livewire:lingua::selector.icon :locale="languageCode($language->code)" size="8" square/>
+                <livewire:lingua::selector.icon :locale="linguaLanguageCode($language->code)" size="8" square/>
                 <p>@lang('lingua::lingua.translations.header', ['locale' => $language->native])</p>
             </div>
         </flux:heading>
@@ -41,7 +41,7 @@
                     <flux:select.option :value="$groupItem" :key="$groupItem">{{ $groupItem }}</flux:select.option>
                 @endforeach
             </flux:select>
-            @if($currentLocale !== defaultLocale())
+            @if($currentLocale !== linguaDefaultLocale())
                 <flux:field variant="inline" class="flex items-center gap-2 w-fit">
                     <flux:label><p
                             style="white-space: nowrap; font-weight: 400;">@lang('lingua::lingua.translations.table.show_only_missing')</p>
@@ -130,13 +130,13 @@
                 <flux:table.column style="width: 30%;">
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.default')</p>
-{{--                        <livewire:lingua::selector.icon :locale="languageCode()" size="sm" square/>--}}
+                        {{--                        <livewire:lingua::selector.icon :locale="languageCode()" size="sm" square/>--}}
                     </div>
                 </flux:table.column>
                 <flux:table.column>
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.translation')</p>
-{{--                        <livewire:lingua::selector.icon :locale="$currentLocale" size="sm" square/>--}}
+                        {{--                        <livewire:lingua::selector.icon :locale="$currentLocale" size="sm" square/>--}}
                     </div>
                 </flux:table.column>
                 <flux:table.column style="width: 10%" align="center">

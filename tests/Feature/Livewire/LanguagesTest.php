@@ -17,7 +17,7 @@ it('can reach the LANGUAGES component page', function () {
 
 it('can reach the LANGUAGE SORT component', function () {
     Livewire::test(Sort::class)
-        ->assertStatus(200);
+            ->assertStatus(200);
 });
 
 it('can reach the LANGUAGE TABLE component', function () {
@@ -44,18 +44,18 @@ it('can reach the SET DEFAULT component', function () {
 
 it('can Sync translations to LOCAL FILES', function () {
     Livewire::test(Languages::class)
-        ->assertStatus(200)
-        ->call('syncToLocal')
-        ->assertHasNoErrors()
-        ->assertDispatched('synced_local')
-        ->assertDispatched('refreshLanguages');
+            ->assertStatus(200)
+            ->call('syncToLocal')
+            ->assertHasNoErrors()
+            ->assertDispatched('synced_local')
+            ->assertDispatched('refreshLanguages');
 });
 
 it('can catch Sync to LOCAL FILES ERRORS', function () {
     $this->mock(Translation::class, function ($mock) {
         $mock->shouldReceive('syncToLocal')
-               ->once()
-               ->andThrow(new Exception('error'));
+             ->once()
+             ->andThrow(new Exception('error'));
     });
 
     Livewire::test(Languages::class)
@@ -76,8 +76,8 @@ it('can Sync translations to DATABASE', function () {
 it('can catch Sync to DATABASE ERRORS', function () {
     $this->mock(Translation::class, function ($mock) {
         $mock->shouldReceive('syncToDatabase')
-               ->once()
-               ->andThrow(new Exception('error'));
+             ->once()
+             ->andThrow(new Exception('error'));
     });
 
     Livewire::test(Languages::class)
@@ -106,4 +106,12 @@ it('can catch Update translations ERRORS', function () {
             ->call('updateLanguages')
             ->assertHasErrors('updateLanguages')
             ->assertDispatched('lang_updated_fail');
+});
+
+it('can react on refreshLanguages event dispatched', function () {
+    $component = Livewire::test(Languages::class);
+    $component->assertDontSeeHtml('Sort Languages');
+    Language::factory()->count(1)->create();
+    $component->dispatch('refreshLanguages')
+              ->assertSeeHtml('Sort Languages');
 });
