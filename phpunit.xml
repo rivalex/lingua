@@ -16,7 +16,6 @@
 
     <logging>
         <junit outputFile="build/report.junit.xml"/>
-        <clover outputFile="build/logs/clover.xml"/>
     </logging>
     <source>
         <include>
