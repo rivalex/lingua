@@ -3,12 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
-use LaravelLang\Locales\Facades\Locales;
 use Rivalex\Lingua\Enums\LinguaType;
-use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
 
 return new class extends Migration
 {

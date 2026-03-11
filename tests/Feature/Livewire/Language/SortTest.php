@@ -7,13 +7,13 @@ use Rivalex\Lingua\Models\Language;
 
 it('can reach the `LANGUAGE SORT` component', function () {
     Livewire::test(Sort::class)
-            ->assertStatus(200);
+        ->assertStatus(200);
 });
 
 it('can read the `COMPUTED` property `languages`', function () {
     $count = Language::count();
     Livewire::test(Sort::class)
-            ->assertCount('languages', $count);
+        ->assertCount('languages', $count);
 
     Language::factory()->create([
         'code' => 'it',
@@ -21,7 +21,7 @@ it('can read the `COMPUTED` property `languages`', function () {
     ]);
 
     Livewire::test(Sort::class)
-            ->assertCount('languages', $count + 1);
+        ->assertCount('languages', $count + 1);
     Language::where('code', 'it')->delete();
 });
 
@@ -35,18 +35,18 @@ it('can `SORT` languages order', function () {
     $target = $languages->first();
 
     expect($target->sort === 1)->toBeTrue()
-                               ->and($target->code === 'en');
+        ->and($target->code === 'en');
 
     Livewire::test(Sort::class)
-            ->call('updateLanguageOrder', $target->id, 0)
-            ->assertDispatched('languages_sorted')
-            ->assertDispatched('refreshLanguages')
-            ->assertDispatched('refreshLanguageSelector');
+        ->call('updateLanguageOrder', $target->id, 0)
+        ->assertDispatched('languages_sorted')
+        ->assertDispatched('refreshLanguages')
+        ->assertDispatched('refreshLanguageSelector');
 
     $languages = Language::orderBy('sort')->get();
     $target = $languages->first();
     expect($target->sort === 1)->toBeTrue()
-                               ->and($target->code === 'it');
+        ->and($target->code === 'it');
 
     Language::where('code', 'it')->delete();
 });
@@ -55,9 +55,9 @@ it('catch `ERRORS` on sort languages', function () {
     $target = Language::first() ?? Language::factory()->create();
 
     Livewire::test(Sort::class)
-            ->call('updateLanguageOrder', $target->id, ['invalid'])
-            ->assertHasErrors('updateLanguageOrderError')
-            ->assertDispatched('languages_sorted_fail');
+        ->call('updateLanguageOrder', $target->id, ['invalid'])
+        ->assertHasErrors('updateLanguageOrderError')
+        ->assertDispatched('languages_sorted_fail');
 });
 
 it('can react on `refreshLanguages event` dispatched', function () {
@@ -70,7 +70,7 @@ it('can react on `refreshLanguages event` dispatched', function () {
     ]);
 
     $component->dispatch('refreshLanguages')
-              ->assertSeeHtml('Sort Languages');
+        ->assertSeeHtml('Sort Languages');
 
     Language::where('code', 'it')->delete();
 });

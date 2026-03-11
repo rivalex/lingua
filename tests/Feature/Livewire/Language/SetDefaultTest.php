@@ -1,6 +1,5 @@
 <?php
 
-use LaravelLang\Locales\Facades\Locales;
 use Livewire\Livewire;
 use Rivalex\Lingua\Livewire\Language\SetDefault;
 use Rivalex\Lingua\Models\Language;
@@ -8,8 +7,8 @@ use Rivalex\Lingua\Models\Language;
 it('can access `SetDefault` component', function () {
     $language = Language::first();
     Livewire::test(SetDefault::class, ['language' => $language])
-            ->assertStatus(200)
-            ->assertSee('Set as DEFAULT');
+        ->assertStatus(200)
+        ->assertSee('Set as DEFAULT');
 });
 
 it('can SET default `language` and dispatch `events`', function () {
@@ -21,9 +20,9 @@ it('can SET default `language` and dispatch `events`', function () {
     ]);
 
     Livewire::test(SetDefault::class, ['language' => $newDefault])
-            ->call('setDefaultLanguage')
-            ->assertDispatched('language_default_set')
-            ->assertDispatched('refreshLanguageRows');
+        ->call('setDefaultLanguage')
+        ->assertDispatched('language_default_set')
+        ->assertDispatched('refreshLanguageRows');
 
     $newDefault->refresh();
     expect($newDefault->is_default)->toBeTrue();
@@ -39,8 +38,8 @@ it('can SET default `language` and dispatch `events`', function () {
 it('catch `ERRORS` setting default Language for `Language::setDefault($locale)`', function () {
     $this->mock(Language::class, function ($mock) {
         $mock->shouldReceive('setDefault')
-             ->once()
-             ->andThrow(new Exception('Error setting language as default.'));
+            ->once()
+            ->andThrow(new Exception('Error setting language as default.'));
     });
 
     $newDefault = Language::factory()->create([
@@ -49,9 +48,9 @@ it('catch `ERRORS` setting default Language for `Language::setDefault($locale)`'
     ]);
 
     Livewire::test(SetDefault::class, ['language' => $newDefault])
-            ->call('setDefaultLanguage')
-            ->assertHasErrors(['setDefaultLanguage' => 'Error setting language as default.'])
-            ->assertDispatched('language_default_fail');
+        ->call('setDefaultLanguage')
+        ->assertHasErrors(['setDefaultLanguage' => 'Error setting language as default.'])
+        ->assertDispatched('language_default_fail');
 
     Language::where('code', 'it')->delete();
 });

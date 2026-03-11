@@ -2,37 +2,46 @@
 
 namespace Rivalex\Lingua\Livewire\Translation;
 
-use Flux\Flux;
-use Livewire\Attributes\Validate;
-use Rivalex\Lingua\Enums\LinguaType;
-use Rivalex\Lingua\Models\Translation;
-use Rivalex\Lingua\Traits\Modals;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Traits\Modals;
 
 class Update extends Component
 {
     use Modals;
 
     public Translation $translation;
+
     public string $currentLocale;
+
     #[Validate]
     public ?string $group = null;
+
     #[Validate]
     public ?string $key = null;
+
     #[Validate]
     public string $textValue = '';
+
     #[Validate]
     public string $htmlValue = '';
+
     #[Validate]
     public string $mdValue = '';
 
     public array $translationsTypes = [];
+
     public string $translationType = LinguaType::text->value;
+
     public array $groups = [];
+
     public bool $required = false;
+
     public bool $locked = false;
 
     public function rules(): array
@@ -44,7 +53,7 @@ class Update extends Component
                 'required',
                 'string',
                 'min:2',
-                Rule::unique('language_lines', 'group_key')->ignore($this->translation->id)
+                Rule::unique('language_lines', 'group_key')->ignore($this->translation->id),
             ],
             'translationType' => 'required|string',
             'textValue' => [
@@ -61,7 +70,7 @@ class Update extends Component
                 Rule::requiredIf($this->translationType === 'markdown'),
                 Rule::requiredIf($this->currentLocale === linguaDefaultLocale()),
                 'string',
-            ]
+            ],
         ];
     }
 
@@ -108,14 +117,14 @@ class Update extends Component
             $this->translation->update([
                 'group' => $this->group,
                 'key' => $this->key,
-                'type' => $this->translationType
+                'type' => $this->translationType,
             ]);
             $this->translation->setTranslation($this->currentLocale, $translationValue);
             $this->translation->save();
             $this->translation->refresh();
             $this->setDefaults();
-            $this->dispatch('refreshTranslationRow.' . $this->translation->id);
-            $this->dispatch($this->translation->group_key . '_updated');
+            $this->dispatch('refreshTranslationRow.'.$this->translation->id);
+            $this->dispatch($this->translation->group_key.'_updated');
             $this->dispatch('translation_updated');
             $this->closeModal();
         } catch (\Throwable $e) {
@@ -125,8 +134,8 @@ class Update extends Component
         }
     }
 
-	public function render()
-	{
-		return view('lingua::translation.update');
-	}
+    public function render()
+    {
+        return view('lingua::translation.update');
+    }
 }

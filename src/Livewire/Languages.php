@@ -3,13 +3,13 @@
 namespace Rivalex\Lingua\Livewire;
 
 use Illuminate\Support\Facades\Artisan;
-use Livewire\Attributes\On;
-use Rivalex\Lingua\Models\Translation;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Async;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Rivalex\Lingua\Models\Translation;
 
 #[Title('UI Translation Manager')]
 class Languages extends Component
@@ -127,8 +127,8 @@ class Languages extends Component
         HTML;
     }
 
-	public function render()
-	{
-		return view('lingua::languages');
-	}
+    public function render()
+    {
+        return view('lingua::languages');
+    }
 }

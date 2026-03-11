@@ -178,7 +178,7 @@ return [
         ],
         'create' => [
             'action' => 'Add a new translation',
-            'header' => 'Create new translation'
+            'header' => 'Create new translation',
         ],
         'update' => [
             'header' => 'Update translation',
