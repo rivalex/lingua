@@ -1,0 +1,90 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Rivalex\Lingua\Tests;
+
+class TestCase extends \Orchestra\Testbench\TestCase
+{
+
+    protected function getPackageProviders($app): array
+    {
+        return [
+            \Livewire\LivewireServiceProvider::class,
+            \Flux\FluxServiceProvider::class,
+            \BladeUI\Icons\BladeIconsServiceProvider::class,
+            \OutheBox\BladeFlags\BladeFlagsServiceProvider::class,
+            \Spatie\TranslationLoader\TranslationServiceProvider::class,
+            \LaravelLang\Locales\ServiceProvider::class,
+            \LaravelLang\Config\ServiceProvider::class,
+            \LaravelLang\Publisher\ServiceProvider::class,
+            \LaravelLang\Lang\ServiceProvider::class,
+            \LaravelLang\Attributes\ServiceProvider::class,
+            \LaravelLang\Actions\ServiceProvider::class,
+            \LaravelLang\HttpStatuses\ServiceProvider::class,
+            \Rivalex\Lingua\LinguaServiceProvider::class,
+        ];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->artisan('migrate'); // Explicitly run migrations
+        $this->seed(\Rivalex\Lingua\Database\Seeders\LinguaSeeder::class);
+    }
+
+    protected function getPackageAliases($app): array
+    {
+        return [
+            'Lingua' => \Rivalex\Lingua\Facades\Lingua::class,
+        ];
+    }
+
+    public function defineEnvironment($app): void
+    {
+        $langPath = __DIR__ . '/tmp/lang';
+        if (!is_dir($langPath)) {
+            mkdir($langPath, 0777, true);
+        }
+        $app->useLangPath($langPath);
+
+        tap($app->make('config'), function (\Illuminate\Config\Repository $config) use ($langPath) {
+            $config->set('lingua.lang_dir', $langPath);
+            $config->set('app.key', 'base64:6Cu69K6S7N25Lp8YV780m3W5vUv7R3P8w4C5o2A6B7E=');
+            $config->set('database.default', 'test');
+            $config->set('database.connections.test', [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+            ]);
+        });
+    }
+
+    protected function defineRoutes($router): void
+    {
+        \Illuminate\Support\Facades\Route::livewire('languages', 'lingua::languages')
+             ->name('lingua.languages');
+
+        \Illuminate\Support\Facades\Route::livewire('translations/{locale?}', 'lingua::translations')
+             ->name('lingua.translations');
+
+        \Illuminate\Support\Facades\Route::get('assets/{path}', function (string $path) {
+            // Serve built assets directly from the package when they are not published
+            $file = dirname(__DIR__)."/src/dist/{$path}";
+            abort_unless(is_file($file), 404);
+
+            $mime = match (pathinfo($file, PATHINFO_EXTENSION)) {
+                'css' => 'text/css',
+                'js' => 'application/javascript',
+                'map' => 'application/json',
+                default => null,
+            };
+
+            return response()->file($file, array_filter([
+                'Content-Type' => $mime,
+                'Cache-Control' => 'public, max-age=31536000',
+            ]));
+        })->where('path', '.*')->name('lingua.assets');
+    }
+}

@@ -1,0 +1,46 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '''
+				#^Access to property \$value of deprecated enum LaravelLang\\Locales\\Enums\\Direction\:
+				Use the \\LaravelLang\\LocaleList\\Direction instead$#
+			'''
+			identifier: property.deprecatedEnum
+			count: 1
+			path: src/Models/Translation.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: src/Models/Translation.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property Rivalex\\Lingua\\Models\\Translation\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Models/Translation.php
+
+		-
+			message: '#^Trait Rivalex\\Lingua\\Traits\\Modals is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/Modals.php
+
+		-
+			message: '#^Trait Rivalex\\Lingua\\Traits\\ModalsConfirm is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/ModalsConfirm.php
+
+		-
+			message: '#^Trait Rivalex\\Lingua\\Traits\\NotificationService is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/NotificationService.php
+
+		-
+			message: '#^Method Spatie\\TranslationLoader\\TranslationLoaders\\TranslationLoader\:\:loadTranslations\(\) invoked with 3 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: src/TranslationManager/LinguaManager.php

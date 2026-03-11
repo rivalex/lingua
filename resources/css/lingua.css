@@ -1,0 +1,6 @@
+@import "../css/lingua/autocomplete.css";
+@import "../css/lingua/tiptap.css";
+@import "../css/lingua/styles.css";
+
+@source '.././../src';
+@source '../views';

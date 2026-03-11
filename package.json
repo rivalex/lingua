@@ -1,0 +1,33 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "dependencies": {
+        "@alpinejs/focus": "^3.15.8",
+        "@alpinejs/ui": "^3.15.8",
+        "@tailwindcss/vite": "^4.2.1",
+        "@tiptap/core": "^3.20.0",
+        "@tiptap/extension-subscript": "^3.20.0",
+        "@tiptap/extension-superscript": "^3.20.0",
+        "@tiptap/extension-typography": "^3.20.0",
+        "@tiptap/extensions": "^3.20.0",
+        "@tiptap/markdown": "^3.20.0",
+        "@tiptap/pm": "^3.20.0",
+        "@tiptap/starter-kit": "^3.20.0",
+        "alpinejs": "^3.15.8",
+        "dompurify": "^3.3.1",
+        "laravel-vite-plugin": "^2.0",
+        "playwright": "^1.58.2",
+        "tailwindcss": "^4.2.1",
+        "vite": "^7.3.1"
+    },
+    "optionalDependencies": {
+        "@rollup/rollup-linux-x64-gnu": "4.9.5",
+        "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
+        "lightningcss-linux-x64-gnu": "^1.29.1"
+    }
+}
