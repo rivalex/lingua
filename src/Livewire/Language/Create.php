@@ -4,6 +4,7 @@ namespace Rivalex\Lingua\Livewire\Language;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 use LaravelLang\Locales\Facades\Locales;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
@@ -19,8 +20,6 @@ use Rivalex\Lingua\Traits\Modals;
  * administrators to add new languages to the system. It integrates with Laravel Lang
  * to fetch available locales, creates language records in the database, and triggers
  * Artisan commands to install language files.
- *
- * @package Rivalex\Lingua\Livewire\Language
  */
 class Create extends Component
 {
@@ -43,8 +42,6 @@ class Create extends Component
      *
      * This property is bound to the form input and validated to ensure
      * a language is selected before creation.
-     *
-     * @var string
      */
     #[Validate('required|string')]
     public string $language = '';
@@ -54,8 +51,6 @@ class Create extends Component
      *
      * Sets the modal identifier and populates the available languages list
      * by fetching all languages that are not currently installed in the system.
-     *
-     * @return void
      */
     public function mount(): void
     {
@@ -70,8 +65,6 @@ class Create extends Component
      * using Laravel Lang's Locales facade. Each language's code, English name,
      * and native name are stored in the availableLanguages array. Silently
      * skips any locales that throw errors during info retrieval.
-     *
-     * @return void
      */
     protected function setDefaults(): void
     {
@@ -86,7 +79,7 @@ class Create extends Component
             $this->availableLanguages[] = [
                 'code' => $lang->code,
                 'label' => $lang->locale->name,
-                'description' => $lang->native
+                'description' => $lang->native,
             ];
         }
     }
@@ -97,8 +90,6 @@ class Create extends Component
      * This method listens for the 'refreshLanguages' Livewire event and repopulates
      * the availableLanguages array to reflect any changes in installed languages.
      * Typically called after a language is added or removed.
-     *
-     * @return void
      */
     #[On('refreshLanguages')]
     public function refreshLanguages(): void
@@ -119,15 +110,13 @@ class Create extends Component
      * 7. Closes the modal and resets the form
      *
      * On failure, logs the error, dispatches a failure event, and closes the modal.
-     *
-     * @return void
      */
     public function addNewLanguage(): void
     {
         $this->validate();
         try {
             $newLanguage = Locales::info(locale: $this->language);
-            Artisan::call('lang:add ' . $this->language);
+            Artisan::call('lang:add '.$this->language);
             app(Language::class)->create([
                 'code' => $newLanguage->code,
                 'regional' => $newLanguage->regional,
@@ -135,7 +124,7 @@ class Create extends Component
                 'name' => $newLanguage->locale->name,
                 'native' => $newLanguage->native,
                 'direction' => $newLanguage->direction,
-                'is_default' => false
+                'is_default' => false,
             ]);
             app(Translation::class)->syncToDatabase();
             $this->dispatch('refreshLanguages');
@@ -151,15 +140,15 @@ class Create extends Component
         }
     }
 
-	/**
+    /**
      * Render the component's view.
      *
      * Returns the Blade view for the language creation modal form.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function render()
-	{
-		return view('lingua::language.create');
-	}
+    {
+        return view('lingua::language.create');
+    }
 }

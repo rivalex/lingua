@@ -3,20 +3,25 @@
 namespace Rivalex\Lingua\Livewire\Translation;
 
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\ModalsConfirm;
-use Livewire\Component;
 
 class Delete extends Component
 {
     use ModalsConfirm;
 
     public string $currentLocale;
+
     public string $localName;
+
     public Translation $translation;
+
     public bool $canDelete = false;
+
     public string $deleteAction;
+
     public string $deleteHeader;
 
     public bool $isDefaultLocale;
@@ -47,7 +52,7 @@ class Delete extends Component
             } else {
                 $this->translation->forgetTranslation($this->currentLocale);
                 $this->dispatch('translation_locale_deleted');
-                $this->dispatch('refreshTranslationRow.' . $this->translation->id);
+                $this->dispatch('refreshTranslationRow.'.$this->translation->id);
             }
         } catch (\Exception $e) {
             $this->closeModal();
@@ -60,8 +65,8 @@ class Delete extends Component
         }
     }
 
-	public function render()
-	{
-		return view('lingua::translation.delete');
-	}
+    public function render()
+    {
+        return view('lingua::translation.delete');
+    }
 }

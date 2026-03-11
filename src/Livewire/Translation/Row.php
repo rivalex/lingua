@@ -10,20 +10,27 @@ use Rivalex\Lingua\Models\Translation;
 class Row extends Component
 {
     public string $currentLocale;
+
     public Translation $translation;
+
     public string $key;
+
     #[Validate]
     public string $value = '';
+
     public string $defaultValue = '';
+
     public string $editModalName;
+
     public string $deleteModalName;
+
     public string $translationType = '';
 
     protected function rules(): array
     {
         return [
             'currentLocale' => 'sometimes|string',
-            'value' => 'required_if:currentLocale,' . linguaDefaultLocale() . '|string|min:1'
+            'value' => 'required_if:currentLocale,'.linguaDefaultLocale().'|string|min:1',
         ];
     }
 
@@ -34,20 +41,21 @@ class Row extends Component
             'html' => __('lingua::lingua.translations.attributes.html_value'),
             'markdown' => __('lingua::lingua.translations.attributes.md_value')
         };
+
         return [
             'value' => match ($this->translation->type->value) {
                 'text' => __('lingua::lingua.translations.attributes.text_value'),
                 'html' => __('lingua::lingua.translations.attributes.html_value'),
                 'markdown' => __('lingua::lingua.translations.attributes.md_value')
-            }
+            },
         ];
     }
 
     public function mount(): void
     {
         $this->setDefaults();
-        $this->editModalName = 'translation-update-modal-' . $this->translation->id;
-        $this->deleteModalName = 'translation-delete-modal-' . $this->translation->id;
+        $this->editModalName = 'translation-update-modal-'.$this->translation->id;
+        $this->deleteModalName = 'translation-delete-modal-'.$this->translation->id;
     }
 
     protected function setDefaults(): void
@@ -65,11 +73,12 @@ class Row extends Component
         $this->forceRender();
     }
 
-
     public function updatedValue(): void
     {
         $this->validate();
-        if (empty($this->value)) return;
+        if (empty($this->value)) {
+            return;
+        }
         $testValue = trim(preg_replace('%<p(.*?)>|</p>%s', '', $this->value));
         if (empty($testValue)) {
             $this->reset('value');
@@ -83,8 +92,8 @@ class Row extends Component
             $this->translation->refresh();
         }
         $this->setDefaults();
-        $this->dispatch('updateTranslationModal.' . $this->translation->id);
-        $this->dispatch($this->translation->group_key . '_updated');
+        $this->dispatch('updateTranslationModal.'.$this->translation->id);
+        $this->dispatch($this->translation->group_key.'_updated');
     }
 
     public function syncFromDefault(): void
@@ -121,8 +130,8 @@ class Row extends Component
         HTML;
     }
 
-	public function render()
-	{
-		return view('lingua::translation.row');
-	}
+    public function render()
+    {
+        return view('lingua::translation.row');
+    }
 }

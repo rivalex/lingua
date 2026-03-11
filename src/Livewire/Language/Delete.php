@@ -2,13 +2,15 @@
 
 namespace Rivalex\Lingua\Livewire\Language;
 
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Livewire\Component;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\ModalsConfirm;
-use Livewire\Component;
 
 /**
  * Delete Language Livewire Component
@@ -19,8 +21,6 @@ use Livewire\Component;
  * - Cleaning up translations in the database
  * - Updating language records and reordering
  * - Providing confirmation modal functionality via ModalsConfirm trait
- *
- * @package Rivalex\Lingua\Livewire\Language
  */
 class Delete extends Component
 {
@@ -28,8 +28,6 @@ class Delete extends Component
 
     /**
      * The language instance to be deleted
-     *
-     * @var Language
      */
     public Language $language;
 
@@ -38,15 +36,13 @@ class Delete extends Component
      *
      * Sets up the modal name using the language code and prepares the confirmation
      * message by formatting and sanitizing the translated confirmation text.
-     *
-     * @return void
      */
     public function mount(): void
     {
-        $this->modalName = 'language-delete-modal-' . $this->language->code;
+        $this->modalName = 'language-delete-modal-'.$this->language->code;
         $this->confirm = Str::of(__('lingua::lingua.languages.delete.confirm',
             ['language' => $this->language->name]))
-                            ->upper()->squish()->trim();
+            ->upper()->squish()->trim();
     }
 
     /**
@@ -62,7 +58,6 @@ class Delete extends Component
      *
      * On failure, logs the error and dispatches a failure event.
      *
-     * @return void
      * @throws \Throwable
      */
     public function deleteLanguage(): void
@@ -70,8 +65,8 @@ class Delete extends Component
         $this->validate();
         try {
             $locale = $this->language->code;
-            Artisan::call('lang:rm ' . strtolower($locale) . ' --force');
-            $translations = Translation::whereNotNull('text->' . $locale)->get();
+            Artisan::call('lang:rm '.strtolower($locale).' --force');
+            $translations = Translation::whereNotNull('text->'.$locale)->get();
             foreach ($translations as $translation) {
                 $translation->forgetTranslation($locale);
             }
@@ -93,10 +88,10 @@ class Delete extends Component
      *
      * Returns the delete language confirmation view.
      *
-     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
+     * @return View|Factory
      */
     public function render()
-	{
-		return view('lingua::language.delete');
-	}
+    {
+        return view('lingua::language.delete');
+    }
 }

@@ -4,13 +4,14 @@ use LaravelLang\Locales\Facades\Locales;
 use Livewire\Livewire;
 use Rivalex\Lingua\Livewire\Language\Table;
 use Rivalex\Lingua\Models\Language;
+
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
 
 it('can render `TABLE component`', function () {
     $component = Livewire::test(Table::class);
     $component->assertStatus(200)
-              ->assertSeeHtml('Languages');
+        ->assertSeeHtml('Languages');
 });
 
 it('can access to `COMPUTED` property `languages`', function () {
@@ -52,7 +53,7 @@ it('can `SEARCH/FILTER` languages by code, regional, name and native', function 
             'name' => $localeData->localized,
             'native' => $localeData->native,
             'direction' => $localeData->direction->value,
-            'is_default' => false
+            'is_default' => false,
         ]
     );
 
@@ -65,7 +66,7 @@ it('can `SEARCH/FILTER` languages by code, regional, name and native', function 
             'name' => $localeData->localized,
             'native' => $localeData->native,
             'direction' => $localeData->direction->value,
-            'is_default' => false
+            'is_default' => false,
         ]
     );
 
@@ -74,12 +75,12 @@ it('can `SEARCH/FILTER` languages by code, regional, name and native', function 
         ->assertCount('languages', 1);
 
     Livewire::test(Table::class)
-            ->set('search', 'italian')
-            ->assertCount('languages', 1);
+        ->set('search', 'italian')
+        ->assertCount('languages', 1);
 
     Livewire::test(Table::class)
-            ->set('search', 'العربية')
-            ->assertCount('languages', 1);
+        ->set('search', 'العربية')
+        ->assertCount('languages', 1);
 
     Language::where('code', 'it')->delete();
     Language::where('code', 'ar')->delete();
@@ -88,6 +89,6 @@ it('can `SEARCH/FILTER` languages by code, regional, name and native', function 
 it('can react on `refreshLanguages event` dispatched', function () {
     $componentId = Livewire::test(Table::class)->id();
     Livewire::test(Table::class)
-            ->dispatch('refreshLanguages')
-            ->assertDontSeeHtml($componentId);
+        ->dispatch('refreshLanguages')
+        ->assertDontSeeHtml($componentId);
 });

@@ -1,5 +1,9 @@
 <?php
 
+use Rivalex\Lingua\Database\Db;
+use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\TranslationManager\LinguaManager;
+
 /**
  * This file contains the configuration options for the lingua package.
  * You can customize the settings to fit your application's needs.
@@ -85,17 +89,17 @@ return [
      * the Spatie\TranslationLoader\TranslationLoaders\TranslationLoader-interface.
      */
     'translation_loaders' => [
-        \Rivalex\Lingua\Database\Db::class,
+        Db::class,
     ],
 
     /*
      * This is the model used by the Db Translation loader. You can put any model here
      * that extends Spatie\TranslationLoader\LanguageLine.
      */
-    'model' => \Rivalex\Lingua\Models\Translation::class,
+    'model' => Translation::class,
 
     /*
      * This is the translation manager which overrides the default Laravel `translation.loader`
      */
-    'translation_manager' => \Rivalex\Lingua\TranslationManager\LinguaManager::class,
+    'translation_manager' => LinguaManager::class,
 ];

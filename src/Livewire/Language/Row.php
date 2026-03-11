@@ -3,12 +3,13 @@
 namespace Rivalex\Lingua\Livewire\Language;
 
 use Livewire\Attributes\On;
-use Rivalex\Lingua\Models\Language;
 use Livewire\Component;
+use Rivalex\Lingua\Models\Language;
 
 class Row extends Component
 {
     public Language $language;
+
     public bool $showFlags = true;
 
     public function mount(int $languageId): void
@@ -48,8 +49,8 @@ class Row extends Component
         HTML;
     }
 
-	public function render()
-	{
-		return view('lingua::language.row');
-	}
+    public function render()
+    {
+        return view('lingua::language.row');
+    }
 }

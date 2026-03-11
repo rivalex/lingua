@@ -25,7 +25,7 @@ class TranslationFactory extends Factory
             'is_vendor' => $isVendor,
             'vendor' => $vendor,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
     }
 }

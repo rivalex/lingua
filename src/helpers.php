@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Str;
+
 if (! function_exists('linguaDefaultLocale')) {
     /**
      * Retrieves the default locale for the application.
@@ -21,12 +23,11 @@ if (! function_exists('linguaLanguageCode')) {
      * and replacing underscores with hyphens. If no locale is provided, the default locale
      * is used.
      *
-     * @param string|null $locale The locale to be formatted. If null, the default locale will be used.
-     *
+     * @param  string|null  $locale  The locale to be formatted. If null, the default locale will be used.
      * @return string The formatted language code in lowercase with hyphens instead of underscores.
      */
     function linguaLanguageCode(?string $locale = null): string
     {
-        return \Illuminate\Support\Str::of($locale ?? app()->getLocale())->lower()->replace('_', '-');
+        return Str::of($locale ?? app()->getLocale())->lower()->replace('_', '-');
     }
 }

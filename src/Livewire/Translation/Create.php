@@ -2,14 +2,14 @@
 
 namespace Rivalex\Lingua\Livewire\Translation;
 
-use Rivalex\Lingua\Enums\LinguaType;
-use Rivalex\Lingua\Models\Translation;
-use Rivalex\Lingua\Traits\Modals;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Traits\Modals;
 
 class Create extends Component
 {
@@ -17,18 +17,24 @@ class Create extends Component
 
     #[Validate]
     public string $group = '';
+
     #[Validate]
     public string $key = '';
+
     #[Validate]
     public string $value = '';
+
     #[Validate]
     public string $textValue = '';
+
     #[Validate]
     public string $htmlValue = '';
+
     #[Validate]
     public string $mdValue = '';
 
     public array $translationsTypes = [];
+
     public string $translationType = LinguaType::text->value;
 
     public array $groups = [];
@@ -41,12 +47,12 @@ class Create extends Component
                 'required',
                 'string',
                 'min:2',
-                Rule::unique('language_lines', 'key')->where('group', $this->group)
+                Rule::unique('language_lines', 'key')->where('group', $this->group),
             ],
             'translationType' => 'required|string',
             'textValue' => 'required_if:translationType,text|string',
             'htmlValue' => 'required_if:translationType,html|string',
-            'mdValue' => 'required_if:translationType,markdown|string'
+            'mdValue' => 'required_if:translationType,markdown|string',
         ];
     }
 
@@ -102,8 +108,8 @@ class Create extends Component
 
     }
 
-	public function render()
-	{
-		return view('lingua::translation.create');
-	}
+    public function render()
+    {
+        return view('lingua::translation.create');
+    }
 }

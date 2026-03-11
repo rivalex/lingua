@@ -18,17 +18,24 @@ class Translations extends Component
 
     #[Url(as: 'q', except: '')]
     public string $search = '';
+
     #[Url(as: 'p', except: 10)]
     public int $perPage = 10;
+
     #[Url(as: 'g', except: '')]
     public string $group = '';
+
     #[Url(as: 'm', except: false)]
     public bool $showOnlyMissing = false;
 
     public Language $language;
+
     public array $availableLocale = [];
+
     public string $currentLocale;
+
     public array $availableGroups = [];
+
     public array $queryString = [];
 
     public function mount(?string $locale = null): void
@@ -83,20 +90,20 @@ class Translations extends Component
         $defaultLocale = linguaDefaultLocale();
 
         return Translation::query()
-                          ->when(!empty($this->search),
-                              fn($q) => $q->where(fn($query) => $query->whereLike('group_key', "%{$this->search}%")
-                                                                      ->orWhereLike('text->' . $defaultLocale,
-                                                                          "%{$this->search}%")
-                                                                      ->orWhereLike('text->' . $locale,
-                                                                          "%{$this->search}%"))
-                          )
-                          ->when($this->showOnlyMissing, fn($q) => $q->whereNull('text->' . $locale))
-                          ->when($this->group, fn($q) => $q->where('group', '=', $this->group))
-                          ->paginate($this->perPage);
+            ->when(! empty($this->search),
+                fn ($q) => $q->where(fn ($query) => $query->whereLike('group_key', "%{$this->search}%")
+                    ->orWhereLike('text->'.$defaultLocale,
+                        "%{$this->search}%")
+                    ->orWhereLike('text->'.$locale,
+                        "%{$this->search}%"))
+            )
+            ->when($this->showOnlyMissing, fn ($q) => $q->whereNull('text->'.$locale))
+            ->when($this->group, fn ($q) => $q->where('group', '=', $this->group))
+            ->paginate($this->perPage);
     }
 
-	public function render()
-	{
-		return view('lingua::translations');
-	}
+    public function render()
+    {
+        return view('lingua::translations');
+    }
 }

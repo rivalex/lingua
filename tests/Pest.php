@@ -15,5 +15,5 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Rivalex\Lingua\Tests\TestCase;
 
 pest()->extend(TestCase::class)
-      ->use(RefreshDatabase::class)
-      ->in('Feature');
+    ->use(RefreshDatabase::class)
+    ->in('Feature');
