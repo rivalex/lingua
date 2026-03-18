@@ -1,6 +1,5 @@
 <?php
 
-use LaravelLang\Locales\Facades\Locales;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 

@@ -1,7 +1,5 @@
 <?php
 
-use LaravelLang\Locales\Facades\Locales;
-use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
 it('can run `lingua:sync-to-database` command', function () {

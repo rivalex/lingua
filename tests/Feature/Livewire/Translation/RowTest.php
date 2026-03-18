@@ -8,12 +8,12 @@ use Rivalex\Lingua\Models\Translation;
 function makeRowTranslation(): Translation
 {
     return Translation::create([
-        'group'     => 'test',
-        'key'       => 'row_test_'.uniqid(),
-        'type'      => 'text',
-        'text'      => ['en' => 'Default English value'],
+        'group' => 'test',
+        'key' => 'row_test_'.uniqid(),
+        'type' => 'text',
+        'text' => ['en' => 'Default English value'],
         'is_vendor' => false,
-        'vendor'    => null,
+        'vendor' => null,
     ]);
 }
 
@@ -21,7 +21,7 @@ it('can render `TRANSLATION ROW` component', function () {
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])->assertStatus(200);
 
@@ -32,7 +32,7 @@ it('shows the `default value` for the default locale', function () {
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])
         ->assertSet('defaultValue', 'Default English value')
@@ -46,7 +46,7 @@ it('shows empty `value` when locale translation is missing', function () {
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])
         ->assertSet('value', '')
@@ -60,16 +60,16 @@ it('shows `locale value` when locale translation exists', function () {
     Language::factory()->create(['code' => 'it', 'is_default' => false]);
 
     $translation = Translation::create([
-        'group'     => 'test',
-        'key'       => 'row_it_'.uniqid(),
-        'type'      => 'text',
-        'text'      => ['en' => 'English', 'it' => 'Italiano'],
+        'group' => 'test',
+        'key' => 'row_it_'.uniqid(),
+        'type' => 'text',
+        'text' => ['en' => 'English', 'it' => 'Italiano'],
         'is_vendor' => false,
-        'vendor'    => null,
+        'vendor' => null,
     ]);
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])
         ->assertSet('value', 'Italiano')
@@ -83,7 +83,7 @@ it('`updatedValue` saves translation when value is not empty', function () {
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])->set('value', 'New saved value');
 
@@ -97,7 +97,7 @@ it('`updatedValue` dispatches `updateTranslationModal.{id}` after saving', funct
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])
         ->set('value', 'Updated via row')
@@ -111,7 +111,7 @@ it('`syncFromDefault` copies default value to current locale', function () {
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])
         ->call('syncFromDefault')
@@ -128,16 +128,16 @@ it('`refreshTranslationRow.{id}` event refreshes the row', function () {
     Language::factory()->create(['code' => 'it', 'is_default' => false]);
 
     $translation = Translation::create([
-        'group'     => 'test',
-        'key'       => 'row_refresh_'.uniqid(),
-        'type'      => 'text',
-        'text'      => ['en' => 'Old value', 'it' => 'Old IT value'],
+        'group' => 'test',
+        'key' => 'row_refresh_'.uniqid(),
+        'type' => 'text',
+        'text' => ['en' => 'Old value', 'it' => 'Old IT value'],
         'is_vendor' => false,
-        'vendor'    => null,
+        'vendor' => null,
     ]);
 
     $component = Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ]);
 
@@ -160,7 +160,7 @@ it('sets `editModalName` and `deleteModalName` on mount', function () {
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])
         ->assertSet('editModalName', 'translation-update-modal-'.$translation->id)
@@ -173,7 +173,7 @@ it('validates `value` is required when current locale is default', function () {
     $translation = makeRowTranslation();
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
     ])
         ->set('value', '')

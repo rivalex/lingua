@@ -1,7 +1,6 @@
 <?php
 
 use Livewire\Livewire;
-use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Livewire\Translation\Create;
 use Rivalex\Lingua\Models\Translation;
 
