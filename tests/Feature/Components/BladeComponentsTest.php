@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\ViewErrorBag;
 use Livewire\Livewire;
 use Rivalex\Lingua\Livewire\Translation\Create;
 use Rivalex\Lingua\Livewire\Translation\Row;
@@ -14,7 +15,7 @@ use Rivalex\Lingua\Models\Translation;
 
 // Share an empty error bag so components that reference $errors don't throw.
 beforeEach(function () {
-    view()->share('errors', new \Illuminate\Support\ViewErrorBag);
+    view()->share('errors', new ViewErrorBag);
 });
 
 // ─────────────────────────────────────────────

@@ -8,12 +8,12 @@ use Rivalex\Lingua\Models\Translation;
 function makeTranslationWithLocale(): Translation
 {
     return Translation::create([
-        'group'     => 'test',
-        'key'       => 'delete_test_'.uniqid(),
-        'type'      => 'text',
-        'text'      => ['en' => 'English value', 'it' => 'Italian value'],
+        'group' => 'test',
+        'key' => 'delete_test_'.uniqid(),
+        'type' => 'text',
+        'text' => ['en' => 'English value', 'it' => 'Italian value'],
         'is_vendor' => false,
-        'vendor'    => null,
+        'vendor' => null,
     ]);
 }
 
@@ -21,7 +21,7 @@ it('can render `DELETE translation` component for default locale', function () {
     $translation = makeTranslationWithLocale();
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
     ])
         ->assertStatus(200)
@@ -35,7 +35,7 @@ it('can render `DELETE translation` component for non-default locale', function 
     $translation = makeTranslationWithLocale();
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])
         ->assertStatus(200)
@@ -49,7 +49,7 @@ it('shows correct `deleteHeader` for default locale (full delete)', function () 
     $translation = makeTranslationWithLocale();
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
     ])->assertSee(__('lingua::lingua.translations.delete.header'));
 
@@ -62,7 +62,7 @@ it('shows correct `deleteHeader` for non-default locale (locale-only delete)', f
     $italianName = Language::where('code', 'it')->first()->name;
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])->assertSee(strtoupper($italianName));
 
@@ -77,7 +77,7 @@ it('`deleteTranslation` deletes entire translation for default locale', function
     expect(Translation::find($id))->not->toBeNull();
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
     ])
         ->call('deleteTranslation')
@@ -94,7 +94,7 @@ it('`deleteTranslation` forgets locale translation for non-default locale', func
     expect($translation->text['it'])->toBe('Italian value');
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])
         ->call('deleteTranslation')
@@ -114,7 +114,7 @@ it('translation is gone from DB after global delete', function () {
     $id = $translation->id;
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
     ])->call('deleteTranslation');
 
@@ -127,7 +127,7 @@ it('translation EN value still exists after locale-only delete of IT', function 
     $id = $translation->id;
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])->call('deleteTranslation');
 

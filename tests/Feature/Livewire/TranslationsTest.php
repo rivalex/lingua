@@ -29,7 +29,7 @@ it('can render `TRANSLATIONS` component with specific locale', function () {
 it('populates `availableLocale` and `availableGroups` on mount', function () {
     $component = Livewire::test(Translations::class);
     $component->assertNotSet('availableLocale', [])
-              ->assertNotSet('availableGroups', []);
+        ->assertNotSet('availableGroups', []);
 });
 
 it('can `SEARCH` translations by key without errors', function () {
