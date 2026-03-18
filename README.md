@@ -13,7 +13,7 @@
 
 Lingua brings **database-driven translations** to Laravel with a beautiful Livewire + Flux UI — install languages, manage translations, and sync everything with a single command.
 
-[Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Artisan Commands](#-artisan-commands) · [UI Guide](#-ui-guide) · [Architecture](#-architecture)
+[Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Architecture](#-architecture)
 
 </div>
 
@@ -122,7 +122,6 @@ return [
     ],
 ];
 ```
-
 ---
 
 ## 🛠 Artisan Commands
@@ -172,6 +171,128 @@ php artisan lingua:sync-to-local
 # Interactive first-time setup wizard
 php artisan lingua:install
 ```
+
+---
+
+## 📤 Publishing
+
+Lingua ships several publishable groups so you can override only what you need.
+
+### Publish everything at once
+
+```bash
+php artisan vendor:publish --provider="Rivalex\Lingua\LinguaServiceProvider"
+```
+
+### Publish individual tags
+
+#### `lingua-config`
+
+Publishes the configuration file to `config/lingua.php`.
+
+```bash
+php artisan vendor:publish --tag="lingua-config"
+```
+
+Use this when you want to customise routes, middleware, the language selector mode, the rich-text editor toolbar, or any other package option. The file is well-commented and safe to edit — Lingua reads it on every request.
+
+---
+
+#### `lingua-migrations`
+
+Publishes the database migrations to `database/migrations/`.
+
+```bash
+php artisan vendor:publish --tag="lingua-migrations"
+```
+
+Use this when you need to modify the `languages` or `language_lines` table schema — for example to add indexes, change column types, or integrate with an existing translations table. After publishing, run `php artisan migrate` as normal.
+
+> **Note:** The `lingua:install` wizard publishes and runs the migrations automatically. Only publish manually if you need to customise the schema before running them.
+
+---
+
+#### `lingua-translations`
+
+Publishes the package's own UI translation strings to `lang/vendor/lingua/`.
+
+```bash
+php artisan vendor:publish --tag="lingua-translations"
+```
+
+This exposes all the labels, headings, buttons, and messages used in the Lingua UI (e.g. `lingua::lingua.languages.title`, `lingua::lingua.translations.save`). Override any string to translate the interface into your application's language or to adapt the wording to your project's style.
+
+The published files follow the standard Laravel vendor translation structure:
+
+```
+lang/
+└── vendor/
+    └── lingua/
+        └── en/
+            └── lingua.php
+```
+
+---
+
+#### `lingua-views`
+
+Publishes all Blade and Livewire views to `resources/views/vendor/lingua/`.
+
+```bash
+php artisan vendor:publish --tag="lingua-views"
+```
+
+Use this to customise the look and layout of the Languages page, Translations page, individual translation rows, modals, or the language selector component. Laravel will use your published views instead of the package's defaults.
+
+The full view tree is:
+
+```
+resources/views/vendor/lingua/
+├── components/               # Blade anonymous components
+│   ├── autocomplete.blade.php
+│   ├── clipboard.blade.php
+│   ├── editor.blade.php
+│   ├── language-flag.blade.php
+│   ├── menu-group.blade.php
+│   └── message.blade.php
+└── livewire/                 # Livewire component views
+    ├── languages.blade.php
+    ├── language-selector.blade.php
+    ├── translations.blade.php
+    └── translation/
+        ├── create.blade.php
+        ├── delete.blade.php
+        ├── row.blade.php
+        └── update.blade.php
+```
+
+> **Tip:** Only publish views you intend to change. Unpublished views are served directly from the package and will receive upstream updates automatically.
+
+---
+
+#### `lingua-assets`
+
+Publishes the compiled CSS and JavaScript assets to `public/vendor/lingua/`.
+
+```bash
+php artisan vendor:publish --tag="lingua-assets"
+```
+
+This is required only if you serve assets from `public/` rather than loading them via Vite or a CDN. Re-run this command after every Lingua upgrade to keep the assets in sync with the package version.
+
+---
+
+### Re-publishing after upgrades
+
+After updating Lingua via Composer, re-publish any assets that may have changed:
+
+```bash
+# Force-overwrite previously published assets
+php artisan vendor:publish --tag="lingua-assets" --force
+php artisan vendor:publish --tag="lingua-translations" --force
+```
+
+The `--force` flag overwrites existing files. Omit it for views and config so your local customisations are not lost.
 
 ---
 
