@@ -3,6 +3,8 @@
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
+use Rivalex\Lingua\Models\Translation;
 
 class UpdateLangCommand extends Command
 {
@@ -23,5 +25,17 @@ class UpdateLangCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): void {}
+    public function handle(): void
+    {
+        $this->info('Updating language files via Laravel Lang...');
+
+        try {
+            Artisan::call('lang:update');
+            $this->info('Language files updated. Syncing translations to database...');
+            app(Translation::class)->syncToDatabase();
+            $this->info('Translations updated and synced to database successfully.');
+        } catch (\Throwable $e) {
+            $this->error('Failed to update language files: '.$e->getMessage());
+        }
+    }
 }

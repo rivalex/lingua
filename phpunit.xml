@@ -4,8 +4,17 @@
          bootstrap="vendor/autoload.php"
          colors="true">
     <testsuites>
+        <testsuite name="Unit">
+            <file>tests/Unit/helpersTest.php</file>
+        </testsuite>
         <testsuite name="Feature">
             <file>tests/Feature/InitializeTest.php</file>
+            <!-- Artisan Commands -->
+            <file>tests/Feature/Commands/SyncToDatabaseCommandTest.php</file>
+            <file>tests/Feature/Commands/SyncToLocalCommandTest.php</file>
+            <file>tests/Feature/Commands/UpdateLangCommandTest.php</file>
+            <file>tests/Feature/Commands/AddLangCommandTest.php</file>
+            <file>tests/Feature/Commands/RemoveLangCommandTest.php</file>
             <!-- Languages Management-->
             <file>tests/Feature/Livewire/LanguagesTest.php</file>
             <!-- Languages actions -->
@@ -18,7 +27,15 @@
             <!-- Language selector -->
             <file>tests/Feature/Livewire/LanguageSelectorTest.php</file>
             <file>tests/Feature/Livewire/Selector/IconTest.php</file>
-
+            <!-- Translations -->
+            <file>tests/Feature/Livewire/TranslationsTest.php</file>
+            <!-- Translation components -->
+            <file>tests/Feature/Livewire/Translation/CreateTest.php</file>
+            <file>tests/Feature/Livewire/Translation/UpdateTest.php</file>
+            <file>tests/Feature/Livewire/Translation/DeleteTest.php</file>
+            <file>tests/Feature/Livewire/Translation/RowTest.php</file>
+            <!-- Blade anonymous components -->
+            <file>tests/Feature/Components/BladeComponentsTest.php</file>
         </testsuite>
     </testsuites>
 

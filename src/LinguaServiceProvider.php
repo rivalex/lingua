@@ -7,8 +7,11 @@ use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Translation\Translator;
 use Livewire\Livewire;
+use Rivalex\Lingua\Commands\AddLangCommand;
+use Rivalex\Lingua\Commands\RemoveLangCommand;
 use Rivalex\Lingua\Commands\SyncToDatabaseCommand;
 use Rivalex\Lingua\Commands\SyncToLocalCommand;
+use Rivalex\Lingua\Commands\UpdateLangCommand;
 use Rivalex\Lingua\Database\Seeders\LinguaSeeder;
 use Rivalex\Lingua\Http\Middleware\LinguaMiddleware;
 use Rivalex\Lingua\Models\Language;
@@ -33,7 +36,13 @@ class LinguaServiceProvider extends PackageServiceProvider
             ->hasAssets()
             ->hasRoute('web')
             ->hasMigration('create_lingua_table')
-            ->hasCommands(SyncToLocalCommand::class, SyncToDatabaseCommand::class)
+            ->hasCommands(
+                AddLangCommand::class,
+                RemoveLangCommand::class,
+                UpdateLangCommand::class,
+                SyncToLocalCommand::class,
+                SyncToDatabaseCommand::class,
+            )
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->startWith(function (InstallCommand $command) {
