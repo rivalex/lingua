@@ -15,11 +15,11 @@
         @foreach($this->languages as $locale)
             <flux:menu.item wire:click.prevent.stop="changeLocale('{{ $locale->code }}')"
                             :key="'menu_locale_' . $locale->code"
-                @class(['bg-zinc-100' => $locale->code === app()->currentLocale()])>
+                @class(['bg-zinc-100 dark:bg-zinc-800' => $locale->code === app()->currentLocale()])>
                 <div class="w-full justify-between flex items-center cursor-pointer">
                     <div class="flex flex-col grow leading-5 truncate">
                         <div class="truncate">{{ $locale->name }}</div>
-                        <div class="text-xs font-light text-gray-500 truncate italic">{{ $locale->native }}</div>
+                        <div class="text-xs font-light text-zinc-500 truncate italic">{{ $locale->native }}</div>
                     </div>
                     <livewire:lingua::selector.icon :locale="linguaLanguageCode($locale->code)" size="md"
                                                     :show-flags="$showFlags"/>

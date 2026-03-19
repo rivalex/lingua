@@ -71,10 +71,10 @@ That's it — Lingua is ready.
 
 ### 3. Access the UI
 
-| Page | URL |
-|---|---|
-| Languages | `your-app.test/lingua/languages` |
-| Translations | `your-app.test/lingua/translations/{locale?}` |
+| Page | URL | Route name |
+|---|---|---|
+| Languages | `your-app.test/lingua/languages` | `lingua.languages` |
+| Translations | `your-app.test/lingua/translations/{locale?}` | `lingua.translations` |
 
 ---
 
@@ -340,6 +340,8 @@ Control the display mode via config or inline props:
 {{-- sidebar (default), dropdown, or modal --}}
 <livewire:lingua::language-selector mode="dropdown" :show-flags="false" />
 ```
+
+> **Note:** To show or hide the language flags, set the `lingua.show_flags` config option to `true` or `false`. Alternatively, use the `:show-flags` prop to override the config setting for a specific instance.
 
 ---
 

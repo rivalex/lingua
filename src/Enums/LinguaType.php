@@ -36,7 +36,7 @@ use Flux\Flux;
  * echo TranslationType::markdown->color(); // Output: text-raid-orange-600 dark:text-raid-orange-500
  *
  * // Get the FontAwesome icon classes
- * echo TranslationType::any->icon(); // Output: fa-duotone fa-light fa-border-all text-gray-400 dark:text-gray-600
+ * echo TranslationType::any->icon(); // Output: fa-duotone fa-light fa-border-all text-zinc-400 dark:text-zinc-600
  *
  * // You can use these enums in conditional logic:
  * $format = TranslationType::html;
@@ -75,8 +75,8 @@ enum LinguaType: string
     public function color(): string
     {
         return match ($this) {
-            self::any => 'text-gray-400 dark:text-gray-600',
-            self::text => 'text-gray-600 dark:text-gray-400',
+            self::any => 'text-zinc-400 dark:text-zinc-600',
+            self::text => 'text-zinc-600 dark:text-zinc-400',
             self::html => 'text-sky-600 dark:text-sky-500',
             self::markdown => 'text-orange-600 dark:text-orange-500'
         };
@@ -97,8 +97,8 @@ enum LinguaType: string
         $iconSize = 'h-'.$size.' w-'.$size;
 
         return match ($this) {
-            self::any => '<div class="'.$iconSize.' text-gray-400 dark:text-gray-600">'.$this->icon().'</div>',
-            self::text => '<div class="'.$iconSize.' text-gray-600 dark:text-gray-400">'.$this->icon().'</div>',
+            self::any => '<div class="'.$iconSize.' text-zinc-400 dark:text-zinc-600">'.$this->icon().'</div>',
+            self::text => '<div class="'.$iconSize.' text-zinc-600 dark:text-zinc-400">'.$this->icon().'</div>',
             self::html => '<div class="'.$iconSize.' text-sky-600 dark:text-sky-500">'.$this->icon().'</div>',
             self::markdown => '<div class="'.$iconSize.' text-orange-600 dark:text-orange-500">'.$this->icon().'</div>'
         };

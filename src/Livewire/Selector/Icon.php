@@ -20,10 +20,10 @@ class Icon extends Component
 
     public array $textIconClasses = [];
 
-    public function mount(): void
+    public function mount($showFlags = null): void
     {
         $this->locale = $this->locale ?? app()->currentLocale();
-        $this->showFlags = config('lingua.selector.show_flags' ?? true);
+        $this->showFlags = ($showFlags !== null) ? (bool)$showFlags : config('lingua.selector.show_flags' ?? true);
         if ($this->showFlags) {
             $this->buildFlag();
         } else {
@@ -37,8 +37,8 @@ class Icon extends Component
             'flex items-center justify-center rounded-sm',
             'font-light uppercase',
             $this->getTextSize(),
-            'bg-gray-200',
-            'border border-gray-300',
+            'bg-zinc-200',
+            'border border-zinc-300',
             $this->getIconSize(),
         ];
     }

@@ -23,10 +23,10 @@ class LanguageSelector extends Component
 
     public string $currentUrl = '';
 
-    public function mount($mode = null): void
+    public function mount($mode = null, $showFlags = null): void
     {
         $this->mode = $mode ?? config('lingua.selector.mode');
-        $this->showFlags = config('lingua.selector.show_flags' ?? true);
+        $this->showFlags = ($showFlags !== null) ? (bool)$showFlags : config('lingua.selector.show_flags' ?? true);
         $this->modalName = 'language-selector-modal';
         $this->currentLocale = app()->currentLocale();
         $this->currentUrl = url()->current();

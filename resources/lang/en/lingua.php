@@ -14,7 +14,7 @@ return [
             'irreversible_action' => 'This action is irreversible!',
         ],
         'no_results_found' => 'No results found',
-        'per_page' => 'Par page',
+        'per_page' => 'Per page',
         'confirm_placeholder' => 'Type :confirm to proceed',
     ],
     'selector' => [
@@ -170,11 +170,11 @@ return [
             'key' => 'Translation Key',
             'key_placeholder' => 'Enter a UNIQUE translation key...',
             'textValue' => 'Translation Value',
-            'textValue_placeholder' => 'Enter a text translation...',
+            'text' => 'Enter a text translation...',
             'htmlValue' => 'Translation HTML Value',
-            'htmlValue_placeholder' => 'Enter an HTML translation...',
+            'html' => 'Enter an HTML translation...',
             'mdValue' => 'Translation Markdown Value',
-            'mdValue_placeholder' => 'Enter a Markdown translation...',
+            'md' => 'Enter a Markdown translation...',
         ],
         'create' => [
             'action' => 'Add a new translation',

@@ -83,15 +83,15 @@
 	<flux:table.cell class="lingua-row">
 		<div x-cloak x-show="$wire.translationType === 'text'">
 			<x-lingua::editor wire:model.blur.live="value" type="text"
-			                  :placeholder="__('lingua::lingua.translations.create.fields.textValue_placeholder')"/>
+			                  :placeholder="__('lingua::lingua.translations.fields.text')"/>
 		</div>
 		<div x-cloak x-show="$wire.translationType === 'html'">
 			<x-lingua::editor wire:model.blur.live="value" type="html"
-			                  :placeholder="__('lingua::lingua.translations.create.fields.htmlValue_placeholder')"/>
+			                  :placeholder="__('lingua::lingua.translations.fields.html')"/>
 		</div>
 		<div x-cloak x-show="$wire.translationType === 'markdown'">
 			<x-lingua::editor wire:model.blur.live="value" type="markdown"
-			                  :placeholder="__('lingua::lingua.translations.create.fields.mdValue_placeholder')"/>
+			                  :placeholder="__('lingua::lingua.translations.fields.md')"/>
 		</div>
 	</flux:table.cell>
 
