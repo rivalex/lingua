@@ -23,7 +23,7 @@ class Icon extends Component
     public function mount($showFlags = null): void
     {
         $this->locale = $this->locale ?? app()->currentLocale();
-        $this->showFlags = ($showFlags !== null) ? (bool)$showFlags : config('lingua.selector.show_flags' ?? true);
+        $this->showFlags = ($showFlags !== null) ? (bool) $showFlags : config('lingua.selector.show_flags' ?? true);
         if ($this->showFlags) {
             $this->buildFlag();
         } else {

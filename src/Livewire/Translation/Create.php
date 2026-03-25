@@ -81,7 +81,6 @@ class Create extends Component
     {
         $this->validate();
         try {
-
             $translationValue = match ($this->translationType) {
                 'text' => $this->textValue,
                 'html' => $this->htmlValue,
@@ -89,11 +88,15 @@ class Create extends Component
                 default => ''
             };
 
+            // is_vendor is intentionally NOT exposed in the form — vendor translations
+            // are managed exclusively through file sync and cannot be created manually.
             Translation::create([
                 'group' => $this->group,
                 'key' => $this->key,
                 'type' => $this->translationType,
                 'text' => [linguaDefaultLocale() => $translationValue],
+                'is_vendor' => false,
+                'vendor' => null,
             ]);
             $this->closeModal();
             $this->reset('group', 'key', 'translationType');

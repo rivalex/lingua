@@ -18,7 +18,7 @@
 >
     <button tabindex="-1" class="w-full cursor-pointer" type="button" id="{{ rand() }}"
             x-on:click.stop="await navigator.clipboard.writeText(decodeHtml(textToCopy)); keyCopied();">
-        <div class="flex flex-row items-start gap-2 select-none text-start">
+        <div class="flex flex-row items-center gap-2 select-none text-start">
             @if($showTooltip)
                 <flux:tooltip :content="__('lingua::lingua.global.click_to_copy')">
                     <div class="flex">

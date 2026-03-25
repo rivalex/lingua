@@ -2,13 +2,13 @@
 
 namespace Rivalex\Lingua\Livewire;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Async;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Rivalex\Lingua\Lingua;
 use Rivalex\Lingua\Models\Translation;
 
 #[Title('UI Translation Manager')]
@@ -20,9 +20,9 @@ class Languages extends Component
     public function updateLanguages(): void
     {
         try {
-            Artisan::call('lang:update');
+            Lingua::updateLanguages();
             app(Translation::class)->syncToDatabase();
-            Artisan::call('optimize:clear');
+            Lingua::optimize();
             $this->dispatch('lang_updated');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
@@ -37,7 +37,7 @@ class Languages extends Component
     {
         try {
             app(Translation::class)->syncToDatabase();
-            Artisan::call('optimize:clear');
+            Lingua::optimize();
             $this->dispatch('synced_database');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
@@ -52,7 +52,7 @@ class Languages extends Component
     {
         try {
             app(Translation::class)->syncToLocal();
-            Artisan::call('optimize:clear');
+            Lingua::optimize();
             $this->dispatch('synced_local');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {

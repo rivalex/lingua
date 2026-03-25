@@ -83,7 +83,8 @@ class Row extends Component
         if (empty($testValue)) {
             $this->reset('value');
             $this->validateOnly('value');
-            if ($this->currentLocale != linguaDefaultLocale()) {
+            // Vendor locale entries are protected — clearing a value does not remove the locale.
+            if ($this->currentLocale != linguaDefaultLocale() && ! $this->translation->is_vendor) {
                 $this->translation->forgetTranslation($this->currentLocale);
             }
         } else {

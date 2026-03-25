@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌍 Lingua
+# 🌍 🌎 🌏 Lingua
 
 **The complete multilingual management system for Laravel**
 
@@ -13,7 +13,7 @@
 
 Lingua brings **database-driven translations** to Laravel with a beautiful Livewire + Flux UI — install languages, manage translations, and sync everything with a single command.
 
-[Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Architecture](#-architecture)
+[Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Facade](#-lingua-facade) · [Architecture](#-architecture)
 
 </div>
 
@@ -34,7 +34,8 @@ Lingua brings **database-driven translations** to Laravel with a beautiful Livew
 | **RTL support** | First-class right-to-left language handling                                                      |
 | **Vendor translations** | Manage package translations alongside your own                                                   |
 | **Database-agnostic** | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                       |
-| **Fully tested** | 150+ tests with Pest, covering commands, Livewire components, Blade components and helpers class |
+| **Lingua Facade** | Fluent programmatic API for reading, writing, and managing languages and translations |
+| **Fully tested** | 150+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
 
 ---
 
@@ -326,6 +327,61 @@ Manage individual translation strings with a filterable, paginated table.
 - **Delete** translations globally or for a specific locale only
 - **Copy** the translation key to clipboard with one click
 
+### RTL / LTR text direction
+
+Some languages (Arabic, Hebrew, Persian, Urdu, …) are written right-to-left. Lingua stores the text direction for every installed language and exposes it via `Lingua::getDirection()`. To support RTL layouts correctly you need to propagate the direction to the root `<html>` tag so that the browser, CSS, and screen readers all behave correctly.
+
+Add `dir` and `lang` attributes to the `<html>` element in your main Blade layout:
+
+```blade
+{{-- resources/views/layouts/app.blade.php --}}
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}" dir="{{ Lingua::getDirection() }}">
+```
+
+`Lingua::getDirection()` returns `'rtl'` for right-to-left languages and `'ltr'` for all others. It uses the **current application locale** by default, so it automatically follows every locale switch without any extra code.
+
+You can also pass an explicit locale when you need the direction outside of the current request context:
+
+```blade
+{{-- e.g. inside a per-language preview or email template --}}
+<html lang="ar" dir="{{ Lingua::getDirection('ar') }}">
+```
+
+#### Tailwind CSS
+
+If your project uses Tailwind CSS, the `dir` attribute on `<html>` activates Tailwind's built-in `rtl:` variant automatically — no additional configuration required:
+
+```html
+<div class="text-left rtl:text-right">…</div>
+<div class="pl-4 rtl:pr-4 rtl:pl-0">…</div>
+```
+
+#### CSS logical properties (recommended)
+
+For new layouts, prefer CSS logical properties over directional ones so the browser handles the flip for you:
+
+```css
+/* Instead of: padding-left / padding-right */
+padding-inline-start: 1rem;   /* left in LTR, right in RTL */
+padding-inline-end:   1rem;
+
+/* Instead of: border-left */
+border-inline-start: 1px solid;
+```
+
+#### Checking direction in Blade
+
+```blade
+@if (Lingua::getDirection() === 'rtl')
+    {{-- RTL-specific markup or classes --}}
+@endif
+```
+
+> **Note:** `Lingua::getDirection()` defaults to `'ltr'` if the locale is not found in the database, so it is always safe to call even before any language is installed.
+
+---
+
 ### Language selector component
 
 Embed a language switcher anywhere in your Blade layouts:
@@ -342,6 +398,128 @@ Control the display mode via config or inline props:
 ```
 
 > **Note:** To show or hide the language flags, set the `lingua.show_flags` config option to `true` or `false`. Alternatively, use the `:show-flags` prop to override the config setting for a specific instance.
+
+---
+
+## 💎 Lingua Facade
+
+Lingua ships a static `Lingua` facade that gives you programmatic access to language and translation data from anywhere in your application.
+
+### Locale helpers
+
+```php
+use Rivalex\Lingua\Facades\Lingua;
+
+// Current application locale (mirrors app()->getLocale())
+Lingua::getLocale();          // 'en'
+
+// Locale marked as default in the database
+Lingua::getDefaultLocale();   // 'en'
+
+// Check whether a locale is the default
+Lingua::isDefaultLocale();          // true  — uses current app locale
+Lingua::isDefaultLocale('fr');      // false
+
+// Check whether a locale is installed
+Lingua::hasLocale('fr');      // true / false
+
+// Change the default locale (persisted in the database)
+Lingua::setDefaultLocale('fr');
+```
+
+### Language metadata
+
+```php
+// English display name for a locale
+Lingua::getLocaleName();          // 'English'  — uses current locale
+Lingua::getLocaleName('fr');      // 'French'
+
+// Native name
+Lingua::getLocaleNative();        // 'English'
+Lingua::getLocaleNative('ar');    // 'العربية'
+
+// Text direction
+Lingua::getDirection();           // 'ltr'
+Lingua::getDirection('ar');       // 'rtl'
+```
+
+### Language collections
+
+```php
+// All installed languages (Eloquent Collection)
+Lingua::languages();
+
+// All languages with completion statistics
+// Each model includes: total_strings, translated_strings, missing_strings, completion_percentage
+Lingua::languagesWithStatistics();
+```
+
+### Translation statistics
+
+```php
+// Stats for a specific locale (or current locale if omitted)
+Lingua::getLocaleStats('fr');
+// [
+//   'total'      => 1240,
+//   'translated' => 980,
+//   'missing'    => 260,
+//   'percentage' => 79.03,
+// ]
+```
+
+### Reading translations
+
+```php
+// All locale variants for a key (returns ?array)
+Lingua::getTranslations('welcome');
+// ['en' => 'Welcome', 'fr' => 'Bienvenue', 'de' => 'Willkommen']
+
+// Single locale value (empty string if missing)
+Lingua::getTranslation('welcome');           // uses current locale
+Lingua::getTranslation('welcome', 'fr');     // 'Bienvenue'
+
+// All translations for a group, optionally filtered to a locale
+Lingua::getTranslationByGroup('validation');
+Lingua::getTranslationByGroup('validation', 'fr'); // only rows that have a French value
+
+// Raw Eloquent collection
+Lingua::translations();
+```
+
+### Writing & deleting translations
+
+```php
+// Set a translation value (creates or updates; uses current locale if omitted)
+Lingua::setTranslation('welcome', 'Bienvenue', 'fr');
+Lingua::setTranslation('welcome', 'Welcome');          // current locale
+
+// Remove a locale's value from a translation key
+// If the locale is the default, the entire record is deleted
+Lingua::forgetTranslation('welcome', 'fr');
+Lingua::forgetTranslation('welcome');                  // current locale
+```
+
+### Language lifecycle
+
+```php
+// Install language files for a locale via laravel-lang (lang:add)
+Lingua::addLanguage('fr');
+
+// Remove language files for a locale via laravel-lang (lang:rm --force)
+Lingua::removeLanguage('fr');
+```
+
+> **Note:** `addLanguage()` and `removeLanguage()` only manage language files on disk. Database records (Language model) and translation rows are handled separately — use the Artisan commands `lingua:add` / `lingua:remove` for a fully orchestrated operation that covers files, DB records, and sync in one step.
+
+### Sync
+
+```php
+// Import all local lang/ files into the database
+Lingua::syncToDatabase();
+
+// Export all database translations to local lang/ files
+Lingua::syncToLocal();
+```
 
 ---
 

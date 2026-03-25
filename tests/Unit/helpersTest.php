@@ -1,5 +1,8 @@
 <?php
 
+use Rivalex\Lingua\Facades\Lingua;
+use Rivalex\Lingua\Models\Language;
+
 it('can access the app configuration', function () {
     expect(config('lingua'))->toBeArray()
         ->and(config('lingua.routes_prefix'))->toBe('lingua');
@@ -25,4 +28,17 @@ it('formats the locale as a lowercase language code with hyphen', function () {
 it('uses the actual locale code when none is provided', function () {
     app()->setLocale('es_MX');
     expect(linguaLanguageCode())->toBe('es-mx');
+});
+
+it('can return the language direction for `rtl` languages', function () {
+    Language::factory()->create(['code' => 'ar', 'is_default' => false, 'direction' => 'rtl']);
+    app()->setLocale('ar');
+    expect(app()->getLocale())->toBe('ar')
+        ->and(Lingua::getDirection())->toBe('rtl');
+    Language::where('code', 'ar')->delete();
+});
+
+it('can return the language direction for `ltr` languages', function () {
+    app()->setLocale('en');
+    expect(Lingua::getDirection())->toBe('ltr');
 });

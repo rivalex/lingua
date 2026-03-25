@@ -23,14 +23,20 @@ it('can access to `COMPUTED` property `languages`', function () {
     Livewire::test(Table::class)
         ->assertCount('languages', $count);
 
-    Language::factory()->create([
-        'code' => 'it',
-        'is_default' => false,
-    ]);
-    Language::factory()->create([
-        'code' => 'es',
-        'is_default' => false,
-    ]);
+    // Use full locale data to avoid regional UNIQUE constraint conflicts
+    // that arise when the factory picks a random regional for an overridden code.
+    foreach (['it', 'es'] as $code) {
+        $data = Locales::info($code);
+        Language::create([
+            'code'      => $data->code,
+            'regional'  => $data->regional,
+            'type'      => $data->type,
+            'name'      => $data->localized,
+            'native'    => $data->native,
+            'direction' => $data->direction->value,
+            'is_default' => false,
+        ]);
+    }
 
     assertDatabaseHas('languages', ['code' => 'it']);
     assertDatabaseHas('languages', ['code' => 'es']);

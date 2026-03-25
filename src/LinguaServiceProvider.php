@@ -5,6 +5,8 @@ namespace Rivalex\Lingua;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Translation\Translator;
 use Livewire\Livewire;
 use Rivalex\Lingua\Commands\AddLangCommand;
@@ -25,7 +27,6 @@ class LinguaServiceProvider extends PackageServiceProvider
     {
         /*
          * This class is a Package Service Provider
-         *
          * More info: https://github.com/spatie/laravel-package-tools
          */
         $package
@@ -47,6 +48,7 @@ class LinguaServiceProvider extends PackageServiceProvider
                 $command
                     ->startWith(function (InstallCommand $command) {
                         $command->info('Hello, and welcome to Lingua new package!');
+                        $command->info('Starting the installation process...');
                     })
                     ->publishAssets()
                     ->publishConfigFile()
@@ -54,8 +56,16 @@ class LinguaServiceProvider extends PackageServiceProvider
                     ->askToRunMigrations()
                     ->askToStarRepoOnGitHub('rivalex/lingua')
                     ->endWith(function (InstallCommand $command) {
-                        $command->call('db:seed', ['--class' => LinguaSeeder::class]);
-                        $command->info('Lingua package installed successfully!');
+                        $tablesCreated = Schema::hasTable('languages') && Schema::hasTable('language_lines');
+                        if ($tablesCreated) {
+                            $command->info('Installing Lingua package...');
+                            $command->call('db:seed', ['--class' => LinguaSeeder::class]);
+                            $command->info('Lingua package installed successfully!');
+                        } else {
+                            $command->info('Lingua package installed successfully!');
+                            $command->info('Please run "php artisan migrate" to create the database tables.');
+                            $command->info('Please run "php artisan db:seed" to populate the database with default data.');
+                        }
                     });
             });
     }
@@ -69,9 +79,6 @@ class LinguaServiceProvider extends PackageServiceProvider
 
         /* Register Blade Namespace components */
         Blade::anonymousComponentPath(__DIR__.'/Views/Components', 'lingua');
-
-        /* Add Livewire Namespace for components */
-        //        Livewire::addNamespace('lingua', $this->getViewPath());
 
         Livewire::addNamespace(
             namespace: 'lingua',
@@ -99,7 +106,7 @@ class LinguaServiceProvider extends PackageServiceProvider
     {
         $this->app->singleton('translator', function ($app) {
             $loader = $app['translation.loader'];
-            $defaultLocale = Language::default()->code ?? config('app.locale');
+            $defaultLocale = Language::default()?->code ?? config('app.locale');
             // When registering the translator component, we'll need to set the default
             // locale as well as the fallback locale. So, we'll grab the application
             // configuration so we can easily get both of these values from there.

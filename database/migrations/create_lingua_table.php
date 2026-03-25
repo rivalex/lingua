@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('vendor')->nullable()->comment('Vendor package name if translation comes from vendor.');
             $table->timestamps();
 
-            $table->unique(['group', 'key'], 'unique_group_key');
-            $table->index(['group', 'key'], 'group_key_index');
+            $table->unique(['group', 'key', 'is_vendor', 'vendor'], 'unique_group_key');
+            $table->index(['group', 'key', 'is_vendor', 'vendor'], 'group_key_index');
         });
 
         Schema::dropIfExists('languages');

@@ -35,6 +35,8 @@ it('can show the `Language DROPDOWN` selector component', function () {
 });
 
 it('can switch the `CURRENT Language`', function () {
+    \Rivalex\Lingua\Models\Language::factory()->create(['code' => 'it', 'is_default' => false]);
+
     expect(app()->getLocale())->toBe('en');
     $component = Livewire::test(LanguageSelector::class);
     $redirect = $component->currentUrl;
@@ -45,4 +47,13 @@ it('can switch the `CURRENT Language`', function () {
     expect(session()->has('locale'))->toBeTrue()
         ->and(session('locale'))->toBe('it')
         ->and(app()->getLocale())->toBe('it');
+
+    \Rivalex\Lingua\Models\Language::where('code', 'it')->delete();
+});
+
+it('rejects `changeLocale` with an unknown locale', function () {
+    $component = Livewire::test(LanguageSelector::class);
+    $component->call('changeLocale', 'xx_FAKE')
+        ->assertNoRedirect();
+    expect(session('locale'))->not->toBe('xx_FAKE');
 });

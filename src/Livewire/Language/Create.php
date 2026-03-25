@@ -9,6 +9,7 @@ use LaravelLang\Locales\Facades\Locales;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\Modals;
@@ -70,9 +71,9 @@ class Create extends Component
     {
         $this->reset('availableLanguages');
 
-        foreach (Locales::raw()->notInstalled() as $locale) {
+        foreach (Lingua::notInstalled() as $locale) {
             try {
-                $lang = Locales::info($locale);
+                $lang = Lingua::info($locale);
             } catch (\Throwable) {
                 continue;
             }
@@ -115,8 +116,8 @@ class Create extends Component
     {
         $this->validate();
         try {
-            $newLanguage = Locales::info(locale: $this->language);
-            Artisan::call('lang:add '.$this->language);
+            $newLanguage = Lingua::info(locale: $this->language);
+            Lingua::addLanguage(locale: $this->language);
             app(Language::class)->create([
                 'code' => $newLanguage->code,
                 'regional' => $newLanguage->regional,
@@ -136,7 +137,7 @@ class Create extends Component
             $this->closeModal();
             $this->addError('addLanguageError', $e->getMessage());
             $this->dispatch('language_added_fail');
-            Log::error('Languages reorder failed! {error}', ['error' => $e->getMessage()]);
+            Log::error('Add language failed! {error}', ['error' => $e->getMessage()]);
         }
     }
 

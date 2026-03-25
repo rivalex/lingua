@@ -29,7 +29,7 @@ class Delete extends Component
     public function mount(): void
     {
         $this->isDefaultLocale = $this->currentLocale === linguaDefaultLocale();
-        $this->localName = Language::where('code', $this->currentLocale)->first()->name;
+        $this->localName = Language::where('code', $this->currentLocale)->first()?->name ?? $this->currentLocale;
         if ($this->isDefaultLocale) {
             $this->deleteHeader = __('lingua::lingua.translations.delete.header');
             $this->confirm = __('lingua::lingua.translations.delete.confirm');
@@ -43,6 +43,12 @@ class Delete extends Component
 
     public function deleteTranslation(): void
     {
+        if ($this->translation->is_vendor) {
+            $this->closeModal();
+            $this->dispatch('vendor_translation_protected');
+            return;
+        }
+
         try {
             $this->closeModal();
             if ($this->isDefaultLocale) {

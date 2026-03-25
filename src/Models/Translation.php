@@ -106,7 +106,12 @@ class Translation extends LanguageLine
     {
         return Attribute::make(
             get: fn ($value) => Str::squish($value),
-            set: fn () => Str::wrap('.', before: Str::squish($this->group), after: Str::squish($this->key))
+            set: fn () => self::buildGroupKey(
+                $this->group,
+                $this->key,
+                $this->is_vendor ?? false,
+                $this->vendor,
+            )
         );
     }
 
@@ -342,18 +347,20 @@ class Translation extends LanguageLine
         foreach ($translations as $translation) {
             $newLanguage = Locales::info($translation['locale']);
 
-            Language::updateOrCreate(
-                [
-                    'code' => $newLanguage->code,
-                    'regional' => $newLanguage->regional,
-                ],
-                [
-                    'type' => $newLanguage->type,
-                    'name' => $newLanguage->locale->name,
-                    'native' => $newLanguage->native,
-                    'direction' => $newLanguage->direction->value,
-                ]
-            );
+            if(!$translation['is_vendor']) {
+                Language::updateOrCreate(
+                    [
+                        'code' => $newLanguage->code,
+                        'regional' => $newLanguage->regional,
+                    ],
+                    [
+                        'type' => $newLanguage->type,
+                        'name' => $newLanguage->locale->name,
+                        'native' => $newLanguage->native,
+                        'direction' => $newLanguage->direction->value,
+                    ]
+                );
+            }
 
             $stringType = LinguaType::text;
             if ($translation['locale'] === linguaDefaultLocale()) {
