@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Livewire;
 use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Facades\Lingua;
@@ -26,7 +27,7 @@ function rrmdir(string $dir): void
         if ($item === '.' || $item === '..') {
             continue;
         }
-        $path = $dir . '/' . $item;
+        $path = $dir.'/'.$item;
         is_dir($path) ? rrmdir($path) : @unlink($path);
     }
     @rmdir($dir);
@@ -41,16 +42,16 @@ beforeEach(function () {
     $langDir = config('lingua.lang_dir');
 
     // Remove vendor subtree written by syncToLocal
-    rrmdir($langDir . '/vendor');
+    rrmdir($langDir.'/vendor');
 
     // Remove any locale-specific JSON files / directories that syncToLocal may have written
-    foreach (glob($langDir . '/*.json') ?: [] as $jsonFile) {
+    foreach (glob($langDir.'/*.json') ?: [] as $jsonFile) {
         // Keep the core en.json if it was part of the original fixture; remove all others
         if (basename($jsonFile) !== 'en.json') {
             @unlink($jsonFile);
         }
     }
-    foreach (glob($langDir . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+    foreach (glob($langDir.'/*', GLOB_ONLYDIR) ?: [] as $dir) {
         if (basename($dir) !== 'en') {
             rrmdir($dir);
         }
@@ -64,12 +65,12 @@ function makeVendorTranslation(
     array $text = ['en' => 'Vendor English value']
 ): Translation {
     return Translation::create([
-        'group'     => $group,
-        'key'       => $key ?? 'vk_' . uniqid(),
-        'type'      => 'text',
-        'text'      => $text,
+        'group' => $group,
+        'key' => $key ?? 'vk_'.uniqid(),
+        'type' => 'text',
+        'text' => $text,
         'is_vendor' => true,
-        'vendor'    => $vendor,
+        'vendor' => $vendor,
     ]);
 }
 
@@ -79,9 +80,9 @@ function makeVendorTranslation(
 
 it('syncToDatabase imports vendor PHP translation files', function () {
     $langDir = config('lingua.lang_dir');
-    $vendorDir = $langDir . '/vendor/testpkg/en';
+    $vendorDir = $langDir.'/vendor/testpkg/en';
     @mkdir($vendorDir, 0755, true);
-    file_put_contents($vendorDir . '/alerts.php', "<?php\nreturn ['saved' => 'Record saved.'];");
+    file_put_contents($vendorDir.'/alerts.php', "<?php\nreturn ['saved' => 'Record saved.'];");
 
     Lingua::syncToDatabase();
 
@@ -96,7 +97,7 @@ it('syncToDatabase imports vendor PHP translation files', function () {
 
     // Cleanup
     Translation::where('vendor', 'testpkg')->delete();
-    @unlink($vendorDir . '/alerts.php');
+    @unlink($vendorDir.'/alerts.php');
     @rmdir($vendorDir);
     @rmdir(dirname($vendorDir));
     @rmdir(dirname($vendorDir, 2));
@@ -104,9 +105,9 @@ it('syncToDatabase imports vendor PHP translation files', function () {
 
 it('syncToDatabase imports vendor JSON translation files', function () {
     $langDir = config('lingua.lang_dir');
-    $vendorDir = $langDir . '/vendor/jsonpkg';
+    $vendorDir = $langDir.'/vendor/jsonpkg';
     @mkdir($vendorDir, 0755, true);
-    file_put_contents($vendorDir . '/en.json', json_encode(['Goodbye' => 'Goodbye!']));
+    file_put_contents($vendorDir.'/en.json', json_encode(['Goodbye' => 'Goodbye!']));
 
     Lingua::syncToDatabase();
 
@@ -121,7 +122,7 @@ it('syncToDatabase imports vendor JSON translation files', function () {
 
     // Cleanup
     Translation::where('vendor', 'jsonpkg')->delete();
-    @unlink($vendorDir . '/en.json');
+    @unlink($vendorDir.'/en.json');
     @rmdir($vendorDir);
     @rmdir(dirname($vendorDir));
 });
@@ -129,13 +130,13 @@ it('syncToDatabase imports vendor JSON translation files', function () {
 it('syncToLocal writes vendor PHP translation files', function () {
     Language::factory()->create(['code' => 'fr', 'is_default' => false]);
     // Use a unique vendor name so leftover disk state from prior runs can never conflict.
-    $vendor = 'mypkg_' . uniqid();
+    $vendor = 'mypkg_'.uniqid();
     $translation = makeVendorTranslation($vendor, 'buttons', 'save', ['en' => 'Save', 'fr' => 'Enregistrer']);
 
     Lingua::syncToLocal();
 
     $langDir = config('lingua.lang_dir');
-    $expectedFile = $langDir . '/vendor/' . $vendor . '/fr/buttons.php';
+    $expectedFile = $langDir.'/vendor/'.$vendor.'/fr/buttons.php';
 
     expect(file_exists($expectedFile))->toBeTrue();
     $content = include $expectedFile;
@@ -152,13 +153,13 @@ it('syncToLocal writes vendor PHP translation files', function () {
 
 it('syncToLocal writes vendor JSON translation files for single-group vendor keys', function () {
     Language::factory()->create(['code' => 'de', 'is_default' => false]);
-    $uniqueKey = 'VendorJsonSync_' . uniqid();
+    $uniqueKey = 'VendorJsonSync_'.uniqid();
     $translation = makeVendorTranslation('jsonout', 'single', $uniqueKey, ['en' => 'Hello', 'de' => 'Hallo']);
 
     Lingua::syncToLocal();
 
     $langDir = config('lingua.lang_dir');
-    $expectedFile = $langDir . '/vendor/jsonout/de.json';
+    $expectedFile = $langDir.'/vendor/jsonout/de.json';
 
     expect(file_exists($expectedFile))->toBeTrue();
     $content = json_decode(file_get_contents($expectedFile), true);
@@ -174,9 +175,9 @@ it('syncToLocal writes vendor JSON translation files for single-group vendor key
 
 it('vendor translations are flagged is_vendor=true after sync', function () {
     $langDir = config('lingua.lang_dir');
-    $vendorDir = $langDir . '/vendor/flagpkg/en';
+    $vendorDir = $langDir.'/vendor/flagpkg/en';
     @mkdir($vendorDir, 0755, true);
-    file_put_contents($vendorDir . '/ui.php', "<?php\nreturn ['btn' => 'Click me'];");
+    file_put_contents($vendorDir.'/ui.php', "<?php\nreturn ['btn' => 'Click me'];");
 
     Lingua::syncToDatabase();
 
@@ -187,7 +188,7 @@ it('vendor translations are flagged is_vendor=true after sync', function () {
 
     // Cleanup
     Translation::where('vendor', 'flagpkg')->delete();
-    @unlink($vendorDir . '/ui.php');
+    @unlink($vendorDir.'/ui.php');
     @rmdir($vendorDir);
     @rmdir(dirname($vendorDir));
     @rmdir(dirname($vendorDir, 2));
@@ -202,7 +203,7 @@ it('Create component always produces is_vendor=false records', function () {
 
     Livewire::test(Create::class)
         ->set('group', $group)
-        ->set('key', 'vendor_guard_test_' . uniqid())
+        ->set('key', 'vendor_guard_test_'.uniqid())
         ->set('translationType', 'text')
         ->set('textValue', 'Some value')
         ->call('addNewTranslation')
@@ -231,7 +232,7 @@ it('Delete component dispatches vendor_translation_protected for vendor records 
     $translation = makeVendorTranslation();
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
     ])
         ->call('deleteTranslation')
@@ -248,7 +249,7 @@ it('Delete component dispatches vendor_translation_protected for vendor records 
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Hello', 'it' => 'Ciao']);
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'it',
     ])
         ->call('deleteTranslation')
@@ -264,14 +265,14 @@ it('Delete component dispatches vendor_translation_protected for vendor records 
 
 it('Delete component still deletes non-vendor translations normally', function () {
     $translation = Translation::create([
-        'group' => 'test', 'key' => 'del_non_vendor_' . uniqid(),
+        'group' => 'test', 'key' => 'del_non_vendor_'.uniqid(),
         'type' => 'text', 'text' => ['en' => 'Value'],
         'is_vendor' => false, 'vendor' => null,
     ]);
     $id = $translation->id;
 
     Livewire::test(Delete::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
     ])
         ->call('deleteTranslation')
@@ -294,7 +295,7 @@ it('Facade forgetTranslation throws VendorTranslationProtectedException for vend
 
 it('Facade forgetTranslation still works for non-vendor translations', function () {
     $translation = Translation::create([
-        'group' => 'test', 'key' => 'forget_non_vendor_' . uniqid(),
+        'group' => 'test', 'key' => 'forget_non_vendor_'.uniqid(),
         'type' => 'text', 'text' => ['en' => 'Value'],
         'is_vendor' => false, 'vendor' => null,
     ]);
@@ -313,7 +314,7 @@ it('Update component can save a new text value for a vendor translation', functi
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Original']);
 
     Livewire::test(Update::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])
         ->set('textValue', 'Updated vendor value')
@@ -332,7 +333,7 @@ it('Update component can add a new locale translation to a vendor record', funct
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Hello']);
 
     Livewire::test(Update::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'es',
     ])
         ->set('textValue', 'Hola')
@@ -351,7 +352,7 @@ it('Update component does NOT change group or key for vendor translations', func
     $translation = makeVendorTranslation('acme', 'original_group', 'original_key', ['en' => 'Value']);
 
     Livewire::test(Update::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])
         ->set('group', 'hacked_group')
@@ -371,7 +372,7 @@ it('Update component exposes isVendor=true for vendor translations', function ()
     $translation = makeVendorTranslation();
 
     Livewire::test(Update::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])->assertSet('isVendor', true);
 
@@ -380,13 +381,13 @@ it('Update component exposes isVendor=true for vendor translations', function ()
 
 it('Update component exposes isVendor=false for non-vendor translations', function () {
     $translation = Translation::create([
-        'group' => 'test', 'key' => 'isvend_non_' . uniqid(),
+        'group' => 'test', 'key' => 'isvend_non_'.uniqid(),
         'type' => 'text', 'text' => ['en' => 'Value'],
         'is_vendor' => false, 'vendor' => null,
     ]);
 
     Livewire::test(Update::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])->assertSet('isVendor', false);
 
@@ -397,7 +398,7 @@ it('Row component allows inline editing of a vendor translation value', function
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Vendor text']);
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'en',
     ])
         ->set('value', 'Updated inline vendor text')
@@ -414,7 +415,7 @@ it('Row component does NOT call forgetTranslation when value cleared on a vendor
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Hello', 'nl' => 'Hallo']);
 
     Livewire::test(Row::class, [
-        'translation'   => $translation,
+        'translation' => $translation,
         'currentLocale' => 'nl',
     ])->set('value', ''); // clearing — should NOT remove the nl entry
 
@@ -504,7 +505,7 @@ it('Facade setVendorTranslation uses current locale when none provided', functio
 
 it('Facade setVendorTranslation throws ModelNotFoundException for unknown vendor record', function () {
     expect(fn () => Lingua::setVendorTranslation('ghost_pkg', 'group', 'key', 'value'))
-        ->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        ->toThrow(ModelNotFoundException::class);
 });
 
 it('Facade getTranslation retrieves value from a vendor translation by key', function () {

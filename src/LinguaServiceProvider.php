@@ -5,7 +5,6 @@ namespace Rivalex\Lingua;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Translation\Translator;
 use Livewire\Livewire;

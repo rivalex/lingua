@@ -28,11 +28,11 @@ it('can access to `COMPUTED` property `languages`', function () {
     foreach (['it', 'es'] as $code) {
         $data = Locales::info($code);
         Language::create([
-            'code'      => $data->code,
-            'regional'  => $data->regional,
-            'type'      => $data->type,
-            'name'      => $data->localized,
-            'native'    => $data->native,
+            'code' => $data->code,
+            'regional' => $data->regional,
+            'type' => $data->type,
+            'name' => $data->localized,
+            'native' => $data->native,
             'direction' => $data->direction->value,
             'is_default' => false,
         ]);

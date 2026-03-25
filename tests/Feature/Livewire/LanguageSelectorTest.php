@@ -2,6 +2,7 @@
 
 use Livewire\Livewire;
 use Rivalex\Lingua\Livewire\LanguageSelector;
+use Rivalex\Lingua\Models\Language;
 
 it('can get `COMPUTED` property `languages`', function () {
     Livewire::test(LanguageSelector::class)
@@ -35,7 +36,7 @@ it('can show the `Language DROPDOWN` selector component', function () {
 });
 
 it('can switch the `CURRENT Language`', function () {
-    \Rivalex\Lingua\Models\Language::factory()->create(['code' => 'it', 'is_default' => false]);
+    Language::factory()->create(['code' => 'it', 'is_default' => false]);
 
     expect(app()->getLocale())->toBe('en');
     $component = Livewire::test(LanguageSelector::class);
@@ -48,7 +49,7 @@ it('can switch the `CURRENT Language`', function () {
         ->and(session('locale'))->toBe('it')
         ->and(app()->getLocale())->toBe('it');
 
-    \Rivalex\Lingua\Models\Language::where('code', 'it')->delete();
+    Language::where('code', 'it')->delete();
 });
 
 it('rejects `changeLocale` with an unknown locale', function () {

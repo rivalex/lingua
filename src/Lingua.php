@@ -9,7 +9,9 @@
 
 namespace Rivalex\Lingua;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use LaravelLang\Locales\Data\LocaleData;
@@ -43,9 +45,8 @@ class Lingua
      * Creates an Eloquent query builder to fetch a Language model by its code or regional code.
      * The locale parameter is normalized by removing extra whitespace, trimming, and converting to lowercase.
      *
-     * @param string $locale The locale code to search for (e.g., 'en', 'en-US', 'fr-CA')
-     *
-     * @return \Illuminate\Database\Eloquent\Builder|null Query builder instance or null
+     * @param  string  $locale  The locale code to search for (e.g., 'en', 'en-US', 'fr-CA')
+     * @return Builder|null Query builder instance or null
      *
      * @example
      * $languageQuery = Lingua::language('en-US');
@@ -54,8 +55,9 @@ class Lingua
     protected static function language(string $locale)
     {
         $locale = Str::of($locale)->squish()->trim()->lower();
+
         return Language::query()->where('code', '=', $locale)
-                       ->orWhere('regional', '=', $locale);
+            ->orWhere('regional', '=', $locale);
     }
 
     /**
@@ -65,8 +67,7 @@ class Lingua
      * The key parameter is normalized by removing extra whitespace and trimming.
      * This is a protected helper method used internally by other translation methods.
      *
-     * @param string|null $key The translation key to search for (e.g., 'welcome.message', 'errors.404')
-     *
+     * @param  string|null  $key  The translation key to search for (e.g., 'welcome.message', 'errors.404')
      * @return Translation|null Translation model instance or null if not found
      *
      * @example
@@ -74,7 +75,7 @@ class Lingua
      * $translation = self::translation('welcome.message');
      * // Returns: Translation model instance or null
      */
-    protected static function translation(?string $key = null): Translation|null
+    protected static function translation(?string $key = null): ?Translation
     {
         return Translation::where('key', Str::of($key)->squish()->trim())->first();
     }
@@ -84,8 +85,6 @@ class Lingua
      *
      * Executes the 'optimize:clear' artisan command to clear and rebuild
      * various caches, ensuring the application is optimized for the latest changes.
-     *
-     * @return void
      */
     public static function optimize(): void
     {
@@ -97,8 +96,6 @@ class Lingua
      *
      * Executes the 'lang:update' Artisan command to refresh or modify
      * the application's language files as needed.
-     *
-     * @return void
      */
     public static function updateLanguages(): void
     {
@@ -111,9 +108,7 @@ class Lingua
      * Executes the 'lang:add' Artisan command to install language files
      * for the specified locale via Laravel Lang.
      *
-     * @param string $locale The locale code to add (e.g., 'it', 'fr', 'de')
-     *
-     * @return void
+     * @param  string  $locale  The locale code to add (e.g., 'it', 'fr', 'de')
      *
      * @example
      * Lingua::addLanguage('fr');
@@ -121,7 +116,7 @@ class Lingua
      */
     public static function addLanguage(string $locale): void
     {
-        Artisan::call('lang:add ' . $locale);
+        Artisan::call('lang:add '.$locale);
     }
 
     /**
@@ -130,9 +125,7 @@ class Lingua
      * Executes the 'lang:rm' Artisan command with the --force flag to remove
      * the language files for the specified locale without prompting for confirmation.
      *
-     * @param string $locale The locale code to remove (e.g., 'it', 'fr', 'de')
-     *
-     * @return void
+     * @param  string  $locale  The locale code to remove (e.g., 'it', 'fr', 'de')
      *
      * @example
      * Lingua::removeLanguage('fr');
@@ -140,7 +133,7 @@ class Lingua
      */
     public static function removeLanguage(string $locale): void
     {
-        Artisan::call('lang:rm ' . strtolower($locale) . ' --force');
+        Artisan::call('lang:rm '.strtolower($locale).' --force');
     }
 
     /**
@@ -149,15 +142,13 @@ class Lingua
      * Determines whether the given locale (or current locale if not specified) is marked
      * as the default language in the system.
      *
-     * @param string|null $locale The locale code to check. If null, uses the current application locale
-     *
+     * @param  string|null  $locale  The locale code to check. If null, uses the current application locale
      * @return bool True if the locale is the default locale, false otherwise
      *
      * @example
      * if (Lingua::isDefaultLocale('en')) {
      *     // 'en' is the default locale
      * }
-     *
      * @example
      * if (Lingua::isDefaultLocale()) {
      *     // Current locale is the default locale
@@ -166,6 +157,7 @@ class Lingua
     public static function isDefaultLocale(?string $locale = null): bool
     {
         $locale = $locale ?? app()->getLocale();
+
         return self::language($locale)->first()?->is_default ?? false;
     }
 
@@ -175,14 +167,12 @@ class Lingua
      * Retrieves the human-readable name of the language for the given locale code
      * (or current locale if not specified). Returns an empty string if not found.
      *
-     * @param string|null $locale The locale code. If null, uses the current application locale
-     *
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      * @return string The language display name (e.g., 'English', 'French') or empty string
      *
      * @example
      * $name = Lingua::getLocaleName('en');
      * // Returns: 'English'
-     *
      * @example
      * $currentName = Lingua::getLocaleName();
      * // Returns the name of the current locale
@@ -190,6 +180,7 @@ class Lingua
     public static function getLocaleName(?string $locale = null): string
     {
         $locale = $locale ?? app()->getLocale();
+
         return self::language($locale)->first()->name ?? '';
     }
 
@@ -199,14 +190,12 @@ class Lingua
      * Retrieves the native language name (in its own language) for the given locale code
      * (or current locale if not specified). Returns an empty string if not found.
      *
-     * @param string|null $locale The locale code. If null, uses the current application locale
-     *
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      * @return string The native language name (e.g., 'English', 'Français', 'Deutsch') or empty string
      *
      * @example
      * $native = Lingua::getLocaleNative('fr');
      * // Returns: 'Français'
-     *
      * @example
      * $currentNative = Lingua::getLocaleNative();
      * // Returns the native name of the current locale
@@ -214,6 +203,7 @@ class Lingua
     public static function getLocaleNative(?string $locale = null): string
     {
         $locale = $locale ?? app()->getLocale();
+
         return self::language($locale)->first()->native ?? '';
     }
 
@@ -223,14 +213,12 @@ class Lingua
      * Retrieves the writing direction (left-to-right or right-to-left) for the given locale code
      * (or current locale if not specified). Defaults to 'ltr' if not found.
      *
-     * @param string|null $locale The locale code. If null, uses the current application locale
-     *
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      * @return string The text direction: 'ltr' (left-to-right) or 'rtl' (right-to-left)
      *
      * @example
      * $direction = Lingua::getDirection('ar');
      * // Returns: 'rtl'
-     *
      * @example
      * $direction = Lingua::getDirection('en');
      * // Returns: 'ltr'
@@ -238,6 +226,7 @@ class Lingua
     public static function getDirection(?string $locale = null): string
     {
         $locale = $locale ?? app()->getLocale();
+
         return self::language($locale)->first()->direction ?? 'ltr';
     }
 
@@ -247,7 +236,6 @@ class Lingua
      * Reads all translation files from the local filesystem (lang directory) and
      * syncs them to the database, updating or creating translation records as needed.
      *
-     * @return void
      *
      * @example
      * Lingua::syncToDatabase();
@@ -264,7 +252,6 @@ class Lingua
      * Exports all translation records from the database and writes them to
      * translation files in the local filesystem (lang directory).
      *
-     * @return void
      *
      * @example
      * Lingua::syncToLocal();
@@ -281,7 +268,7 @@ class Lingua
      * Retrieves a collection of all Language models that are currently installed
      * in the system.
      *
-     * @return \Illuminate\Database\Eloquent\Collection|array Collection of Language models
+     * @return Collection|array Collection of Language models
      *
      * @example
      * $languages = Lingua::languages();
@@ -356,8 +343,7 @@ class Lingua
      * Determines whether the specified locale code exists in the list of available
      * locales that are not yet installed in the system.
      *
-     * @param string|null $locale The locale code to check
-     *
+     * @param  string|null  $locale  The locale code to check
      * @return bool True if the locale is available but not installed, false otherwise
      *
      * @example
@@ -367,7 +353,7 @@ class Lingua
      */
     public static function isAvailable(?string $locale = null): bool
     {
-        return !empty($locale) && in_array($locale, self::notInstalled());
+        return ! empty($locale) && in_array($locale, self::notInstalled());
     }
 
     /**
@@ -376,8 +362,7 @@ class Lingua
      * Determines whether the specified locale code exists in the list of
      * installed languages in the system.
      *
-     * @param string|null $locale The locale code to check
-     *
+     * @param  string|null  $locale  The locale code to check
      * @return bool True if the locale is installed, false otherwise
      *
      * @example
@@ -387,7 +372,7 @@ class Lingua
      */
     public static function isInstalled(?string $locale = null): bool
     {
-        return !empty($locale) && in_array($locale, self::installed());
+        return ! empty($locale) && in_array($locale, self::installed());
     }
 
     /**
@@ -396,9 +381,8 @@ class Lingua
      * Retrieves the Language model for the specified locale code.
      * Returns null if the language is not found.
      *
-     * @param string|null $locale The locale code to retrieve
-     *
-     * @return \Rivalex\Lingua\Models\Language|null Language model instance or null
+     * @param  string|null  $locale  The locale code to retrieve
+     * @return Language|null Language model instance or null
      *
      * @example
      * $language = Lingua::get('en');
@@ -417,7 +401,7 @@ class Lingua
      * Retrieves the Language model that is marked as the default language
      * in the system. Returns null if no default language is set.
      *
-     * @return \Rivalex\Lingua\Models\Language|null Default Language model instance or null
+     * @return Language|null Default Language model instance or null
      *
      * @example
      * $defaultLanguage = Lingua::getDefault();
@@ -434,11 +418,10 @@ class Lingua
      * Retrieves comprehensive LocaleData information for the specified locale,
      * optionally including country and currency information.
      *
-     * @param mixed $locale       The locale code to get information for
-     * @param bool  $withCountry  Whether to include country information (default: false)
-     * @param bool  $withCurrency Whether to include currency information (default: false)
-     *
-     * @return \LaravelLang\Locales\Data\LocaleData LocaleData object containing locale information
+     * @param  mixed  $locale  The locale code to get information for
+     * @param  bool  $withCountry  Whether to include country information (default: false)
+     * @param  bool  $withCurrency  Whether to include currency information (default: false)
+     * @return LocaleData LocaleData object containing locale information
      *
      * @example
      * $info = Lingua::info('en-US', withCountry: true, withCurrency: true);
@@ -456,7 +439,7 @@ class Lingua
      * The fallback locale is used when a translation is not available in the current locale.
      * Returns null if the fallback language is not found.
      *
-     * @return \Rivalex\Lingua\Models\Language|null Fallback Language model instance or null
+     * @return Language|null Fallback Language model instance or null
      *
      * @example
      * $fallback = Lingua::getFallback();
@@ -473,7 +456,7 @@ class Lingua
      * Retrieves a collection of all Translation models stored in the database,
      * regardless of locale or group.
      *
-     * @return \Illuminate\Database\Eloquent\Collection|array Collection of Translation models
+     * @return Collection|array Collection of Translation models
      *
      * @example
      * $translations = Lingua::translations();
@@ -493,8 +476,7 @@ class Lingua
      * where keys are locale codes and values are translated strings.
      * Returns null if the translation key is not found.
      *
-     * @param string|null $key The translation key (e.g., 'welcome.message')
-     *
+     * @param  string|null  $key  The translation key (e.g., 'welcome.message')
      * @return array Associative array of translations (e.g., ['en' => 'Hello', 'fr' => 'Bonjour']) or empty array
      *
      * @example
@@ -512,15 +494,13 @@ class Lingua
      * Retrieves the translated string for the given key in the specified locale
      * (or current locale if not specified). Returns an empty string if not found.
      *
-     * @param string|null $key    The translation key (e.g., 'welcome.message')
-     * @param string|null $locale The locale code. If null, uses the current application locale
-     *
+     * @param  string|null  $key  The translation key (e.g., 'welcome.message')
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      * @return string The translated string or empty string if not found
      *
      * @example
      * $welcome = Lingua::getTranslation('welcome.message', 'fr');
      * // Returns: 'Bienvenue'
-     *
      * @example
      * $currentWelcome = Lingua::getTranslation('welcome.message');
      * // Returns translation in current locale
@@ -528,6 +508,7 @@ class Lingua
     public static function getTranslation(?string $key, ?string $locale = null): string
     {
         $locale = $locale ?? app()->getLocale();
+
         return self::translation($key)?->text[$locale] ?? '';
     }
 
@@ -537,16 +518,13 @@ class Lingua
      * Updates or creates a translation for the given key in the specified locale
      * (or current locale if not specified). The translation is saved to the database.
      *
-     * @param string|null $key    The translation key (e.g., 'welcome.message')
-     * @param string      $value  The translated string value
-     * @param string|null $locale The locale code. If null, uses the current application locale
-     *
-     * @return void
+     * @param  string|null  $key  The translation key (e.g., 'welcome.message')
+     * @param  string  $value  The translated string value
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      *
      * @example
      * Lingua::setTranslation('welcome.message', 'Bienvenue', 'fr');
      * // Sets French translation for 'welcome.message'
-     *
      * @example
      * Lingua::setTranslation('welcome.message', 'Welcome');
      * // Sets translation for current locale
@@ -555,7 +533,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
         $translation = self::translation($key);
-        if(!$translation) {
+        if (! $translation) {
             return;
         }
         $translation->setTranslation($locale, $value);
@@ -569,17 +547,14 @@ class Lingua
      * (or current locale if not specified). If the locale is the default locale,
      * the entire translation record is deleted. Vendor translations cannot be deleted.
      *
-     * @param string|null $key    The translation key (e.g., 'welcome.message')
-     * @param string|null $locale The locale code. If null, uses the current application locale
-     *
-     * @return void
+     * @param  string|null  $key  The translation key (e.g., 'welcome.message')
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      *
      * @throws VendorTranslationProtectedException If attempting to delete a vendor translation
      *
      * @example
      * Lingua::forgetTranslation('welcome.message', 'fr');
      * // Removes French translation for 'welcome.message'
-     *
      * @example
      * Lingua::forgetTranslation('welcome.message');
      * // Removes translation for current locale
@@ -588,7 +563,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
         $translation = self::translation($key);
-        if(!$translation) {
+        if (! $translation) {
             return;
         }
         if ($translation->is_vendor) {
@@ -607,15 +582,13 @@ class Lingua
      * Retrieves a collection of Translation models that belong to the specified group.
      * Optionally filters to only include translations that have a value for the specified locale.
      *
-     * @param string      $group  The translation group name (e.g., 'messages', 'validation')
-     * @param string|null $locale Optional locale code to filter translations
-     *
-     * @return \Illuminate\Database\Eloquent\Collection|array Collection of Translation models
+     * @param  string  $group  The translation group name (e.g., 'messages', 'validation')
+     * @param  string|null  $locale  Optional locale code to filter translations
+     * @return Collection|array Collection of Translation models
      *
      * @example
      * $messages = Lingua::getTranslationByGroup('messages');
      * // Returns all translations in the 'messages' group
-     *
      * @example
      * $frenchMessages = Lingua::getTranslationByGroup('messages', 'fr');
      * // Returns translations in 'messages' group that have French translations
@@ -623,8 +596,8 @@ class Lingua
     public static function getTranslationByGroup(string $group, ?string $locale = null): Collection|array
     {
         return Translation::where('group', Str::of($group)->squish()->trim())
-                          ->when($locale, fn($query) => $query->whereNotNull('text->' . $locale))
-                          ->get();
+            ->when($locale, fn ($query) => $query->whereNotNull('text->'.$locale))
+            ->get();
     }
 
     /**
@@ -650,8 +623,7 @@ class Lingua
      * Determines whether a Language record exists for the specified locale code
      * (by either code or regional code).
      *
-     * @param string $locale The locale code to check
-     *
+     * @param  string  $locale  The locale code to check
      * @return bool True if the locale exists, false otherwise
      *
      * @example
@@ -670,11 +642,9 @@ class Lingua
      * Marks the specified locale as the default language in the system.
      * All other languages will have their is_default flag set to false.
      *
-     * @param string $locale The locale code to set as default
+     * @param  string  $locale  The locale code to set as default
      *
-     * @return void
-     *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the locale is not found
+     * @throws ModelNotFoundException If the locale is not found
      *
      * @example
      * Lingua::setDefaultLocale('fr');
@@ -693,14 +663,12 @@ class Lingua
      * (or current locale if not specified), such as total translations, completed,
      * and missing translations.
      *
-     * @param string|null $locale The locale code. If null, uses the current application locale
-     *
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      * @return array Associative array containing translation statistics
      *
      * @example
      * $stats = Lingua::getLocaleStats('fr');
      * // Returns: ['total' => 100, 'translated' => 85, 'missing' => 15, ...]
-     *
      * @example
      * $currentStats = Lingua::getLocaleStats();
      * // Returns statistics for current locale
@@ -708,6 +676,7 @@ class Lingua
     public static function getLocaleStats(?string $locale = null): array
     {
         $locale = $locale ?? app()->getLocale();
+
         return Translation::getLocaleStats($locale);
     }
 
@@ -717,7 +686,7 @@ class Lingua
      * Retrieves a collection of all Language models enriched with translation
      * statistics (e.g., total translations, completion percentage, etc.).
      *
-     * @return \Illuminate\Database\Eloquent\Collection|array Collection of Language models with statistics
+     * @return Collection|array Collection of Language models with statistics
      *
      * @example
      * $languages = Lingua::languagesWithStatistics();
@@ -736,15 +705,13 @@ class Lingua
      * Retrieves a collection of Translation models for a specific vendor package.
      * Optionally filters to only include translations that have a value for the specified locale.
      *
-     * @param string      $vendor The vendor package name (e.g., 'laravel', 'spatie')
-     * @param string|null $locale Optional locale code to filter translations
-     *
-     * @return \Illuminate\Database\Eloquent\Collection|array Collection of Translation models
+     * @param  string  $vendor  The vendor package name (e.g., 'laravel', 'spatie')
+     * @param  string|null  $locale  Optional locale code to filter translations
+     * @return Collection|array Collection of Translation models
      *
      * @example
      * $laravelTranslations = Lingua::getVendorTranslations('laravel');
      * // Returns all Laravel vendor translations
-     *
      * @example
      * $laravelFrench = Lingua::getVendorTranslations('laravel', 'fr');
      * // Returns Laravel vendor translations that have French translations
@@ -752,9 +719,9 @@ class Lingua
     public static function getVendorTranslations(string $vendor, ?string $locale = null): Collection|array
     {
         return Translation::where('is_vendor', true)
-                          ->where('vendor', Str::of($vendor)->squish()->trim())
-                          ->when($locale, fn($q) => $q->whereNotNull('text->' . $locale))
-                          ->get();
+            ->where('vendor', Str::of($vendor)->squish()->trim())
+            ->when($locale, fn ($q) => $q->whereNotNull('text->'.$locale))
+            ->get();
     }
 
     /**
@@ -763,35 +730,31 @@ class Lingua
      * Updates a translation for a specific vendor package, group, and key in the specified locale
      * (or current locale if not specified). The translation is saved to the database.
      *
-     * @param string      $vendor The vendor package name (e.g., 'laravel', 'spatie')
-     * @param string      $group  The translation group name (e.g., 'validation', 'passwords')
-     * @param string      $key    The translation key (e.g., 'required', 'min.string')
-     * @param string      $value  The translated string value
-     * @param string|null $locale The locale code. If null, uses the current application locale
+     * @param  string  $vendor  The vendor package name (e.g., 'laravel', 'spatie')
+     * @param  string  $group  The translation group name (e.g., 'validation', 'passwords')
+     * @param  string  $key  The translation key (e.g., 'required', 'min.string')
+     * @param  string  $value  The translated string value
+     * @param  string|null  $locale  The locale code. If null, uses the current application locale
      *
-     * @return void
-     *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If the vendor translation is not found
+     * @throws ModelNotFoundException If the vendor translation is not found
      *
      * @example
      * Lingua::setVendorTranslation('laravel', 'validation', 'required', 'Ce champ est requis', 'fr');
      * // Sets French translation for Laravel's validation.required message
-     *
      * @example
      * Lingua::setVendorTranslation('laravel', 'passwords', 'reset', 'Password has been reset');
      * // Sets translation for current locale
      */
-    public static function setVendorTranslation(string  $vendor, string $group, string $key, string $value,
-                                                ?string $locale = null): void
+    public static function setVendorTranslation(string $vendor, string $group, string $key, string $value,
+        ?string $locale = null): void
     {
         $locale = $locale ?? app()->getLocale();
         $translation = Translation::where('is_vendor', true)
-                                  ->where('vendor', Str::of($vendor)->squish()->trim())
-                                  ->where('group', Str::of($group)->squish()->trim())
-                                  ->where('key', Str::of($key)->squish()->trim())
-                                  ->firstOrFail();
+            ->where('vendor', Str::of($vendor)->squish()->trim())
+            ->where('group', Str::of($group)->squish()->trim())
+            ->where('key', Str::of($key)->squish()->trim())
+            ->firstOrFail();
         $translation->setTranslation($locale, $value);
         $translation->save();
     }
-
 }

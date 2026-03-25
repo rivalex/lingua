@@ -46,6 +46,7 @@ class Delete extends Component
         if ($this->translation->is_vendor) {
             $this->closeModal();
             $this->dispatch('vendor_translation_protected');
+
             return;
         }
 

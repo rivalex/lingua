@@ -11,12 +11,12 @@ use Rivalex\Lingua\Models\Translation;
 function makeFacadeTranslation(string $group = 'facade_test', ?string $key = null, array $text = ['en' => 'Hello']): Translation
 {
     return Translation::create([
-        'group'     => $group,
-        'key'       => $key ?? 'key_'.uniqid(),
-        'type'      => 'text',
-        'text'      => $text,
+        'group' => $group,
+        'key' => $key ?? 'key_'.uniqid(),
+        'type' => 'text',
+        'text' => $text,
         'is_vendor' => false,
-        'vendor'    => null,
+        'vendor' => null,
     ]);
 }
 
@@ -193,7 +193,7 @@ it('getDirection falls back to ltr for unknown locale', function () {
 it('languages returns a collection of all installed languages', function () {
     $languages = Lingua::languages();
     expect($languages)->not->toBeEmpty()
-        ->and($languages->first())->toBeInstanceOf(\Rivalex\Lingua\Models\Language::class);
+        ->and($languages->first())->toBeInstanceOf(Language::class);
 });
 
 it('languages collection contains the default language', function () {
