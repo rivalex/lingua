@@ -40,3 +40,8 @@
         </div>
     </flux:modal>
 </div>
+@assets
+@once
+    <link rel="stylesheet" href="{{ asset('vendor/lingua/css/lingua.min.css') }}">
+@endonce
+@endassets
