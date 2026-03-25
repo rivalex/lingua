@@ -347,7 +347,7 @@ class Translation extends LanguageLine
         foreach ($translations as $translation) {
             $newLanguage = Locales::info($translation['locale']);
 
-            if(!$translation['is_vendor']) {
+            if (! $translation['is_vendor']) {
                 Language::updateOrCreate(
                     [
                         'code' => $newLanguage->code,
