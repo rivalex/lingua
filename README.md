@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div align="center">
 
 <a href="https://rivalex.github.io/lingua-docs/" target="_blank" style="margin: 30px 0 50px !important;">
 <figure>
@@ -26,7 +26,7 @@ manage translations, and sync everything with a single command.
 
 ---
 
-<div style="text-align: center;">
+<div align="center">
 
 ## [Official Documentation](https://rivalex.github.io/lingua-docs/)
 
