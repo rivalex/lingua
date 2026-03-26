@@ -1,12 +1,14 @@
-<div align="center">
+<div style="text-align: center;">
 
-<a href="https://rivalex.github.io/lingua-docs/" target="_blank">
-<figure style="margin: 30px auto 30px !important;">
-<img src="resources/images/logoLinguaHorizzontal.svg" alt="Lingua Logo" width="640">
+<a href="https://rivalex.github.io/lingua-docs/" target="_blank" style="margin: 30px 0 50px !important;">
+<figure>
+<img src="resources/images/logoLinguaHorizzontal.svg" alt="Lingua Logo" width="500">
 </figure>
 </a>
 
-**The complete multilingual management system for Laravel**
+---
+
+### **The complete multilingual management system for Laravel**
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rivalex/lingua.svg)](https://packagist.org/packages/rivalex/lingua)
 [![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-blue)](https://php.net)
@@ -19,6 +21,12 @@ Lingua brings **database-driven translations** to Laravel with a beautiful Livew
 manage translations, and sync everything with a single command.
 
 [Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Facade](#-lingua-facade) · [Architecture](#-architecture)
+
+</div>
+
+---
+
+<div style="text-align: center;">
 
 ## [Official Documentation](https://rivalex.github.io/lingua-docs/)
 
