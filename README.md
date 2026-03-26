@@ -1,6 +1,10 @@
 <div align="center">
 
-# 🌍 🌎 🌏 Lingua
+<a href="https://rivalex.github.io/lingua-docs/" target="_blank">
+<figure style="margin: 30px auto 30px !important;">
+<img src="resources/images/logoLinguaHorizzontal.svg" alt="Lingua Logo" width="640">
+</figure>
+</a>
 
 **The complete multilingual management system for Laravel**
 
@@ -11,9 +15,12 @@
 [![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
 [![Tests](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml/badge.svg)](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml)
 
-Lingua brings **database-driven translations** to Laravel with a beautiful Livewire + Flux UI — install languages, manage translations, and sync everything with a single command.
+Lingua brings **database-driven translations** to Laravel with a beautiful Livewire + Flux UI — install languages,
+manage translations, and sync everything with a single command.
 
 [Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Facade](#-lingua-facade) · [Architecture](#-architecture)
+
+## [Official Documentation](https://rivalex.github.io/lingua-docs/)
 
 </div>
 
@@ -21,21 +28,21 @@ Lingua brings **database-driven translations** to Laravel with a beautiful Livew
 
 ## ✨ Features
 
-| Feature | Description                                                                                      |
-|---|--------------------------------------------------------------------------------------------------|
-| **Database-backed translations** | All translations stored in the database, editable instantly without deployments                  |
-| **Livewire UI** | Reactive, real-time language and translation management interface                                |
-| **Flux UI components** | Modern, accessible UI built with Livewire Flux                                                   |
-| **Bi-directional sync** | Push translations to the database or pull them back to local PHP/JSON files                      |
-| **Laravel Lang integration** | Install 70+ languages with one command, auto-updated via `laravel-lang`                          |
-| **Rich text support** | Translations can be plain text, HTML, or Markdown                                                |
-| **Language selector** | Configurable sidebar, dropdown, or modal language switcher for users                             |
-| **Progress tracking** | Per-language completion percentage and missing-translation counts                                |
-| **RTL support** | First-class right-to-left language handling                                                      |
-| **Vendor translations** | Manage package translations alongside your own                                                   |
-| **Database-agnostic** | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                       |
-| **Lingua Facade** | Fluent programmatic API for reading, writing, and managing languages and translations |
-| **Fully tested** | 150+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
+| Feature                          | Description                                                                                                    |
+|----------------------------------|----------------------------------------------------------------------------------------------------------------|
+| **Database-backed translations** | All translations stored in the database, editable instantly without deployments                                |
+| **Livewire UI**                  | Reactive, real-time language and translation management interface                                              |
+| **Flux UI components**           | Modern, accessible UI built with Livewire Flux                                                                 |
+| **Bi-directional sync**          | Push translations to the database or pull them back to local PHP/JSON files                                    |
+| **Laravel Lang integration**     | Install 70+ languages with one command, auto-updated via `laravel-lang`                                        |
+| **Rich text support**            | Translations can be plain text, HTML, or Markdown                                                              |
+| **Language selector**            | Configurable sidebar, dropdown, or modal language switcher for users                                           |
+| **Progress tracking**            | Per-language completion percentage and missing-translation counts                                              |
+| **RTL support**                  | First-class right-to-left language handling                                                                    |
+| **Vendor translations**          | Manage package translations alongside your own                                                                 |
+| **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                                     |
+| **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations                          |
+| **Fully tested**                 | 150+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
 
 ---
 
@@ -63,6 +70,7 @@ php artisan lingua:install
 ```
 
 The installer will:
+
 - Publish the configuration file to `config/lingua.php`
 - Publish and run the database migrations
 - Seed the database with your default language and its translations
@@ -72,9 +80,9 @@ That's it — Lingua is ready.
 
 ### 3. Access the UI
 
-| Page | URL | Route name |
-|---|---|---|
-| Languages | `your-app.test/lingua/languages` | `lingua.languages` |
+| Page         | URL                                           | Route name            |
+|--------------|-----------------------------------------------|-----------------------|
+| Languages    | `your-app.test/lingua/languages`              | `lingua.languages`    |
 | Translations | `your-app.test/lingua/translations/{locale?}` | `lingua.translations` |
 
 ---
@@ -123,6 +131,7 @@ return [
     ],
 ];
 ```
+
 ---
 
 ## 🛠 Artisan Commands
@@ -131,11 +140,11 @@ Lingua ships with a complete command suite for terminal-driven language and tran
 
 ### Language management
 
-| Command | Description |
-|---|---|
-| `lingua:add {locale}` | Install a new language: downloads files, creates DB record, syncs translations |
-| `lingua:remove {locale}` | Remove a language: deletes files, cleans DB, reorders remaining languages |
-| `lingua:update-lang` | Update all installed language files via Laravel Lang, then re-sync to database |
+| Command                  | Description                                                                    |
+|--------------------------|--------------------------------------------------------------------------------|
+| `lingua:add {locale}`    | Install a new language: downloads files, creates DB record, syncs translations |
+| `lingua:remove {locale}` | Remove a language: deletes files, cleans DB, reorders remaining languages      |
+| `lingua:update-lang`     | Update all installed language files via Laravel Lang, then re-sync to database |
 
 ```bash
 # Add Italian
@@ -153,10 +162,10 @@ php artisan lingua:update-lang
 
 ### Translation sync
 
-| Command | Description |
-|---|---|
+| Command                   | Description                                                   |
+|---------------------------|---------------------------------------------------------------|
 | `lingua:sync-to-database` | Import all local PHP/JSON translation files into the database |
-| `lingua:sync-to-local` | Export all database translations back to local PHP/JSON files |
+| `lingua:sync-to-local`    | Export all database translations back to local PHP/JSON files |
 
 ```bash
 # Populate the database from existing lang/ files (e.g. after a fresh install)
@@ -195,7 +204,8 @@ Publishes the configuration file to `config/lingua.php`.
 php artisan vendor:publish --tag="lingua-config"
 ```
 
-Use this when you want to customise routes, middleware, the language selector mode, the rich-text editor toolbar, or any other package option. The file is well-commented and safe to edit — Lingua reads it on every request.
+Use this when you want to customise routes, middleware, the language selector mode, the rich-text editor toolbar, or any
+other package option. The file is well-commented and safe to edit — Lingua reads it on every request.
 
 ---
 
@@ -207,9 +217,11 @@ Publishes the database migrations to `database/migrations/`.
 php artisan vendor:publish --tag="lingua-migrations"
 ```
 
-Use this when you need to modify the `languages` or `language_lines` table schema — for example to add indexes, change column types, or integrate with an existing translations table. After publishing, run `php artisan migrate` as normal.
+Use this when you need to modify the `languages` or `language_lines` table schema — for example to add indexes, change
+column types, or integrate with an existing translations table. After publishing, run `php artisan migrate` as normal.
 
-> **Note:** The `lingua:install` wizard publishes and runs the migrations automatically. Only publish manually if you need to customise the schema before running them.
+> **Note:** The `lingua:install` wizard publishes and runs the migrations automatically. Only publish manually if you
+> need to customise the schema before running them.
 
 ---
 
@@ -221,7 +233,9 @@ Publishes the package's own UI translation strings to `lang/vendor/lingua/`.
 php artisan vendor:publish --tag="lingua-translations"
 ```
 
-This exposes all the labels, headings, buttons, and messages used in the Lingua UI (e.g. `lingua::lingua.languages.title`, `lingua::lingua.translations.save`). Override any string to translate the interface into your application's language or to adapt the wording to your project's style.
+This exposes all the labels, headings, buttons, and messages used in the Lingua UI (e.g.
+`lingua::lingua.languages.title`, `lingua::lingua.translations.save`). Override any string to translate the interface
+into your application's language or to adapt the wording to your project's style.
 
 The published files follow the standard Laravel vendor translation structure:
 
@@ -243,7 +257,8 @@ Publishes all Blade and Livewire views to `resources/views/vendor/lingua/`.
 php artisan vendor:publish --tag="lingua-views"
 ```
 
-Use this to customise the look and layout of the Languages page, Translations page, individual translation rows, modals, or the language selector component. Laravel will use your published views instead of the package's defaults.
+Use this to customise the look and layout of the Languages page, Translations page, individual translation rows, modals,
+or the language selector component. Laravel will use your published views instead of the package's defaults.
 
 The full view tree is:
 
@@ -267,7 +282,8 @@ resources/views/vendor/lingua/
         └── update.blade.php
 ```
 
-> **Tip:** Only publish views you intend to change. Unpublished views are served directly from the package and will receive upstream updates automatically.
+> **Tip:** Only publish views you intend to change. Unpublished views are served directly from the package and will
+> receive upstream updates automatically.
 
 ---
 
@@ -279,7 +295,8 @@ Publishes the compiled CSS and JavaScript assets to `public/vendor/lingua/`.
 php artisan vendor:publish --tag="lingua-assets"
 ```
 
-This is required only if you serve assets from `public/` rather than loading them via Vite or a CDN. Re-run this command after every Lingua upgrade to keep the assets in sync with the package version.
+This is required only if you serve assets from `public/` rather than loading them via Vite or a CDN. Re-run this command
+after every Lingua upgrade to keep the assets in sync with the package version.
 
 ---
 
@@ -304,6 +321,7 @@ The `--force` flag overwrites existing files. Omit it for views and config so yo
 The languages page is your control center for installed locales.
 
 **Available actions:**
+
 - **Add a language** — choose from 70+ locales; files are installed and translations synced automatically
 - **Remove a language** — confirmation modal prevents accidental deletion; the default language is protected
 - **Set the default language** — one click sets the new application default
@@ -312,13 +330,15 @@ The languages page is your control center for installed locales.
 - **Sync to local** — export database translations back to `lang/` files
 - **Update via Laravel Lang** — pull the latest strings from upstream `laravel-lang` packages
 
-Each language row shows the **completion percentage** and a count of **missing translations** so you can prioritise your translation effort.
+Each language row shows the **completion percentage** and a count of **missing translations** so you can prioritise your
+translation effort.
 
 ### Translations page — `/lingua/translations/{locale?}`
 
 Manage individual translation strings with a filterable, paginated table.
 
 **Available actions:**
+
 - **Search** by key, group, or value
 - **Filter** by locale, group, or translation type (text / HTML / Markdown)
 - **Show only missing** translations for a locale to focus your translation work
@@ -329,7 +349,9 @@ Manage individual translation strings with a filterable, paginated table.
 
 ### RTL / LTR text direction
 
-Some languages (Arabic, Hebrew, Persian, Urdu, …) are written right-to-left. Lingua stores the text direction for every installed language and exposes it via `Lingua::getDirection()`. To support RTL layouts correctly you need to propagate the direction to the root `<html>` tag so that the browser, CSS, and screen readers all behave correctly.
+Some languages (Arabic, Hebrew, Persian, Urdu, …) are written right-to-left. Lingua stores the text direction for every
+installed language and exposes it via `Lingua::getDirection()`. To support RTL layouts correctly you need to propagate
+the direction to the root `<html>` tag so that the browser, CSS, and screen readers all behave correctly.
 
 Add `dir` and `lang` attributes to the `<html>` element in your main Blade layout:
 
@@ -339,7 +361,8 @@ Add `dir` and `lang` attributes to the `<html>` element in your main Blade layou
 <html lang="{{ app()->getLocale() }}" dir="{{ Lingua::getDirection() }}">
 ```
 
-`Lingua::getDirection()` returns `'rtl'` for right-to-left languages and `'ltr'` for all others. It uses the **current application locale** by default, so it automatically follows every locale switch without any extra code.
+`Lingua::getDirection()` returns `'rtl'` for right-to-left languages and `'ltr'` for all others. It uses the **current
+application locale** by default, so it automatically follows every locale switch without any extra code.
 
 You can also pass an explicit locale when you need the direction outside of the current request context:
 
@@ -350,9 +373,11 @@ You can also pass an explicit locale when you need the direction outside of the 
 
 #### Tailwind CSS
 
-If your project uses Tailwind CSS, the `dir` attribute on `<html>` activates Tailwind's built-in `rtl:` variant automatically — no additional configuration required:
+If your project uses Tailwind CSS, the `dir` attribute on `<html>` activates Tailwind's built-in `rtl:` variant
+automatically — no additional configuration required:
 
 ```html
+
 <div class="text-left rtl:text-right">…</div>
 <div class="pl-4 rtl:pr-4 rtl:pl-0">…</div>
 ```
@@ -363,11 +388,26 @@ For new layouts, prefer CSS logical properties over directional ones so the brow
 
 ```css
 /* Instead of: padding-left / padding-right */
-padding-inline-start: 1rem;   /* left in LTR, right in RTL */
-padding-inline-end:   1rem;
+padding-inline-start:
+
+1
+rem
+
+; /* left in LTR, right in RTL */
+padding-inline-end:
+
+1
+rem
+
+;
 
 /* Instead of: border-left */
-border-inline-start: 1px solid;
+border-inline-start:
+
+1
+px solid
+
+;
 ```
 
 #### Checking direction in Blade
@@ -378,7 +418,8 @@ border-inline-start: 1px solid;
 @endif
 ```
 
-> **Note:** `Lingua::getDirection()` defaults to `'ltr'` if the locale is not found in the database, so it is always safe to call even before any language is installed.
+> **Note:** `Lingua::getDirection()` defaults to `'ltr'` if the locale is not found in the database, so it is always
+> safe to call even before any language is installed.
 
 ---
 
@@ -397,13 +438,15 @@ Control the display mode via config or inline props:
 <livewire:lingua::language-selector mode="dropdown" :show-flags="false" />
 ```
 
-> **Note:** To show or hide the language flags, set the `lingua.show_flags` config option to `true` or `false`. Alternatively, use the `:show-flags` prop to override the config setting for a specific instance.
+> **Note:** To show or hide the language flags, set the `lingua.show_flags` config option to `true` or `false`.
+> Alternatively, use the `:show-flags` prop to override the config setting for a specific instance.
 
 ---
 
 ## 💎 Lingua Facade
 
-Lingua ships a static `Lingua` facade that gives you programmatic access to language and translation data from anywhere in your application.
+Lingua ships a static `Lingua` facade that gives you programmatic access to language and translation data from anywhere
+in your application.
 
 ### Locale helpers
 
@@ -509,7 +552,9 @@ Lingua::addLanguage('fr');
 Lingua::removeLanguage('fr');
 ```
 
-> **Note:** `addLanguage()` and `removeLanguage()` only manage language files on disk. Database records (Language model) and translation rows are handled separately — use the Artisan commands `lingua:add` / `lingua:remove` for a fully orchestrated operation that covers files, DB records, and sync in one step.
+> **Note:** `addLanguage()` and `removeLanguage()` only manage language files on disk. Database records (Language model)
+> and translation rows are handled separately — use the Artisan commands `lingua:add` / `lingua:remove` for a fully
+> orchestrated operation that covers files, DB records, and sync in one step.
 
 ### Sync
 
@@ -527,7 +572,9 @@ Lingua::syncToLocal();
 
 ### How translations are stored
 
-Lingua stores translations in the `language_lines` table, extending Spatie's [laravel-translation-loader](https://github.com/spatie/laravel-translation-loader). Each row holds **all locales in a single JSON `text` column**, eliminating the need for per-locale rows:
+Lingua stores translations in the `language_lines` table, extending
+Spatie's [laravel-translation-loader](https://github.com/spatie/laravel-translation-loader). Each row holds **all
+locales in a single JSON `text` column**, eliminating the need for per-locale rows:
 
 ```
 group       | key          | text
@@ -542,11 +589,11 @@ This design allows instant locale switching at runtime without additional querie
 
 Each string is classified automatically during sync:
 
-| Type | Use case | Auto-detected when… |
-|---|---|---|
-| `text` | Plain strings, labels, messages | Default |
-| `html` | Rich content with HTML markup | String contains HTML tags |
-| `markdown` | Markdown-formatted content | String parses as Markdown |
+| Type       | Use case                        | Auto-detected when…       |
+|------------|---------------------------------|---------------------------|
+| `text`     | Plain strings, labels, messages | Default                   |
+| `html`     | Rich content with HTML markup   | String contains HTML tags |
+| `markdown` | Markdown-formatted content      | String parses as Markdown |
 
 The type drives which editor is shown in the Translations UI.
 
@@ -561,12 +608,15 @@ lang/vendor/…        │  ← lingua:sync-to-local
                     ─┘
 ```
 
-- **`sync-to-database`** — reads every locale file (core + vendor packages) and upserts rows in `language_lines`, auto-creating `languages` records for any new locales discovered.
-- **`sync-to-local`** — reads every row in `language_lines` and writes locale-specific PHP/JSON files back to `lang/`, including vendor subdirectories.
+- **`sync-to-database`** — reads every locale file (core + vendor packages) and upserts rows in `language_lines`,
+  auto-creating `languages` records for any new locales discovered.
+- **`sync-to-local`** — reads every row in `language_lines` and writes locale-specific PHP/JSON files back to `lang/`,
+  including vendor subdirectories.
 
 ### Translation loading at runtime
 
 Lingua registers a custom `LinguaManager` as the Laravel translation loader. At runtime it merges:
+
 1. File-based translations from `lang/`
 2. Database translations via Spatie's `Db` loader
 
@@ -575,6 +625,7 @@ Database translations take precedence, enabling live overrides without touching 
 ### Locale middleware
 
 `LinguaMiddleware` is automatically appended to the `web` middleware group on boot. It:
+
 1. Reads the active locale from the session (`lingua.session_variable`)
 2. Falls back to the database default language
 3. Calls `app()->setLocale()` and stores the locale in the session for the next request
@@ -592,6 +643,7 @@ composer test-coverage
 ```
 
 The suite uses [Pest](https://pestphp.com) and covers:
+
 - All 5 Artisan commands — happy paths and error handling
 - All Livewire components — rendering, interactions, and event dispatching
 - Bi-directional sync operations
@@ -602,7 +654,8 @@ The suite uses [Pest](https://pestphp.com) and covers:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please open an issue first to discuss your proposed change, then submit a PR. Run `composer lint` before pushing.
+Contributions are welcome! Please open an issue first to discuss your proposed change, then submit a PR. Run
+`composer lint` before pushing.
 
 ---
 
@@ -616,6 +669,7 @@ The MIT License (MIT). Please see [LICENSE.md](LICENSE.md) for more information.
 
 Built with ❤️ by [Alessandro Rivolta](https://github.com/rivalex)
 
-Powered by [Laravel](https://laravel.com) · [Livewire](https://livewire.laravel.com) · [Flux](https://fluxui.dev) · [Laravel Lang](https://laravel-lang.com) · [Spatie](https://spatie.be)
+Powered
+by [Laravel](https://laravel.com) · [Livewire](https://livewire.laravel.com) · [Flux](https://fluxui.dev) · [Laravel Lang](https://laravel-lang.com) · [Spatie](https://spatie.be)
 
 </div>
