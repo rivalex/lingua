@@ -2,7 +2,7 @@
 
 All notable changes to `lingua` will be documented in this file.
 
-## [Unreleased]
+## 2026-03-26
 
 ### Fixed
 
