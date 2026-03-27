@@ -56,7 +56,7 @@ manage translations, and sync everything with a single command.
 
 ## 📦 Requirements
 
-- PHP **8.1+**
+- PHP **8.2+**
 - Laravel **11+**
 - Livewire **4.0+**
 - Livewire Flux **2.0+**
