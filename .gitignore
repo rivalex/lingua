@@ -215,6 +215,6 @@ Temporary Items
 
 # End of https://www.toptal.com/developers/gitignore/api/osx,intellij+all,laravel,symfony,git
 /.phpunit.cache/
-
-# Project exclude paths
-/.junie/
+.claude/settings.local.json
+.claude/hooks/__pycache__/
+CLAUDE.md.backup

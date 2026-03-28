@@ -2,6 +2,17 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Rivalex Lingua - 2026-03-28
+
+### 2026-03-28
+
+#### Added
+
+- **Laravel 13 compatibility** — `illuminate/contracts ^13.0` and `orchestra/testbench ^11.0` confirmed; no breaking-change impact from the framework. Livewire 4.x is fully compatible with Laravel 13.
+- README and documentation updated to reflect supported range: Laravel **11 | 12 | 13**.
+
+---
+
 ## Rivalex Lingua - 2026-03-27
 
 All notable changes to `lingua` will be documented in this file.

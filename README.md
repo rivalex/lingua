@@ -12,7 +12,7 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rivalex/lingua.svg)](https://packagist.org/packages/rivalex/lingua)
 [![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-blue)](https://php.net)
-[![Laravel Version](https://img.shields.io/badge/Laravel-12%2B-orange)](https://laravel.com)
+[![Laravel Version](https://img.shields.io/badge/Laravel-11--13-orange)](https://laravel.com)
 [![License](https://img.shields.io/github/license/rivalex/lingua)](LICENSE.md)
 [![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
 [![Tests](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml/badge.svg)](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml)
@@ -57,7 +57,7 @@ manage translations, and sync everything with a single command.
 ## 📦 Requirements
 
 - PHP **8.2+**
-- Laravel **11+**
+- Laravel **11 | 12 | 13**
 - Livewire **4.0+**
 - Livewire Flux **2.0+**
 
