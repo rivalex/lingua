@@ -2,6 +2,16 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Rivalex Lingua - 2026-04-01
+
+### 2026-04-01
+
+#### Fixed
+
+- **`Lingua::updateLanguages()` / `lingua:update-lang`** — `lang:update` was called without arguments, causing laravel-lang to refresh translation files for every locale present in the vendor filesystem, including locales not installed in the `languages` table. Both the facade method and the Artisan command now resolve the installed locales from the database and pass them explicitly to `lang:update {locales}`. If no languages are installed the update is skipped entirely.
+
+---
+
 ## Rivalex Lingua - 2026-03-28
 
 ### 2026-03-28

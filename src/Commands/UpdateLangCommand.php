@@ -4,6 +4,7 @@ namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
 class UpdateLangCommand extends Command
@@ -30,7 +31,15 @@ class UpdateLangCommand extends Command
         $this->info('Updating language files via Laravel Lang...');
 
         try {
-            Artisan::call('lang:update');
+            $locales = Language::all()->pluck('code')->toArray();
+
+            if (empty($locales)) {
+                $this->info('No languages installed. Skipping update.');
+
+                return;
+            }
+
+            Artisan::call('lang:update', ['locales' => $locales]);
             $this->info('Language files updated. Syncing translations to database...');
             app(Translation::class)->syncToDatabase();
             $this->info('Translations updated and synced to database successfully.');

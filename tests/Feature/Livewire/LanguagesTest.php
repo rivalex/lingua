@@ -156,7 +156,7 @@ it('catch `Update translations ERRORS` for `Artisan::call(\'lang:update\')`', fu
         Mockery::mock(Kernel::class, function ($mock) {
             $mock->shouldReceive('call')
                 ->once()
-                ->with('lang:update')
+                ->with('lang:update', Mockery::type('array'))
                 ->andThrow(new Exception('Artisan command failed.'));
         })
     );
@@ -196,7 +196,7 @@ it('catch `Update translations ERRORS` for `Artisan::call(\'optimize:clear\')`',
         Mockery::mock(Kernel::class, function ($mock) {
             $mock->shouldReceive('call')
                 ->once()
-                ->with('lang:update')
+                ->with('lang:update', Mockery::type('array'))
                 ->andReturnNull();
             $mock->shouldReceive('call')
                 ->once()

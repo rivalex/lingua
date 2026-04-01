@@ -1,5 +1,6 @@
 <?php
 
+use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
 it('can run `lingua:update-lang` command', function () {
@@ -9,7 +10,7 @@ it('can run `lingua:update-lang` command', function () {
         ->expectsOutputToContain('Translations updated and synced to database successfully.');
 });
 
-it('calls lang:update and then syncs to database', function () {
+it('calls lang:update only for installed languages and then syncs to database', function () {
     $initialCount = Translation::count();
     expect($initialCount)->toBeGreaterThan(0);
 
@@ -17,6 +18,14 @@ it('calls lang:update and then syncs to database', function () {
         ->assertSuccessful();
 
     expect(Translation::count())->toBeGreaterThanOrEqual($initialCount);
+});
+
+it('skips lang:update when no languages are installed', function () {
+    Language::query()->delete();
+
+    $this->artisan('lingua:update-lang')
+        ->assertSuccessful()
+        ->expectsOutputToContain('No languages installed. Skipping update.');
 });
 
 it('outputs error when sync to database fails after lang:update', function () {
