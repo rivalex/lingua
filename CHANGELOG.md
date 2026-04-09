@@ -2,6 +2,20 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 1.0.3 - 2026-04-09
+
+### 2026-04-09
+
+#### Fixed
+
+- **`Translation/Create` — group preserved after creation** — the `group` field is now retained after a successful save, allowing multiple keys to be added to the same group consecutively without reselecting it. Only `key`, `translationType`, and value fields are reset.
+- **`Translation/Create` and `Translation/Update` — whitespace normalization** — `group` and `key` values are sanitized with `Str::squish()->trim()` before being persisted, preventing keys with leading, trailing, or excess internal spaces from being stored.
+
+#### Tests
+
+- `CreateTest`: corrected `group` assertions to reflect preservation after creation; added whitespace normalization test for `group` and `key`.
+- `UpdateTest`: added whitespace normalization test for `group` and `key`; added test confirming that vendor translation `group` and `key` fields are immutable.
+
 ## Rivalex Lingua - 2026-04-09
 
 ### 2026-04-09
@@ -16,6 +30,7 @@ All notable changes to `lingua` will be documented in this file.
 - `CreateTest`: corrected `group` assertions to reflect preservation after creation; added whitespace normalization test for `group` and `key`.
 - `UpdateTest`: added whitespace normalization test for `group` and `key`; added test confirming that vendor translation `group` and `key` fields are immutable.
 
+
 ---
 
 ## Rivalex Lingua - 2026-04-01
@@ -25,6 +40,7 @@ All notable changes to `lingua` will be documented in this file.
 #### Fixed
 
 - **`Lingua::updateLanguages()` / `lingua:update-lang`** — `lang:update` was called without arguments, causing laravel-lang to refresh translation files for every locale present in the vendor filesystem, including locales not installed in the `languages` table. Both the facade method and the Artisan command now resolve the installed locales from the database and pass them explicitly to `lang:update {locales}`. If no languages are installed the update is skipped entirely.
+
 
 ---
 
@@ -36,6 +52,7 @@ All notable changes to `lingua` will be documented in this file.
 
 - **Laravel 13 compatibility** — `illuminate/contracts ^13.0` and `orchestra/testbench ^11.0` confirmed; no breaking-change impact from the framework. Livewire 4.x is fully compatible with Laravel 13.
 - README and documentation updated to reflect supported range: Laravel **11 | 12 | 13**.
+
 
 ---
 
@@ -76,6 +93,7 @@ All notable changes to `lingua` will be documented in this file.
 #### Added
 
 - **`Lingua` facade** fully implemented with a complete API surface:
+  
   - Locale helpers: `getLocale()`, `getDefaultLocale()`, `hasLocale()`, `isDefaultLocale()`, `setDefaultLocale()`
   - Language metadata: `getLocaleName()`, `getLocaleNative()`, `getDirection()`
   - Language queries: `languages()`, `languagesWithStatistics()`
@@ -85,11 +103,17 @@ All notable changes to `lingua` will be documented in this file.
   - Vendor translation helpers: `getVendorTranslations()`, `setVendorTranslation()`
   
 - **`VendorTranslationProtectedException`** — thrown when attempting to delete a vendor-owned translation.
+  
 - **Vendor translation protection** — vendor translations cannot be deleted from the UI; attempting to do so dispatches a `vendor_translation_protected` event and closes the modal instead.
+  
 - **Vendor translation locking in `Update`** — when editing a vendor translation, `group` and `key` fields are locked; only the text value and type may be changed.
+  
 - `isVendor` property exposed on the `Translation/Update` Livewire component for view-layer awareness.
+  
 - Feature tests: `LinguaFacadeTest` and `VendorTranslationTest` covering the full facade API and vendor-protection behaviour.
+  
 - Helper unit tests extended to cover new utility cases.
+  
 
 #### Changed
 
@@ -130,6 +154,7 @@ All notable changes to `lingua` will be documented in this file.
 ### Added
 
 - **`Lingua` facade** fully implemented with a complete API surface:
+  
   - Locale helpers: `getLocale()`, `getDefaultLocale()`, `hasLocale()`, `isDefaultLocale()`, `setDefaultLocale()`
   - Language metadata: `getLocaleName()`, `getLocaleNative()`, `getDirection()`
   - Language queries: `languages()`, `languagesWithStatistics()`
@@ -139,11 +164,17 @@ All notable changes to `lingua` will be documented in this file.
   - Vendor translation helpers: `getVendorTranslations()`, `setVendorTranslation()`
   
 - **`VendorTranslationProtectedException`** — thrown when attempting to delete a vendor-owned translation.
+  
 - **Vendor translation protection** — vendor translations cannot be deleted from the UI; attempting to do so dispatches a `vendor_translation_protected` event and closes the modal instead.
+  
 - **Vendor translation locking in `Update`** — when editing a vendor translation, `group` and `key` fields are locked; only the text value and type may be changed.
+  
 - `isVendor` property exposed on the `Translation/Update` Livewire component for view-layer awareness.
+  
 - Feature tests: `LinguaFacadeTest` and `VendorTranslationTest` covering the full facade API and vendor-protection behaviour.
+  
 - Helper unit tests extended to cover new utility cases.
+  
 
 ### Changed
 
@@ -202,24 +233,42 @@ All notable changes to `lingua` will be documented in this file.
 ### Added
 
 - **Language management UI** — Livewire-powered CRUD for application languages (create, delete, set default, reorder).
+  
 - **Translation management UI** — Livewire-powered interface for browsing and editing translations per locale, including rich-text (TipTap) and plain-text editor modes.
+  
 - **Language selector** — embeddable Livewire component in three styles: `dropdown`, `modal`, and `sidebar`.
+  
 - **Artisan commands**:
+  
   - `lingua:sync-to-database` — import local translation files into the database.
   - `lingua:sync-to-local` — export database translations back to local files.
   - `lingua:update-lang` — update language files via `laravel-lang`.
   
 - **`LinguaMiddleware`** — sets the active locale from the authenticated user's language preference.
+  
 - **`LinguaSeeder`** — seeds the database with language records.
+  
 - **Database migration** — creates the `lingua_languages` and `lingua_translations` tables.
+  
 - **`Language` and `Translation` Eloquent models** with factory support.
+  
 - **`Lingua` facade** stub (fully implemented in Unreleased above).
+  
 - **`LinguaType` enum** for translation content types (plain, HTML, Markdown).
+  
 - **Blade components**: `clipboard`, `editor`, `language-flag`.
+  
 - **Publishable assets**: config, views, migrations, language files (`en` baseline), compiled CSS/JS.
+  
 - **Frontend assets**: TipTap-based rich-text editor, autocomplete, flag icons via `outhebox/blade-flags`, Livewire Flux UI.
+  
 - CI workflows: test runner, PHP code-style fixer (Pint), Dependabot auto-merge, changelog updater.
+  
 - Dependabot enabled for Composer and GitHub Actions dependencies.
+  
 - `actions/checkout` bumped from `5` to `6`.
+  
 - Codecov integration in the test workflow.
+  
 - PHPStan baseline configuration.
+  
