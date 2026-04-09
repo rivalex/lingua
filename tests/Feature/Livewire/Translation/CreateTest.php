@@ -33,7 +33,7 @@ it('can create a `TEXT` translation', function () {
         ->assertHasNoErrors()
         ->assertDispatched('translation_added')
         ->assertDispatched('refreshTranslationsTableDefaults')
-        ->assertSet('group', '')
+        ->assertSet('group', $group)  // group is preserved after creation
         ->assertSet('key', '');
 
     expect(Translation::where('group', $group)->where('key', 'test_create_text')->exists())->toBeTrue();
@@ -171,6 +171,21 @@ it('dispatches `translation_added` only once per creation', function () {
     Translation::where('key', 'like', 'unique_once_key_%')->delete();
 });
 
+it('normalizes extra whitespace in `group` and `key` before saving', function () {
+    Livewire::test(Create::class)
+        ->set('group', '  actions  ')
+        ->set('key', '  my   spaced   key  ')
+        ->set('translationType', 'text')
+        ->set('textValue', 'Hello')
+        ->call('addNewTranslation')
+        ->assertHasNoErrors()
+        ->assertDispatched('translation_added');
+
+    expect(Translation::where('group', 'actions')->where('key', 'my spaced key')->exists())->toBeTrue();
+
+    Translation::where('group', 'actions')->where('key', 'my spaced key')->delete();
+});
+
 it('reacts to `updateTranslationGroup` event and sets group', function () {
     $group = Translation::first()->group;
 
@@ -188,7 +203,7 @@ it('resets form after successful creation', function () {
         ->set('translationType', 'text')
         ->set('textValue', 'Test value')
         ->call('addNewTranslation')
-        ->assertSet('group', '')
+        ->assertSet('group', $group)  // group is preserved to allow adding more keys to the same group
         ->assertSet('key', '');
 
     Translation::where('key', 'reset_after_create')->delete();

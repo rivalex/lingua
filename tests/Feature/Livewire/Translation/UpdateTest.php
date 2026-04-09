@@ -199,6 +199,59 @@ it('dispatches `translation_updated` after a successful update', function () {
     $translation->delete();
 });
 
+it('normalizes extra whitespace in `group` and `key` before saving', function () {
+    $translation = makeTextTranslation();
+
+    Livewire::test(Update::class, [
+        'translation' => $translation,
+        'currentLocale' => 'en',
+    ])
+        ->set('group', '  actions  ')
+        ->set('key', '  my   spaced   key  ')
+        ->set('textValue', 'Updated text')
+        ->call('updateTranslation')
+        ->assertHasNoErrors()
+        ->assertDispatched('translation_updated');
+
+    $translation->refresh();
+    expect($translation->group)->toBe('actions')
+        ->and($translation->key)->toBe('my spaced key');
+
+    $translation->delete();
+});
+
+it('does NOT update `group` and `key` for vendor translations', function () {
+    $vendor = Translation::create([
+        'group' => 'messages',
+        'key' => 'vendor_key_'.uniqid(),
+        'type' => 'text',
+        'text' => ['en' => 'Vendor text'],
+        'is_vendor' => true,
+        'vendor' => 'acme',
+    ]);
+
+    $originalGroup = $vendor->group;
+    $originalKey = $vendor->key;
+
+    Livewire::test(Update::class, [
+        'translation' => $vendor,
+        'currentLocale' => 'en',
+    ])
+        ->set('group', 'hacked_group')
+        ->set('key', 'hacked_key')
+        ->set('textValue', 'Updated vendor text')
+        ->call('updateTranslation')
+        ->assertHasNoErrors()
+        ->assertDispatched('translation_updated');
+
+    $vendor->refresh();
+    expect($vendor->group)->toBe($originalGroup)
+        ->and($vendor->key)->toBe($originalKey)
+        ->and($vendor->text['en'])->toBe('Updated vendor text');
+
+    $vendor->delete();
+});
+
 it('responds to `updateTranslationModal.{id}` event by refreshing defaults', function () {
     $translation = makeTextTranslation();
 

@@ -11,6 +11,36 @@
         <flux:separator variant="subtle"/>
     </div>
 
+{{--    @if(!config('lingua.suppress_pro_nudge', false))--}}
+{{--    <div--}}
+{{--        x-data="{ dismissed: false }"--}}
+{{--        x-show="!dismissed"--}}
+{{--        x-cloak--}}
+{{--        class="flex items-center justify-between gap-4 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm dark:border-violet-800 dark:bg-violet-950"--}}
+{{--    >--}}
+{{--        <div class="flex items-center gap-3">--}}
+{{--            <flux:icon.sparkles class="shrink-0 text-violet-500 dark:text-violet-400" size="sm"/>--}}
+{{--            <p class="text-violet-700 dark:text-violet-300">--}}
+{{--                <strong>@lang('lingua::lingua.pro.banner_text')</strong>--}}
+{{--                — @lang('lingua::lingua.pro.banner_features')--}}
+{{--            </p>--}}
+{{--        </div>--}}
+{{--        <div class="flex shrink-0 items-center gap-2">--}}
+{{--            <a--}}
+{{--                href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.com') }}"--}}
+{{--                target="_blank"--}}
+{{--                rel="noopener noreferrer"--}}
+{{--                class="inline-flex items-center gap-1 rounded-md bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-violet-700"--}}
+{{--            >@lang('lingua::lingua.pro.banner_cta')</a>--}}
+{{--            <button--}}
+{{--                x-on:click="dismissed = true"--}}
+{{--                class="text-violet-400 transition-colors hover:text-violet-600 dark:hover:text-violet-300"--}}
+{{--                aria-label="Dismiss"--}}
+{{--            ><flux:icon.x-mark size="sm"/></button>--}}
+{{--        </div>--}}
+{{--    </div>--}}
+{{--    @endif--}}
+
     <div
         class="flex flex-col lg:flex-row w-full items-center justify-between sticky top-0 z-1 bg-white dark:bg-zinc-800 py-4 gap-4">
         <div class="flex flex-col lg:flex-row w-full lg:w-max items-center gap-4">
