@@ -1,4 +1,4 @@
-<div>
+<div class="lingua">
     <flux:modal.trigger name="{{ $modalName }}">
         <flux:button variant="filled" square class="cursor-pointer">
             <div class="flex flex-col items-center w-full px-1.5 space-y-[2px]">
@@ -12,7 +12,7 @@
             </div>
         </flux:button>
     </flux:modal.trigger>
-    <flux:modal name="{{ $modalName }}" class="lingua-modal">
+    <flux:modal name="{{ $modalName }}" class="lingua lingua-modal">
         <div class="flex flex-col gap-4">
             <flux:heading size="lg" level="1">
                 @lang('lingua::lingua.selector.modal_header')

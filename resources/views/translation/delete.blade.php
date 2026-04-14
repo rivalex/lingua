@@ -1,4 +1,4 @@
-<flux:modal name="{{ $modalName }}" class="lingua-modal">
+<flux:modal name="{{ $modalName }}" class="lingua lingua-modal">
 	<div class="flex flex-col gap-4" x-data="{ control: '' }">
         <flux:heading size="xl" level="1">
             {!! $this->deleteHeader !!}

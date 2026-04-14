@@ -1,4 +1,4 @@
-<div>
+<div class="lingua">
     <x-lingua::menu-group expandable :expanded="false" heading="{{ __('lingua::lingua.selector.menu_title') }}" class="grid">
         <x-slot name="icon" class="p-0">
             <livewire:lingua::selector.icon locale="{{ app()->currentLocale() }}" :show-flags="$showFlags"/>

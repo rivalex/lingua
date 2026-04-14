@@ -1,3 +1,4 @@
+<div class="lingua">
 <section class="flex flex-col gap-4">
 
     {{-- Header --}}
@@ -31,6 +32,7 @@
     @include('lingua::statistics.partials._breakdown')
 
 </section>
+</div>
 @assets
 @once
     <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">

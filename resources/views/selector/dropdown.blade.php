@@ -1,3 +1,4 @@
+<div class="lingua">
 <flux:dropdown wire:ignore>
     <flux:button variant="filled" square class="cursor-pointer">
         <div class="flex flex-col items-center w-full px-1.5 space-y-[2px]">
@@ -29,6 +30,7 @@
     </flux:menu>
     @endisland
 </flux:dropdown>
+</div>
 @assets
 @once
     <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">

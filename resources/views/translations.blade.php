@@ -1,3 +1,4 @@
+<div class="lingua">
 <section class="flex flex-col gap-4">
     <div class="relative w-full">
         <flux:heading size="xl" level="1">
@@ -203,6 +204,7 @@
         @endisland
     </div>
 </section>
+</div>
 @assets
 @once
     <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
