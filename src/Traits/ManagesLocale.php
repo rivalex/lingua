@@ -46,7 +46,7 @@ trait ManagesLocale
      *
      * @return Collection<int, Language>
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function languages(): Collection
     {
         return Language::query()->active()->get();
