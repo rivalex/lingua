@@ -2,9 +2,26 @@
 
 All notable changes to `lingua` will be documented in this file.
 
-## Lingua 1.1.1 - 2026-04-14
+## Lingua 1.1.2 - 2026-04-14
 
-Minor bug correction
+### Fixed
+
+- **`ManagesLocale::languages()` — `__PHP_Incomplete_Class` on git installs** — removed `cache: true` from
+  `#[Computed]` attribute. Livewire was serializing the `Eloquent Collection` across requests; during
+  deserialization the model class was not yet loaded, producing `__PHP_Incomplete_Class_Name:
+  Illuminate\Database\Eloquent\Collection`. The computed value is now kept in memory for the current render
+  only, which is the correct behaviour for an Eloquent collection.
+
+### Changed
+
+- **CSS isolation** — all Lingua styles are now scoped under a `.lingua` wrapper class via a
+  `postcss-prefix-selector` PostCSS plugin in the Vite build. Every utility, Flux `[data-flux-*]` rule,
+  Preflight reset, and theme CSS variable (formerly on `:root`) now targets `.lingua` descendants only.
+  Dark-mode selectors are restructured as `:where(.dark,.dark *) .lingua .class` so that the host
+  application's `.dark` class on `<html>` continues to work correctly. This eliminates all style conflicts
+  with host Laravel projects that ship their own Tailwind or Flux setup.
+  All top-level Livewire views are wrapped in `<div class="lingua">` and all `<flux:modal>` tags carry
+  `class="lingua …"` to maintain styles on teleported portal content.
 
 ## Lingua 1.1.0 - 2026-04-14
 
