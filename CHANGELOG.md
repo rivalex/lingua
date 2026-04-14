@@ -2,6 +2,10 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 1.1.1 - 2026-04-14
+
+Minor bug correction
+
 ## Lingua 1.1.0 - 2026-04-14
 
 ### Added
@@ -9,27 +13,28 @@ All notable changes to `lingua` will be documented in this file.
 - **Statistics page** (`/lingua/statistics`, route `lingua.statistics`) — per-language coverage with progress bars,
   breakdown by translation group, missing-key counts with direct links to the translation editor.
   Vendor translations can be included or excluded via a toggle.
-
+  
 - **Settings page** (`/lingua/settings`, route `lingua.settings`) — persistent UI settings stored in the
   `lingua_settings` table. Selector mode and flag display are now configurable from the UI without editing config files
   or redeploying.
-
+  
 - **`LinguaSetting` model** — key/value store for package settings with typed get/set API and automatic fallback to
   `config/lingua.php`. Known keys: `selector.show_flags` (bool) and `selector.mode` (string).
-
+  
 - **`SelectorMode` enum** — backed string enum with four cases: `sidebar`, `modal`, `dropdown`, `headless`.
   Each case provides a `label()` and `description()` method; `selectValues()` returns all cases as value/label pairs.
-
+  
 - **Headless language selector** (`lingua::headless-language-selector`) — zero-CSS Livewire component rendering
   semantic HTML with `data-lingua-*` attributes (`data-lingua-selector`, `data-lingua-list`, `data-lingua-item`,
   `data-lingua-active`, `data-lingua-button`, `data-lingua-name`, `data-lingua-native`, `data-lingua-code`) and named
   slots (`$item`, `$current`) for full styling freedom.
-
+  
 - **`ManagesLocale` trait** — extracts shared locale management logic (`languages()`, `changeLocale()`,
   `currentLocale`) used by both `LanguageSelector` and `HeadlessLanguageSelector`.
-
+  
 - **Translation files** for `ar`, `es`, `fr`, `hi`, `it`, `pt`, `ru`, `zh` — complete translations of all Lingua UI
   strings including the new statistics and settings sections.
+  
 
 ### Changed
 
@@ -37,26 +42,29 @@ All notable changes to `lingua` will be documented in this file.
   the reference key set; non-default locale keys are skipped if absent from the default locale; vendor keys are
   imported only when the locale is installed in the `languages` table. A `$syncing` flag suppresses per-row
   `cache:clear` calls during bulk sync, firing once at the end instead. No existing DB records are ever deleted.
-
+  
 - **Migration structure** — `create_lingua_table` split into three separate files: `create_language_lines_table`,
   `create_languages_table`, `create_lingua_settings_table`. Granular rollback is now possible per table.
-
+  
 - **`Language::scopeActive()`** — renamed to `scopeOrdered()` for semantic accuracy; `scopeActive()` preserved as a
   delegate with `@todo` for future `is_active` field filtering.
-
+  
 - **Asset serving** — compiled assets are now served directly from the package via the `lingua.assets` route.
   Publishing assets is no longer required or supported; the `lingua-assets` publish tag has been removed.
-
+  
 - **Language selector config** — `selector.mode` now accepts `headless` as a valid value in addition to the existing
   `sidebar`, `modal`, and `dropdown` options.
+  
 
 ### Fixed
 
 - **`languages` migration** — removed erroneous standalone `->unique()` on the `regional` column; the composite
   unique index `unique_language_type` on `[code, regional]` is the correct constraint.
-
+  
 - **Statistics `includeVendor` toggle** — replaced conflicting `wire:model.live` + `wire:change` directives with
   `:checked` binding + `wire:change`, eliminating the double-toggle that caused the switch to have no effect.
+  
+
 
 ---
 
@@ -65,11 +73,12 @@ All notable changes to `lingua` will be documented in this file.
 Run migrations to create the new `lingua_settings` table:
 
     php artisan migrate
-
+    
 If you previously published assets, they are no longer needed. The package now serves its own compiled assets
 automatically. You can safely delete `public/vendor/lingua/` from your project.
 
 If you have customised `config/lingua.php`, your values continue to work as fallback — no changes required.
+
 
 ---
 
