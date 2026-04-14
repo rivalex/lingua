@@ -30,7 +30,7 @@
                                 <div class="truncate">{{ $locale->name }}</div>
                                 <div class="text-xs font-light text-zinc-500 truncate">{{ $locale->native }}</div>
                             </div>
-                            <livewire:lingua::selector.icon :locale="linguaLanguageCode($locale->code)" size="md"
+                            <livewire:lingua::selector.icon :locale="$locale->code" size="md"
                                                             :show-flags="$showFlags"/>
                         </div>
                     </flux:button>
@@ -42,6 +42,6 @@
 </div>
 @assets
 @once
-    <link rel="stylesheet" href="{{ asset('vendor/lingua/css/lingua.min.css') }}">
+    <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
 @endonce
 @endassets

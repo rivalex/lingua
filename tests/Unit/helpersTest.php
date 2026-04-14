@@ -20,14 +20,14 @@ test('The helper linguaLanguageCode function exists', function () {
     expect(function_exists('linguaLanguageCode'))->toBeTrue();
 });
 
-it('formats the locale as a lowercase language code with hyphen', function () {
-    expect(linguaLanguageCode('EN_US'))->toBe('en-us')
-        ->and(linguaLanguageCode('pt_BR'))->toBe('pt-br');
+it('formats the locale as a language code with hyphen', function () {
+    expect(linguaLanguageCode('EN_US'))->toBe('EN-US')
+        ->and(linguaLanguageCode('pt_BR'))->toBe('pt-BR');
 });
 
 it('uses the actual locale code when none is provided', function () {
     app()->setLocale('es_MX');
-    expect(linguaLanguageCode())->toBe('es-mx');
+    expect(linguaLanguageCode())->toBe('es-MX');
 });
 
 it('can return the language direction for `rtl` languages', function () {

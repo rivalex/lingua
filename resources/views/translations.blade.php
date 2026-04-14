@@ -2,7 +2,7 @@
     <div class="relative w-full">
         <flux:heading size="xl" level="1">
             <div class="flex flex-row gap-2 items-center">
-                <livewire:lingua::selector.icon :locale="linguaLanguageCode($language->code)" size="8" square/>
+                <livewire:lingua::selector.icon :locale="$language->code" size="8" square/>
                 <p>@lang('lingua::lingua.translations.header', ['locale' => $language->native])</p>
             </div>
         </flux:heading>
@@ -160,13 +160,13 @@
                 <flux:table.column style="width: 30%;">
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.default')</p>
-                        {{--                        <livewire:lingua::selector.icon :locale="languageCode()" size="sm" square/>--}}
+                        <livewire:lingua::selector.icon :locale="Lingua::getDefaultLocale()" size="sm" square/>
                     </div>
                 </flux:table.column>
                 <flux:table.column>
                     <div class="flex flex-row gap-2 items-center">
                         <p>@lang('lingua::lingua.translations.table.columns.translation')</p>
-                        {{--                        <livewire:lingua::selector.icon :locale="$currentLocale" size="sm" square/>--}}
+                        <livewire:lingua::selector.icon :locale="$language->code" size="sm" square/>
                     </div>
                 </flux:table.column>
                 <flux:table.column style="width: 10%" align="center">
@@ -205,7 +205,7 @@
 </section>
 @assets
 @once
-    <link rel="stylesheet" href="{{ asset('vendor/lingua/css/lingua.min.css') }}">
-    <script type="module" src="{{ asset('vendor/lingua/js/lingua.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
+    <script type="module" src="{{ route('lingua.assets', 'js/lingua.min.js') }}"></script>
 @endonce
 @endassets

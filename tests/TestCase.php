@@ -80,6 +80,12 @@ class TestCase extends \Orchestra\Testbench\TestCase
         Route::livewire('translations/{locale?}', 'lingua::translations')
             ->name('lingua.translations');
 
+        Route::livewire('statistics', 'lingua::statistics')
+            ->name('lingua.statistics');
+
+        Route::livewire('settings', 'lingua::settings')
+            ->name('lingua.settings');
+
         Route::get('assets/{path}', function (string $path) {
             // Serve built assets directly from the package when they are not published
             $file = dirname(__DIR__)."/src/dist/{$path}";

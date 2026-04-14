@@ -16,7 +16,7 @@ export default defineConfig({
     ],
     build: {
         manifest: false,
-        outDir: 'resources/dist',
+        outDir: 'src/dist',
         emptyOutDir: true,
         cssMinify: true,
         sourcemap: true,

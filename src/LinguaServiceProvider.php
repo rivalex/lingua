@@ -35,7 +35,9 @@ class LinguaServiceProvider extends PackageServiceProvider
             ->hasTranslations()
             ->hasAssets()
             ->hasRoute('web')
-            ->hasMigration('create_lingua_table')
+            ->hasMigration('create_language_lines_table')
+            ->hasMigration('create_languages_table')
+            ->hasMigration('create_lingua_settings_table')
             ->hasCommands(
                 AddLangCommand::class,
                 RemoveLangCommand::class,
