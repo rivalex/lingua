@@ -1,19 +1,19 @@
 <div class="lingua">
-<section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-4">
 
-    {{-- Header --}}
-    <div class="relative w-full">
-        <flux:heading size="xl" level="1">{{ __('lingua::lingua.settings.title') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-4">
-            {{ __('lingua::lingua.settings.subtitle') }}
-        </flux:subheading>
-        <flux:separator variant="subtle"/>
-    </div>
+        {{-- Header --}}
+        <div class="relative w-full">
+            <flux:heading size="xl" level="1">{{ __('lingua::lingua.settings.title') }}</flux:heading>
+            <flux:subheading size="lg" class="mb-4">
+                {{ __('lingua::lingua.settings.subtitle') }}
+            </flux:subheading>
+            <flux:separator variant="subtle"/>
+        </div>
 
-    {{-- Selector settings --}}
-    @include('lingua::settings.partials._selector')
+        {{-- Selector settings --}}
+        @include('lingua::settings.partials._selector')
 
-</section>
+    </section>
 </div>
 @assets
 @once

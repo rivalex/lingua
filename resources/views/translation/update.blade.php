@@ -40,15 +40,15 @@
                     </div>
                     <div x-cloak x-show="$wire.translationType === 'html'">
                         <x-lingua::editor wire:model.blur="htmlValue" type="html" :helper="false"
-                                             :required="$required"
-                                             :label="__('lingua::lingua.translations.fields.htmlValue')"
-                                             :placeholder="__('lingua::lingua.translations.fields.html')"/>
+                                          :required="$required"
+                                          :label="__('lingua::lingua.translations.fields.htmlValue')"
+                                          :placeholder="__('lingua::lingua.translations.fields.html')"/>
                     </div>
                     <div x-cloak x-show="$wire.translationType === 'markdown'">
                         <x-lingua::editor wire:model.blur="mdValue" type="markdown" :helper="false"
-                                             :required="$required"
-                                             :label="__('lingua::lingua.translations.fields.mdValue')"
-                                             :placeholder="__('lingua::lingua.translations.fields.md')"/>
+                                          :required="$required"
+                                          :label="__('lingua::lingua.translations.fields.mdValue')"
+                                          :placeholder="__('lingua::lingua.translations.fields.md')"/>
                     </div>
                 </div>
             </div>

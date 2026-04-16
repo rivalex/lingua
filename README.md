@@ -36,25 +36,25 @@ manage translations, and sync everything with a single command.
 
 ## ✨ Features
 
-| Feature                          | Description                                                                                                   |
-|----------------------------------|---------------------------------------------------------------------------------------------------------------|
-| **Database-backed translations** | All translations stored in the database, editable instantly without deployments                               |
-| **Livewire UI**                  | Reactive, real-time language and translation management interface                                             |
-| **Flux UI components**           | Modern, accessible UI built with Livewire Flux                                                                |
-| **Bi-directional sync**          | Push translations to the database or pull them back to local PHP/JSON files                                   |
-| **Laravel Lang integration**     | Install 70+ languages with one command, auto-updated via `laravel-lang`                                       |
-| **Rich text support**            | Translations can be plain text, HTML, or Markdown                                                             |
-| **Language selector**            | Configurable sidebar, dropdown, modal, or headless language switcher for users                                |
-| **Translation statistics**       | Per-language coverage with progress bars, group breakdown, and missing-key drill-down                         |
-| **DB-persisted settings**        | Selector mode and flag display managed from the UI — no config file changes needed                            |
-| **Headless language selector**   | Zero-CSS semantic HTML component for full styling freedom with any CSS framework                              |
-| **Progress tracking**            | Per-language completion percentage and missing-translation counts                                             |
-| **RTL support**                  | First-class right-to-left language handling                                                                   |
-| **Vendor translations**          | Manage package translations alongside your own                                                                |
-| **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                                    |
-| **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations                         |
+| Feature                          | Description                                                                                                    |
+|----------------------------------|----------------------------------------------------------------------------------------------------------------|
+| **Database-backed translations** | All translations stored in the database, editable instantly without deployments                                |
+| **Livewire UI**                  | Reactive, real-time language and translation management interface                                              |
+| **Flux UI components**           | Modern, accessible UI built with Livewire Flux                                                                 |
+| **Bi-directional sync**          | Push translations to the database or pull them back to local PHP/JSON files                                    |
+| **Laravel Lang integration**     | Install 70+ languages with one command, auto-updated via `laravel-lang`                                        |
+| **Rich text support**            | Translations can be plain text, HTML, or Markdown                                                              |
+| **Language selector**            | Configurable sidebar, dropdown, modal, or headless language switcher for users                                 |
+| **Translation statistics**       | Per-language coverage with progress bars, group breakdown, and missing-key drill-down                          |
+| **DB-persisted settings**        | Selector mode and flag display managed from the UI — no config file changes needed                             |
+| **Headless language selector**   | Zero-CSS semantic HTML component for full styling freedom with any CSS framework                               |
+| **Progress tracking**            | Per-language completion percentage and missing-translation counts                                              |
+| **RTL support**                  | First-class right-to-left language handling                                                                    |
+| **Vendor translations**          | Manage package translations alongside your own                                                                 |
+| **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                                     |
+| **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations                          |
 | **Fully tested**                 | 190+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
-| **Documentation**                | Comprehensive documentation and guides available at [rivalex/lingua](https://github.com/rivalex/lingua)       |
+| **Documentation**                | Comprehensive documentation and guides available at [Lingua Docs](https://rivalex.github.io/lingua-docs/)      |
 
 ---
 

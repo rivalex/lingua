@@ -47,31 +47,31 @@
                         </div>
                         <div x-cloak x-show="$wire.translationType === 'html'">
                             <x-lingua::editor wire:model.blur="htmlValue" type="html" :helper="false"
-                                                 :label="__('lingua::lingua.translations.fields.htmlValue')"
-                                                 :placeholder="__('lingua::lingua.translations.fields.html')"/>
+                                              :label="__('lingua::lingua.translations.fields.htmlValue')"
+                                              :placeholder="__('lingua::lingua.translations.fields.html')"/>
                         </div>
                         <div x-cloak x-show="$wire.translationType === 'markdown'">
                             <x-lingua::editor wire:model.blur="mdValue" type="markdown" :helper="false"
-                                                 :label="__('lingua::lingua.translations.fields.mdValue')"
-                                                 :placeholder="__('lingua::lingua.translations.fields.md')"/>
+                                              :label="__('lingua::lingua.translations.fields.mdValue')"
+                                              :placeholder="__('lingua::lingua.translations.fields.md')"/>
                         </div>
                     </div>
                 </div>
                 <flux:separator/>
-{{--                @if(!config('lingua.suppress_pro_nudge', false))--}}
-{{--                <div class="flex items-center justify-between gap-3 rounded-md border border-violet-100 bg-violet-50 px-3 py-2 text-xs dark:border-violet-800 dark:bg-violet-950">--}}
-{{--                    <div class="flex items-center gap-2 text-violet-600 dark:text-violet-300">--}}
-{{--                        <flux:icon.sparkles size="xs" class="shrink-0"/>--}}
-{{--                        <span>@lang('lingua::lingua.pro.hint_text')</span>--}}
-{{--                    </div>--}}
-{{--                    <a--}}
-{{--                        href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.com') }}"--}}
-{{--                        target="_blank"--}}
-{{--                        rel="noopener noreferrer"--}}
-{{--                        class="shrink-0 font-semibold text-violet-600 hover:underline dark:text-violet-400"--}}
-{{--                    >@lang('lingua::lingua.pro.hint_cta')</a>--}}
-{{--                </div>--}}
-{{--                @endif--}}
+                {{--                @if(!config('lingua.suppress_pro_nudge', false))--}}
+                {{--                <div class="flex items-center justify-between gap-3 rounded-md border border-violet-100 bg-violet-50 px-3 py-2 text-xs dark:border-violet-800 dark:bg-violet-950">--}}
+                {{--                    <div class="flex items-center gap-2 text-violet-600 dark:text-violet-300">--}}
+                {{--                        <flux:icon.sparkles size="xs" class="shrink-0"/>--}}
+                {{--                        <span>@lang('lingua::lingua.pro.hint_text')</span>--}}
+                {{--                    </div>--}}
+                {{--                    <a--}}
+                {{--                        href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.com') }}"--}}
+                {{--                        target="_blank"--}}
+                {{--                        rel="noopener noreferrer"--}}
+                {{--                        class="shrink-0 font-semibold text-violet-600 hover:underline dark:text-violet-400"--}}
+                {{--                    >@lang('lingua::lingua.pro.hint_cta')</a>--}}
+                {{--                </div>--}}
+                {{--                @endif--}}
                 <div class="flex justify-between gap-2 items-center">
                     <flux:button variant="filled" color="gray" icon="x-mark"
                                  x-on:click="$flux.modal('{{ $modalName }}').close()">@lang('lingua::lingua.global.close')</flux:button>
