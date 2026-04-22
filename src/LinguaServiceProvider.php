@@ -6,6 +6,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View;
 use Illuminate\Translation\Translator;
 use Livewire\Livewire;
 use Rivalex\Lingua\Commands\AddLangCommand;
@@ -16,12 +17,28 @@ use Rivalex\Lingua\Commands\UpdateLangCommand;
 use Rivalex\Lingua\Database\Seeders\LinguaSeeder;
 use Rivalex\Lingua\Http\Middleware\LinguaMiddleware;
 use Rivalex\Lingua\Models\Language;
+use Rivalex\Lingua\Services\ExtensionRegistry;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class LinguaServiceProvider extends PackageServiceProvider
 {
+    /**
+     * Register the extension registry singleton.
+     *
+     * Placed in register() so the singleton is available before any
+     * extension's ServiceProvider calls $this->app->tag() in their own
+     * register(). The registry itself resolves tagged implementations
+     * lazily (on first call to all()), so tag order does not matter.
+     */
+    public function register(): void
+    {
+        parent::register();
+
+        $this->app->singleton(ExtensionRegistry::class);
+    }
+
     public function configurePackage(Package $package): void
     {
         /*
@@ -86,6 +103,11 @@ class LinguaServiceProvider extends PackageServiceProvider
             classViewPath: $this->getViewPath(),
         );
 
+        // Share the extension registry with all lingua views so that
+        // @foreach loops in page views can render extension-provided
+        // Livewire components without an explicit app() call in Blade.
+        View::share('linguaExtensions', $this->app->make(ExtensionRegistry::class));
+
         $this->app->make(Kernel::class)->appendMiddlewareToGroup('web', LinguaMiddleware::class);
 
         $this->registerLoader();
@@ -122,7 +144,7 @@ class LinguaServiceProvider extends PackageServiceProvider
      */
     public function provides(): array
     {
-        return ['translator', 'translation.loader'];
+        return ['translator', 'translation.loader', ExtensionRegistry::class];
     }
 
     protected function getViewPath(): string

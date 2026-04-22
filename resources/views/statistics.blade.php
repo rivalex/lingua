@@ -31,6 +31,11 @@
         {{-- Group breakdown --}}
         @include('lingua::statistics.partials._breakdown')
 
+        {{-- lingua extension hook: dashboard.widgets --}}
+        @foreach ($linguaExtensions->allDashboardWidgetComponents() as $cls)
+            <livewire:dynamic-component :component="$cls" :key="'ext_widget_'.$cls"/>
+        @endforeach
+
     </section>
 </div>
 @assets

@@ -12,6 +12,11 @@
             <flux:separator variant="subtle"/>
         </div>
 
+        {{-- lingua extension hook: translation.tabs --}}
+        @foreach ($linguaExtensions->allTranslationTabComponents() as $cls)
+            <livewire:dynamic-component :component="$cls" :key="'ext_tab_'.$cls"/>
+        @endforeach
+
         {{--    @if(!config('lingua.suppress_pro_nudge', false))--}}
         {{--    <div--}}
         {{--        x-data="{ dismissed: false }"--}}
@@ -84,6 +89,10 @@
             </div>
             <div class="w-max gap-2">
                 <livewire:lingua::translation.create :key="'newTranslation'" :$group/>
+                {{-- lingua extension hook: translation.actions --}}
+                @foreach ($linguaExtensions->allTranslationActionComponents() as $cls)
+                    <livewire:dynamic-component :component="$cls" :key="'ext_action_'.$cls"/>
+                @endforeach
             </div>
         </div>
         <div class="flex flex-col w-full gap-2">

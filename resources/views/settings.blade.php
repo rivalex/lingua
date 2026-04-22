@@ -13,6 +13,11 @@
         {{-- Selector settings --}}
         @include('lingua::settings.partials._selector')
 
+        {{-- lingua extension hook: settings.tabs --}}
+        @foreach ($linguaExtensions->allSettingsTabComponents() as $cls)
+            <livewire:dynamic-component :component="$cls" :key="'ext_settings_'.$cls"/>
+        @endforeach
+
     </section>
 </div>
 @assets
