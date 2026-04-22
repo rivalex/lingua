@@ -11,7 +11,7 @@
 ### **The complete multilingual management system for Laravel**
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rivalex/lingua.svg)](https://packagist.org/packages/rivalex/lingua)
-[![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-blue)](https://php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue)](https://php.net)
 [![Laravel Version](https://img.shields.io/badge/Laravel-11--13-orange)](https://laravel.com)
 [![License](https://img.shields.io/github/license/rivalex/lingua)](LICENSE.md)
 [![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
@@ -60,7 +60,7 @@ manage translations, and sync everything with a single command.
 
 ## 📦 Requirements
 
-- PHP **8.2+**
+- PHP **8.3+**
 - Laravel **11 | 12 | 13**
 - Livewire **4.0+**
 - Livewire Flux **2.0+**
@@ -138,10 +138,15 @@ return [
         'italic'        => true,
         'underline'     => true,
         'strikethrough' => false,
+        'subscript'     => true,
+        'superscript'   => true,
+        'blockquote'    => false,
+        'code-line'     => false,
+        'code-block'    => false,
         'bullet'        => true,
         'ordered'       => true,
         'clear'         => true,
-        // ... more options available
+        'code-mode'     => false,
     ],
 ];
 ```
@@ -429,26 +434,9 @@ For new layouts, prefer CSS logical properties over directional ones so the brow
 
 ```css
 /* Instead of: padding-left / padding-right */
-padding-inline-start:
-
-1
-rem
-
-; /* left in LTR, right in RTL */
-padding-inline-end:
-
-1
-rem
-
-;
-
-/* Instead of: border-left */
-border-inline-start:
-
-1
-px solid
-
-;
+padding-inline-start: 1 rem; /* left in LTR, right in RTL */
+padding-inline-end: 1 rem; /* Instead of: border-left */
+border-inline-start: 1px solid;
 ```
 
 #### Checking direction in Blade

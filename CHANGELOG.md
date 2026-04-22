@@ -2,9 +2,34 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 1.1.4 - 2026-04-22
+
+### Fixed
+
+- **Modal centering** — Tailwind preflight scoped under `.lingua *` set `margin: 0` on all descendants, overriding the browser UA `margin: auto` that centers native `<dialog>:modal`. Added explicit `[data-flux-modal] > dialog { margin: auto }` rule in `resources/css/lingua/styles.css` (post-prefixed by postcss-prefix-selector to `.lingua [data-flux-modal] > dialog`). Affects all modal Livewire components: `Language/Create`, `Language/Delete`, `Language/SetDefault`, `Translation/Create`, `Translation/Delete`, `Translation/Update`, and `LanguageSelector` in modal mode.
+
+---
+
 ## Lingua 1.1.3 - 2026-04-16
 
-Fix minor bugs
+### Changed
+
+- Normalized indentation across all Blade views and PHP source files for consistency.
+- Removed unused static assets from the package.
+
+---
+
+## Lingua 1.1.2 - 2026-04-14
+
+### Fixed
+
+- **`Lingua::languages()` serialization** — Method now correctly returns a plain Eloquent `Collection`, fixing a serialization error when the result was stored in a Livewire component property.
+
+### Changed
+
+- **CSS isolation** — All Tailwind utilities, preflight resets, and CSS custom properties are now scoped under `.lingua` via `postcss-prefix-selector`. This prevents Lingua's bundled Tailwind styles from leaking into the host application's global stylesheet. The `lingua.min.css` dist file is rebuilt accordingly.
+
+---
 
 ## Lingua 1.1.0 - 2026-04-10
 
