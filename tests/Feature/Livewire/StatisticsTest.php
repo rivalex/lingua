@@ -311,3 +311,22 @@ it('updates totalKeys after toggling vendor inclusion', function (): void {
 
     expect($component->instance()->totalKeys)->toBe(3);
 });
+
+// ---------------------------------------------------------------------------
+// defaultLanguage computed property
+// ---------------------------------------------------------------------------
+
+it('defaultLanguage returns the language marked as default', function (): void {
+    $default = Livewire::test(Statistics::class)->instance()->defaultLanguage;
+
+    expect($default)->toBeInstanceOf(Language::class)
+        ->and($default->is_default)->toBeTrue();
+});
+
+it('defaultLanguage returns null when no language is set as default', function (): void {
+    Language::query()->update(['is_default' => false]);
+
+    $default = Livewire::test(Statistics::class)->instance()->defaultLanguage;
+
+    expect($default)->toBeNull();
+});
