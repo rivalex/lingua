@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Language;
 
 use Illuminate\Contracts\View\Factory;
@@ -42,7 +44,7 @@ class Delete extends Component
         $this->modalName = 'language-delete-modal-'.$this->language->code;
         $this->confirm = Str::of(__('lingua::lingua.languages.delete.confirm',
             ['language' => $this->language->name]))
-            ->upper()->squish()->trim();
+            ->upper()->squish()->trim()->toString();
     }
 
     /**

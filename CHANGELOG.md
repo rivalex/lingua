@@ -2,6 +2,32 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 1.1.6 - 2026-05-08
+
+### Security
+
+- **[CRITICAL] Path traversal in asset route** — `routes/web.php` `lingua/assets/{path}` used `where('path', '.*')` allowing `../` traversal outside `src/dist/`. Fixed with `realpath()` jail: resolved path must start with the `src/dist` base or request is rejected with 404.
+- **[CRITICAL] Default middleware now includes `auth`** — Lingua management routes were publicly accessible by default. Default changed to `['web', 'auth']`. Existing published configs unaffected; new installations now require authentication.
+- **[CRITICAL] SQL injection via locale in JSON column path** — `Translations.php` interpolated user-controlled `$currentLocale` directly into raw JSON column paths. Added regex validation; invalid formats fall back to default locale.
+- **[HIGH] Path traversal in `syncToLocal()`** — User-controlled `group` values used directly in `file_put_contents()` paths without sanitization. Added `assertSafePathSegment()` guard on locale, group, and vendor before all filesystem writes.
+- **[HIGH] Artisan argument injection** — `addLanguage()`, `removeLanguage()`, `updateLanguages()` concatenated locale strings into `Artisan::call()` strings, allowing flag injection. Added `validateLocale()` regex guard before all Artisan calls.
+- **[HIGH] TypeError on null Language model** — `Translations.php` declared `public Language $language` (non-nullable) but `::first()` can return null. Changed to `public ?Language $language = null` with null-safe fallback in `mount()`.
+- **[MEDIUM] Unvalidated session locale in middleware** — `LinguaMiddleware` applied session locale to `app()->setLocale()` without format validation. Added ISO locale regex check; malformed values fall back to default.
+
+### Fixed
+
+- **[MEDIUM] Wrong unique column in Translation Update** — `rules()` validated `key` against the `group_key` composite column, making uniqueness inoperative. Fixed to scope by `group` + `is_vendor`.
+- **[MEDIUM] Double `requiredIf` logic bug** — Two independent `requiredIf` conditions caused cross-field required errors (e.g. `textValue` required when locale=default even if type=html). Fixed to single combined condition.
+- **[MEDIUM] Broken markdown type detection** — `writeTranslation()` used `Str::markdown() === $original` which never matched. Replaced with heuristic regex for common markdown markers.
+- **[MEDIUM] Missing enum validation on `translationType`** — Both Create and Update accepted any string; invalid types silently produced empty translations. Changed to `Rule::enum(LinguaType::class)`.
+
+### Changed
+
+- Added `declare(strict_types=1)` to all source files missing it.
+- Fixed bare `use DB;` in `Models/Language.php` → `use Illuminate\Support\Facades\DB`.
+
+---
+
 ## Lingua 1.1.5 - 2026-04-29
 
 ### Changed

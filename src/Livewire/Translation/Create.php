@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Translation;
 
 use Illuminate\Support\Facades\Log;
@@ -50,10 +52,10 @@ class Create extends Component
                 'min:2',
                 Rule::unique('language_lines', 'key')->where('group', $this->group),
             ],
-            'translationType' => 'required|string',
-            'textValue' => 'required_if:translationType,text|string',
-            'htmlValue' => 'required_if:translationType,html|string',
-            'mdValue' => 'required_if:translationType,markdown|string',
+            'translationType' => ['required', Rule::enum(LinguaType::class)],
+            'textValue' => ['required_if:translationType,text', 'nullable', 'string'],
+            'htmlValue' => ['required_if:translationType,html', 'nullable', 'string'],
+            'mdValue' => ['required_if:translationType,markdown', 'nullable', 'string'],
         ];
     }
 

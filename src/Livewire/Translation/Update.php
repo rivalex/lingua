@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Translation;
 
 use Illuminate\Support\Facades\Log;
@@ -49,6 +51,8 @@ class Update extends Component
 
     public function rules(): array
     {
+        $isDefault = $this->currentLocale === linguaDefaultLocale();
+
         return [
             'currentLocale' => 'string',
             'group' => 'required|string',
@@ -56,22 +60,28 @@ class Update extends Component
                 'required',
                 'string',
                 'min:2',
-                Rule::unique('language_lines', 'group_key')->ignore($this->translation->id),
+                // M1 fix: validate against `key` column scoped by group+vendor, not the composite group_key column
+                Rule::unique('language_lines', 'key')
+                    ->where('group', $this->group ?? $this->translation->group)
+                    ->where('is_vendor', $this->isVendor)
+                    ->ignore($this->translation->id),
             ],
-            'translationType' => 'required|string',
+            // M4 fix: validate against enum values, not just any string
+            'translationType' => ['required', Rule::enum(LinguaType::class)],
+            // M3 fix: single combined condition — required only when type matches AND locale is default
             'textValue' => [
-                Rule::requiredIf($this->translationType === 'text'),
-                Rule::requiredIf($this->currentLocale === linguaDefaultLocale()),
+                Rule::requiredIf($this->translationType === 'text' && $isDefault),
+                'nullable',
                 'string',
             ],
             'htmlValue' => [
-                Rule::requiredIf($this->translationType === 'html'),
-                Rule::requiredIf($this->currentLocale === linguaDefaultLocale()),
+                Rule::requiredIf($this->translationType === 'html' && $isDefault),
+                'nullable',
                 'string',
             ],
             'mdValue' => [
-                Rule::requiredIf($this->translationType === 'markdown'),
-                Rule::requiredIf($this->currentLocale === linguaDefaultLocale()),
+                Rule::requiredIf($this->translationType === 'markdown' && $isDefault),
+                'nullable',
                 'string',
             ],
         ];

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Class Lingua
  *
@@ -81,6 +83,19 @@ class Lingua
     }
 
     /**
+     * Validate that a locale string is a safe ISO-format code before passing to Artisan.
+     * Prevents argument injection when the locale is concatenated into a command string.
+     *
+     * @throws \InvalidArgumentException if the locale does not match the expected format
+     */
+    private static function validateLocale(string $locale): void
+    {
+        if (! preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $locale)) {
+            throw new \InvalidArgumentException("[Lingua] Invalid locale format: {$locale}");
+        }
+    }
+
+    /**
      * Optimize and clear cached files for the application.
      *
      * Executes the 'optimize:clear' artisan command to clear and rebuild
@@ -113,6 +128,7 @@ class Lingua
         // that lang:update only refreshes DB-managed locales.
         foreach (Locales::raw()->installed() as $locale) {
             if (! in_array($locale, $dbLocales)) {
+                self::validateLocale($locale);
                 Artisan::call('lang:rm '.$locale.' --force');
             }
         }
@@ -134,6 +150,7 @@ class Lingua
      */
     public static function addLanguage(string $locale): void
     {
+        self::validateLocale($locale);
         Artisan::call('lang:add '.$locale);
     }
 
@@ -151,6 +168,7 @@ class Lingua
      */
     public static function removeLanguage(string $locale): void
     {
+        self::validateLocale($locale);
         Artisan::call('lang:rm '.$locale.' --force');
     }
 
