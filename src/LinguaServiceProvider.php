@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua;
 
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -7,6 +9,7 @@ use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
+use Illuminate\Translation\FileLoader;
 use Illuminate\Translation\Translator;
 use Livewire\Livewire;
 use Rivalex\Lingua\Commands\AddLangCommand;
@@ -119,6 +122,10 @@ class LinguaServiceProvider extends PackageServiceProvider
         $this->app->singleton('translation.loader', function ($app) {
             $class = config('lingua.translation_manager');
 
+            if (! $class || ! class_exists($class)) {
+                return new FileLoader($app['files'], $app['path.lang']);
+            }
+
             return new $class($app['files'], $app['path.lang']);
         });
     }
@@ -127,7 +134,13 @@ class LinguaServiceProvider extends PackageServiceProvider
     {
         $this->app->singleton('translator', function ($app) {
             $loader = $app['translation.loader'];
-            $defaultLocale = Language::default()?->code ?? config('app.locale');
+
+            try {
+                $defaultLocale = Language::default()?->code ?? config('app.locale');
+            } catch (\Throwable) {
+                $defaultLocale = config('app.locale');
+            }
+
             // When registering the translator component, we'll need to set the default
             // locale as well as the fallback locale. So, we'll grab the application
             // configuration so we can easily get both of these values from there.

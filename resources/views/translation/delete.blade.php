@@ -1,7 +1,7 @@
 <flux:modal name="{{ $modalName }}" class="lingua lingua-modal">
     <div class="flex flex-col gap-4" x-data="{ control: '' }">
         <flux:heading size="xl" level="1">
-            {!! $this->deleteHeader !!}
+            {{ $this->deleteHeader }}
         </flux:heading>
         <flux:separator/>
         <x-lingua::validation-errors class="text-start"/>
@@ -24,7 +24,7 @@
                 </flux:button>
                 <flux:button x-bind:type="control !== $wire.confirm ? 'button' : 'submit'" variant="danger" icon="check"
                              x-bind:disabled="control !== $wire.confirm">
-                    <p>{!! $this->deleteAction !!}</p>
+                    <p>{{ $this->deleteAction }}</p>
                 </flux:button>
             </div>
         </form>

@@ -20,8 +20,6 @@ class Delete extends Component
 
     public Translation $translation;
 
-    public bool $canDelete = false;
-
     public string $deleteAction;
 
     public string $deleteHeader;
