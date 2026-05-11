@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Language;
 
 use Illuminate\Support\Facades\DB;
@@ -18,10 +20,6 @@ class Table extends Component
 
     #[Url('search', except: ''), Modelable]
     public string $search = '';
-
-    public bool $syncDatabase = true;
-
-    public int $totalStrings;
 
     #[On('refreshLanguages')]
     public function refreshLanguages(): void

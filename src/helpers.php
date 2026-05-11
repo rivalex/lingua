@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Str;
 
 if (! function_exists('linguaDefaultLocale')) {
@@ -28,6 +30,6 @@ if (! function_exists('linguaLanguageCode')) {
      */
     function linguaLanguageCode(?string $locale = null): string
     {
-        return Str::of($locale ?? app()->getLocale())->replace('_', '-');
+        return Str::of($locale ?? app()->getLocale())->replace('_', '-')->toString();
     }
 }

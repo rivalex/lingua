@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire;
 
 use Livewire\Attributes\Computed;
@@ -36,12 +38,10 @@ class Translations extends Component
 
     public array $availableGroups = [];
 
-    public array $queryString = [];
-
     public function mount(?string $locale = null): void
     {
         $this->search = request('q', '');
-        $this->perPage = request('p', 10);
+        $this->perPage = max(1, min((int) request('p', 10), 100));
         $this->group = request('g', '');
         $this->showOnlyMissing = request('m', false);
 
@@ -49,7 +49,6 @@ class Translations extends Component
         // Fall back to default locale when the requested locale does not exist in DB.
         $this->currentLocale = $this->language?->code ?? linguaDefaultLocale();
         $this->setDefaults();
-        $this->queryString = request()->query();
     }
 
     protected function setDefaults(): void
@@ -68,14 +67,12 @@ class Translations extends Component
     public function updatedCurrentLocale(): void
     {
         $this->reset('showOnlyMissing');
-        if ($this->search) {
-            $this->queryString['s'] = $this->search;
-        }
-        if ($this->group) {
-            $this->queryString['g'] = $this->group;
-        }
-        $this->redirect(route('lingua.translations',
-            array_merge(['locale' => $this->currentLocale], $this->queryString)), true);
+        $params = array_filter([
+            'locale' => $this->currentLocale,
+            'q' => $this->search ?: null,
+            'g' => $this->group ?: null,
+        ]);
+        $this->redirect(route('lingua.translations', $params), true);
     }
 
     public function updatedGroup(): void

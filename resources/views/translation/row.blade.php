@@ -66,8 +66,10 @@
                     <div x-data="{ showMarkdown: @js($defaultValue) }">
                         <pre class="markdown" x-text="showMarkdown"></pre>
                     </div>
-                @else
+                @elseif($translation->type->value === 'html')
                     <div class="preview">{!! $defaultValue !!}</div>
+                @else
+                    <div class="preview">{{ $defaultValue }}</div>
                 @endif
             </x-lingua::clipboard>
             <div class="flex flex-col gap-1 items-center">

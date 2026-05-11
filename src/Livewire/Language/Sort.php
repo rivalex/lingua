@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Language;
 
 use Illuminate\Support\Facades\Log;
@@ -13,9 +15,12 @@ use Rivalex\Lingua\Models\Language;
 class Sort extends Component
 {
     #[Renderless, Async]
-    public function updateLanguageOrder($item, $position): void
+    public function updateLanguageOrder(int $item, mixed $position): void
     {
         try {
+            if (! is_int($position) || $position < 0) {
+                throw new \InvalidArgumentException('Invalid position value.');
+            }
             $languages = Language::orderBy('sort')->get();
             $movedLanguage = $languages->firstWhere('id', $item);
             if (! $movedLanguage) {

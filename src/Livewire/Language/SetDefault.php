@@ -16,8 +16,6 @@ class SetDefault extends Component
 
     public Language $language;
 
-    public bool $canSetDefault = false;
-
     public function mount(): void
     {
         $this->modalName = 'language-set-default-modal-'.$this->language->code;
