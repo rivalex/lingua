@@ -35,13 +35,28 @@
                                 parameter (#[Url(as: 'q')] in the Translations component).
                                 Passing group_key narrows the search to this specific translation.
                             --}}
-                            <a
-                                href="{{ route('lingua.translations', ['locale' => $language->code, 'q' => $missing['group_key']]) }}"
-                                wire:navigate
-                                class="text-xs text-violet-600 dark:text-violet-400 hover:underline whitespace-nowrap"
-                            >
+                            @if(config('lingua.links.translations.enabled', true))
+                                @if(config('lingua.navigate', false))
+                                <a
+                                    href="{{ route(config('lingua.links.translations.route', 'lingua.translations'), ['locale' => $language->code, 'q' => $missing['group_key']]) }}"
+                                    wire:navigate
+                                    class="text-xs text-violet-600 dark:text-violet-400 hover:underline whitespace-nowrap"
+                                >
+                                    {{ __('lingua::lingua.statistics.missing.translate') }}
+                                </a>
+                                @else
+                                <a
+                                    href="{{ route(config('lingua.links.translations.route', 'lingua.translations'), ['locale' => $language->code, 'q' => $missing['group_key']]) }}"
+                                    class="text-xs text-violet-600 dark:text-violet-400 hover:underline whitespace-nowrap"
+                                >
+                                    {{ __('lingua::lingua.statistics.missing.translate') }}
+                                </a>
+                                @endif
+                            @else
+                            <span class="text-xs text-zinc-400 whitespace-nowrap">
                                 {{ __('lingua::lingua.statistics.missing.translate') }}
-                            </a>
+                            </span>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

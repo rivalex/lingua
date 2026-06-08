@@ -131,6 +131,9 @@ class Languages extends Component
 
     public function render()
     {
-        return view('lingua::languages');
+        $view = view('lingua::languages');
+        $layout = config('lingua.layout');
+
+        return $layout ? $view->layout($layout) : $view;
     }
 }

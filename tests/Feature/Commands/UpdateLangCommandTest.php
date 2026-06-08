@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
 it('can run `lingua:update-lang` command', function () {
     $this->artisan('lingua:update-lang')
         ->assertSuccessful()
-        ->expectsOutputToContain('Updating language files via Laravel Lang')
+        ->expectsOutputToContain('Updating languages')
         ->expectsOutputToContain('Translations updated and synced to database successfully.');
 });
 
-it('calls lang:update only for installed languages and then syncs to database', function () {
+it('syncs translations to database after updating languages', function () {
     $initialCount = Translation::count();
     expect($initialCount)->toBeGreaterThan(0);
 
@@ -20,7 +22,7 @@ it('calls lang:update only for installed languages and then syncs to database', 
     expect(Translation::count())->toBeGreaterThanOrEqual($initialCount);
 });
 
-it('skips lang:update when no languages are installed', function () {
+it('skips update when no languages are installed', function () {
     Language::query()->delete();
 
     $this->artisan('lingua:update-lang')
@@ -28,7 +30,7 @@ it('skips lang:update when no languages are installed', function () {
         ->expectsOutputToContain('No languages installed. Skipping update.');
 });
 
-it('outputs error when sync to database fails after lang:update', function () {
+it('outputs error when sync to database fails during update', function () {
     $this->mock(Translation::class, function ($mock) {
         $mock->shouldReceive('syncToDatabase')
             ->once()
@@ -37,5 +39,5 @@ it('outputs error when sync to database fails after lang:update', function () {
 
     $this->artisan('lingua:update-lang')
         ->assertSuccessful()
-        ->expectsOutputToContain('Failed to update language files: Sync to database failed.');
+        ->expectsOutputToContain('Failed to update languages: Sync to database failed.');
 });

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Spatie\TranslationLoader\TranslationLoaderManager;
+use Rivalex\Lingua\TranslationManager\LinguaManager;
 
 it('is bound as the translation.loader singleton', function (): void {
-    expect(app('translation.loader'))->toBeInstanceOf(TranslationLoaderManager::class);
+    expect(app('translation.loader'))->toBeInstanceOf(LinguaManager::class);
 });
 
 it('returns an array for a default-namespace load', function (): void {

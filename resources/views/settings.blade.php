@@ -13,6 +13,21 @@
         {{-- Selector settings --}}
         @include('lingua::settings.partials._selector')
 
+        <flux:separator variant="subtle"/>
+
+        {{-- Routing & navigation --}}
+        @include('lingua::settings.partials._routing')
+
+        <flux:separator variant="subtle"/>
+
+        {{-- Editor toolbar --}}
+        @include('lingua::settings.partials._editor')
+
+        <flux:separator variant="subtle"/>
+
+        {{-- Save / toast --}}
+        @include('lingua::settings.partials._save')
+
         {{-- lingua extension hook: settings.tabs --}}
         @foreach ($linguaExtensions->allSettingsTabComponents() as $cls)
             <livewire:dynamic-component :component="$cls" :key="'ext_settings_'.$cls"/>

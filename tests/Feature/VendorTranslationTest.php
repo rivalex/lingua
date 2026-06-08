@@ -271,10 +271,12 @@ it('Delete component still deletes non-vendor translations normally', function (
     ]);
     $id = $translation->id;
 
-    Livewire::test(Delete::class, [
+    $component = Livewire::test(Delete::class, [
         'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
-    ])
+    ]);
+    $component
+        ->set('control', $component->get('confirm'))
         ->call('deleteTranslation')
         ->assertDispatched('translation_deleted')
         ->assertNotDispatched('vendor_translation_protected');

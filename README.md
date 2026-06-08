@@ -11,7 +11,7 @@
 ### **The complete multilingual management system for Laravel**
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rivalex/lingua.svg)](https://packagist.org/packages/rivalex/lingua)
-[![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue)](https://php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-blue)](https://php.net)
 [![Laravel Version](https://img.shields.io/badge/Laravel-11--13-orange)](https://laravel.com)
 [![License](https://img.shields.io/github/license/rivalex/lingua)](LICENSE.md)
 [![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
@@ -53,14 +53,15 @@ manage translations, and sync everything with a single command.
 | **Vendor translations**          | Manage package translations alongside your own                                                                 |
 | **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                                     |
 | **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations                          |
-| **Fully tested**                 | 440+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
+| **Flexible routing**             | Optional route parameters, direct component embedding, `wire:navigate` toggle, layout override                 |
+| **Fully tested**                 | 489+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
 | **Documentation**                | Comprehensive documentation and guides available at [Lingua Docs](https://rivalex.github.io/lingua-docs/)      |
 
 ---
 
 ## 📦 Requirements
 
-- PHP **8.3+**
+- PHP **8.4+**
 - Laravel **11 | 12 | 13**
 - Livewire **4.0+**
 - Livewire Flux **2.0+**
@@ -107,31 +108,42 @@ After installation, `config/lingua.php` gives you full control:
 
 ```php
 return [
+
+    // -------------------------------------------------------------------------
+    // LOCALE DEFAULTS
+    // -------------------------------------------------------------------------
+
     // Directory where local language files are stored
-    'lang_dir' => lang_path(),
-
-    // Application default locale
-    'default_locale' => config('app.locale', 'en'),
-
-    // Fallback locale when a translation is missing
-    'fallback_locale' => config('app.fallback_locale', 'en'),
-
-    // Middleware applied to Lingua's routes
-    'middleware' => ['web'],
-
-    // URL prefix for Lingua's management pages
-    'routes_prefix' => 'lingua',
-
-    // Session key used to store the active locale
+    'lang_dir'         => lang_path(),
+    'default_locale'   => config('app.locale', 'en'),
+    'fallback_locale'  => config('app.fallback_locale', 'en'),
     'session_variable' => 'locale',
 
-    // Language selector widget settings
+    // -------------------------------------------------------------------------
+    // ROUTING
+    // -------------------------------------------------------------------------
+
+    // Middleware applied to Lingua's management routes (auth required by default)
+    'middleware'             => ['web', 'auth'],
+
+    // URL prefix for Lingua's management pages
+    'routes_prefix'          => 'lingua',
+
+    // Optional URI fragment appended to every Lingua page route.
+    // Useful for multi-tenant routing, e.g. '{team?}'.
+    'routes_extra_parameters' => null,
+
+    // -------------------------------------------------------------------------
+    // UI / PRESENTATION
+    // -------------------------------------------------------------------------
+
+    // Language selector widget
     'selector' => [
-        'mode'       => 'sidebar',   // 'sidebar' | 'modal' | 'dropdown'
+        'mode'       => 'sidebar',   // 'sidebar' | 'modal' | 'dropdown' | 'headless'
         'show_flags' => true,
     ],
 
-    // Rich-text editor toolbar options
+    // Rich-text editor toolbar options (overridable from the Settings UI)
     'editor' => [
         'headings'      => false,
         'bold'          => true,
@@ -147,6 +159,43 @@ return [
         'ordered'       => true,
         'clear'         => true,
         'code-mode'     => false,
+    ],
+
+    // Layout used when Lingua pages render full-page via lingua routes.
+    // null = use the Livewire default (livewire.layout config).
+    'layout' => null,
+
+    // Set to true when the host app has Livewire SPA navigation enabled
+    // (adds wire:navigate to internal locale/page redirects).
+    'navigate' => false,
+
+    // Configurable navigation links from the Lingua UI to package pages.
+    'links' => [
+        'translations' => [
+            'enabled' => true,
+            'route'   => 'lingua.translations',
+        ],
+    ],
+
+    // UI presentation tweaks.
+    // sticky_top: CSS top offset for the sticky filter bar in the Translations page.
+    // Use when the host app has a fixed header. Accepts int (→ rem) or a CSS string.
+    'ui' => [
+        'sticky_top' => 0,
+    ],
+
+    // -------------------------------------------------------------------------
+    // STORAGE / LOADERS
+    // -------------------------------------------------------------------------
+
+    'translation_loaders' => [\Rivalex\Lingua\Database\Db::class],
+    'model'               => \Rivalex\Lingua\Models\Translation::class,
+    'translation_manager' => \Rivalex\Lingua\TranslationManager\LinguaManager::class,
+
+    // Cache configuration: translations cached forever per (locale, group) pair.
+    'cache' => [
+        'store'  => env('LINGUA_CACHE_STORE', null),   // null = app default driver
+        'prefix' => env('LINGUA_CACHE_PREFIX', 'lingua.trans'),
     ],
 ];
 ```
@@ -383,9 +432,11 @@ The settings page lets you configure Lingua's UI behaviour without touching conf
 **What you can configure:**
 
 - **Selector mode** — choose between `sidebar`, `modal`, `dropdown`, or `headless`
-- **Flag icons** — toggle the display of country flag icons next to language names in the selector
+- **Flag icons** — toggle country flag icons next to language names
+- **Routing** — toggle `wire:navigate`, set sticky bar top offset (`ui.sticky_top`), configure extra route parameters
+- **Editor toolbar** — enable or disable individual toolbar buttons (bold, italic, headings, code-block, …) across 3 groups
 
-Settings are stored in the `lingua_settings` database table and take effect immediately. Values from `config/lingua.php` continue to serve as the fallback when no database setting has been saved yet — no changes to your config file are required.
+Settings are stored in the `lingua_settings` database table and take effect immediately. Values from `config/lingua.php` serve as fallback when no database setting has been saved — no config file changes required.
 
 ```blade
 <a href="{{ route('lingua.settings') }}">Lingua Settings</a>
@@ -423,10 +474,29 @@ If your project uses Tailwind CSS, the `dir` attribute on `<html>` activates Tai
 automatically — no additional configuration required:
 
 ```html
-
 <div class="text-left rtl:text-right">…</div>
 <div class="pl-4 rtl:pr-4 rtl:pl-0">…</div>
 ```
+
+### Flux UI Assets
+
+Lingua uses [Flux UI](https://fluxui.dev) for its interface. To ensure that all Flux components (like searchable selects) work correctly, you must include Flux assets in your application layout.
+
+Add the `@fluxAppearance` and `@fluxScripts` directives to your layout file:
+
+```html
+{{-- resources/views/layouts/app.blade.php --}}
+<head>
+    ...
+    @fluxAppearance
+</head>
+<body>
+    ...
+    @fluxScripts
+</body>
+```
+
+Note: Lingua depends on these assets to be present in your layout for its internal components (like searchable selects) to function correctly. If you don't include them, some UI elements might not work as expected.
 
 #### CSS logical properties (recommended)
 
@@ -671,8 +741,7 @@ Lingua::syncToLocal();
 
 ### How translations are stored
 
-Lingua stores translations in the `language_lines` table, extending
-Spatie's [laravel-translation-loader](https://github.com/spatie/laravel-translation-loader). Each row holds **all
+Lingua stores translations in the `language_lines` table. Each row holds **all
 locales in a single JSON `text` column**, eliminating the need for per-locale rows:
 
 ```
@@ -716,12 +785,12 @@ lang/vendor/…        │  ← lingua:sync-to-local
 
 ### Translation loading at runtime
 
-Lingua registers a custom `LinguaManager` as the Laravel translation loader. At runtime it merges:
+Lingua registers `LinguaManager` (extends `FileLoader`) as the Laravel `translation.loader` via `extend()`. At runtime it merges:
 
 1. File-based translations from `lang/`
-2. Database translations via Spatie's `Db` loader
+2. Database translations via Lingua's internal `Db` loader (`Rivalex\Lingua\Database\Db`)
 
-Database translations take precedence, enabling live overrides without touching source files.
+Database translations take precedence, enabling live overrides without touching source files. Translations are cached per `(locale, group)` pair via `Cache::rememberForever` and invalidated selectively on model save/delete.
 
 ### Locale middleware
 
@@ -771,6 +840,6 @@ The MIT License (MIT). Please see [LICENSE.md](LICENSE.md) for more information.
 Built with ❤️ by [Alessandro Rivolta](https://github.com/rivalex)
 
 Powered
-by [Laravel](https://laravel.com) · [Livewire](https://livewire.laravel.com) · [Flux](https://fluxui.dev) · [Laravel Lang](https://laravel-lang.com) · [Spatie](https://spatie.be)
+by [Laravel](https://laravel.com) · [Livewire](https://livewire.laravel.com) · [Flux](https://fluxui.dev) · [Laravel Lang](https://laravel-lang.com)
 
 </div>

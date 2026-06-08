@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
+use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
@@ -47,18 +47,17 @@ class RemoveLangCommand extends Command
         }
 
         try {
-            $this->info('Removing language files via Laravel Lang...');
-            Artisan::call('lang:rm', ['locales' => [strtolower($locale)], '--force' => true]);
-
             if ($language) {
                 $this->info('Removing translations from database...');
                 $translations = Translation::whereNotNull('text->'.$locale)->get();
                 foreach ($translations as $translation) {
                     $translation->forgetTranslation($locale);
                 }
+            }
 
-                $this->info('Deleting language record...');
-                $language->delete();
+            Lingua::removeLanguage($locale);
+
+            if ($language) {
                 app(Language::class)->reorderLanguages();
             }
 

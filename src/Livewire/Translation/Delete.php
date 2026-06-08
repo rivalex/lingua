@@ -50,6 +50,8 @@ class Delete extends Component
             return;
         }
 
+        $this->validateConfirmControl();
+
         try {
             $this->closeModal();
             if ($this->isDefaultLocale) {

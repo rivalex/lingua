@@ -51,6 +51,24 @@ final class LinguaSetting extends Model
     /** Which rendering mode the language selector uses (sidebar|modal|dropdown|headless). */
     public const string KEY_SELECTOR_MODE = 'selector.mode';
 
+    /** Whether wire:navigate is used on internal Lingua redirects. */
+    public const string KEY_NAVIGATE = 'navigate';
+
+    /** Blade layout component used for full-page Lingua views (null = Livewire default). */
+    public const string KEY_LAYOUT = 'layout';
+
+    /** Whether the translations link is active in language rows and statistics. */
+    public const string KEY_LINKS_TRANSLATIONS_ENABLED = 'links.translations.enabled';
+
+    /** Route name used for all translation page links. */
+    public const string KEY_LINKS_TRANSLATIONS_ROUTE = 'links.translations.route';
+
+    /** CSS top offset for the sticky filter bar in the Translations page. */
+    public const string KEY_UI_STICKY_TOP = 'ui.sticky_top';
+
+    /** Editor toolbar feature toggles, stored as a JSON array. */
+    public const string KEY_EDITOR = 'editor';
+
     // -------------------------------------------------------------------------
     // Public API
     // -------------------------------------------------------------------------

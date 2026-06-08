@@ -1,7 +1,8 @@
 <div wire:ignore>
     <flux:modal.trigger name="{{ $modalName }}">
-        <flux:button variant="primary" color="green"
-                     icon="plus">@lang('lingua::lingua.translations.create.action')</flux:button>
+        <flux:button variant="primary" color="green" icon="plus">
+            @lang('lingua::lingua.translations.create.action')
+        </flux:button>
     </flux:modal.trigger>
     <flux:modal name="{{ $modalName }}" class="lingua lingua-modal">
         <div class="flex flex-col gap-4">
@@ -19,19 +20,19 @@
                                                 :placeholder="__('lingua::lingua.translations.fields.group_placeholder')"/>
                     </div>
                     <div class="col-span-1">
-                        <flux:select wire:model.change.live="translationType"
-                                     required
-                                     :badge="__('lingua::lingua.global.required')"
-                                     :label="__('lingua::lingua.translations.fields.type')"
-                                     :placeholder="__('lingua::lingua.translations.fields.type_placeholder')"
-                                     :variant="Flux::pro() ? 'listbox' : null">
+                        <x-lingua::select wire:model.change.live="translationType"
+                                          required
+                                          :badge="__('lingua::lingua.global.required')"
+                                          :label="__('lingua::lingua.translations.fields.type')"
+                                          :placeholder="__('lingua::lingua.translations.fields.type_placeholder')">
                             @foreach($translationsTypes as $translationTypeItem)
-                                <flux:select.option value="{{ $translationTypeItem['value'] }}"
-                                                    :key="'group-' . $translationTypeItem['value']">
+                                <x-lingua::select.option
+                                    value="{{ $translationTypeItem['value'] }}"
+                                    :selected-label="strip_tags($translationTypeItem['label'])">
                                     {!! $translationTypeItem['label'] !!}
-                                </flux:select.option>
+                                </x-lingua::select.option>
                             @endforeach
-                        </flux:select>
+                        </x-lingua::select>
                     </div>
                     <div class="col-span-3">
                         <flux:input wire:model.blur.live="key" type="text" icon="key"

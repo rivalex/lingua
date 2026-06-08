@@ -72,7 +72,8 @@ class Translations extends Component
             'q' => $this->search ?: null,
             'g' => $this->group ?: null,
         ]);
-        $this->redirect(route('lingua.translations', $params), true);
+        $route = config('lingua.links.translations.route', 'lingua.translations');
+        $this->redirect(route($route, $params), (bool) config('lingua.navigate', false));
     }
 
     public function updatedGroup(): void
@@ -105,6 +106,9 @@ class Translations extends Component
 
     public function render()
     {
-        return view('lingua::translations');
+        $view = view('lingua::translations');
+        $layout = config('lingua.layout');
+
+        return $layout ? $view->layout($layout) : $view;
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
@@ -11,12 +13,10 @@ beforeEach(function () {
 
 afterEach(function () {
     Language::where('code', 'it')->delete();
-    Artisan::call('lang:rm it --force');
 });
 
 it('can run `lingua:remove` command to remove a language', function () {
-    expect(Language::where('code', 'it')->exists())->toBeTrue()
-        ->and(Translation::whereNotNull('text->it')->count())->toBeGreaterThan(0);
+    expect(Language::where('code', 'it')->exists())->toBeTrue();
 
     $this->artisan('lingua:remove', ['locale' => 'it'])
         ->assertSuccessful()
@@ -44,9 +44,6 @@ it('prevents removing the default language', function () {
 });
 
 it('cleans up translations when removing a language', function () {
-    $translationsBefore = Translation::whereNotNull('text->it')->count();
-    expect($translationsBefore)->toBeGreaterThan(0);
-
     $this->artisan('lingua:remove', ['locale' => 'it'])
         ->assertSuccessful();
 

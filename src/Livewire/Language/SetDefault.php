@@ -26,6 +26,7 @@ class SetDefault extends Component
 
     public function setDefaultLanguage(): void
     {
+        $this->validateConfirmControl();
         try {
             app(Language::class)->setDefault($this->language);
             $this->dispatch('refreshLanguageRows');

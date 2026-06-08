@@ -1,8 +1,10 @@
 <?php
 
-use LaravelLang\Locales\Facades\Locales;
+declare(strict_types=1);
+
 use Livewire\Livewire;
 use Rivalex\Lingua\Livewire\Language\Table;
+use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Models\Language;
 
 use function Pest\Laravel\assertDatabaseHas;
@@ -23,17 +25,16 @@ it('can access to `COMPUTED` property `languages`', function () {
     Livewire::test(Table::class)
         ->assertCount('languages', $count);
 
-    // Use full locale data to avoid regional UNIQUE constraint conflicts
-    // that arise when the factory picks a random regional for an overridden code.
+    $registry = app(LocaleRegistry::class);
     foreach (['it', 'es'] as $code) {
-        $data = Locales::info($code);
+        $data = $registry->info($code);
         Language::create([
             'code' => $data->code,
             'regional' => $data->regional,
             'type' => $data->type,
-            'name' => $data->localized,
+            'name' => $data->name,
             'native' => $data->native,
-            'direction' => $data->direction->value,
+            'direction' => $data->direction,
             'is_default' => false,
         ]);
     }
@@ -49,32 +50,29 @@ it('can access to `COMPUTED` property `languages`', function () {
 });
 
 it('can `SEARCH/FILTER` languages by code, regional, name and native', function () {
+    $registry = app(LocaleRegistry::class);
 
-    $localeData = Locales::info('it');
-    Language::create(
-        [
-            'code' => $localeData->code,
-            'regional' => $localeData->regional,
-            'type' => $localeData->type,
-            'name' => $localeData->localized,
-            'native' => $localeData->native,
-            'direction' => $localeData->direction->value,
-            'is_default' => false,
-        ]
-    );
+    $it = $registry->info('it');
+    Language::create([
+        'code' => $it->code,
+        'regional' => $it->regional,
+        'type' => $it->type,
+        'name' => $it->name,
+        'native' => $it->native,
+        'direction' => $it->direction,
+        'is_default' => false,
+    ]);
 
-    $localeData = Locales::info('ar');
-    Language::create(
-        [
-            'code' => $localeData->code,
-            'regional' => $localeData->regional,
-            'type' => $localeData->type,
-            'name' => $localeData->localized,
-            'native' => $localeData->native,
-            'direction' => $localeData->direction->value,
-            'is_default' => false,
-        ]
-    );
+    $ar = $registry->info('ar');
+    Language::create([
+        'code' => $ar->code,
+        'regional' => $ar->regional,
+        'type' => $ar->type,
+        'name' => $ar->name,
+        'native' => $ar->native,
+        'direction' => $ar->direction,
+        'is_default' => false,
+    ]);
 
     Livewire::test(Table::class)
         ->set('search', 'english')

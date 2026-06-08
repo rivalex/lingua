@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
-use LaravelLang\Locales\Facades\Locales;
+use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
 
 class UpdateLangCommand extends Command
 {
@@ -31,7 +29,7 @@ class UpdateLangCommand extends Command
      */
     public function handle(): void
     {
-        $this->info('Updating language files via Laravel Lang...');
+        $this->info('Updating languages...');
 
         try {
             $dbLocales = Language::all()->pluck('code')->toArray();
@@ -42,20 +40,10 @@ class UpdateLangCommand extends Command
                 return;
             }
 
-            // Remove filesystem locales not tracked in the database so that
-            // lang:update only refreshes DB-managed locales.
-            foreach (Locales::raw()->installed() as $locale) {
-                if (! in_array($locale, $dbLocales)) {
-                    Artisan::call('lang:rm', ['locales' => [$locale], '--force' => true]);
-                }
-            }
-
-            Artisan::call('lang:update');
-            $this->info('Language files updated. Syncing translations to database...');
-            app(Translation::class)->syncToDatabase();
+            Lingua::updateLanguages();
             $this->info('Translations updated and synced to database successfully.');
         } catch (\Throwable $e) {
-            $this->error('Failed to update language files: '.$e->getMessage());
+            $this->error('Failed to update languages: '.$e->getMessage());
         }
     }
 }

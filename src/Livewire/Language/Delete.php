@@ -63,7 +63,7 @@ class Delete extends Component
      */
     public function deleteLanguage(): void
     {
-        $this->validate();
+        $this->validateConfirmControl();
         try {
             $locale = $this->language->code;
             Lingua::removeLanguage($locale);

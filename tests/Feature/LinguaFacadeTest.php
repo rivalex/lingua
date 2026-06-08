@@ -442,18 +442,20 @@ it('getLocaleStats shows zero translated for a locale with no translations', fun
 // addLanguage / removeLanguage
 // ---------------------------------------------------------------------------
 
-it('addLanguage installs language files without throwing', function () {
+it('addLanguage creates language record without throwing', function () {
     expect(fn () => Lingua::addLanguage('fr'))->not->toThrow(Exception::class);
 
-    // Cleanup
-    Artisan::call('lang:rm fr --force');
+    expect(Language::where('code', 'fr')->exists())->toBeTrue();
+
     Language::where('code', 'fr')->delete();
 });
 
-it('removeLanguage removes language files without throwing', function () {
-    Artisan::call('lang:add fr');
+it('removeLanguage deletes language record without throwing', function () {
+    Lingua::addLanguage('fr');
 
     expect(fn () => Lingua::removeLanguage('fr'))->not->toThrow(Exception::class);
+
+    expect(Language::where('code', 'fr')->exists())->toBeFalse();
 });
 
 // ---------------------------------------------------------------------------

@@ -19,7 +19,9 @@ it('can SET default `language` and dispatch `events`', function () {
         'is_default' => false,
     ]);
 
-    Livewire::test(SetDefault::class, ['language' => $newDefault])
+    $component = Livewire::test(SetDefault::class, ['language' => $newDefault]);
+    $component
+        ->set('control', $component->get('confirm'))
         ->call('setDefaultLanguage')
         ->assertDispatched('language_default_set')
         ->assertDispatched('refreshLanguageRows');
@@ -47,7 +49,9 @@ it('catch `ERRORS` setting default Language for `Language::setDefault($locale)`'
         'is_default' => false,
     ]);
 
-    Livewire::test(SetDefault::class, ['language' => $newDefault])
+    $component = Livewire::test(SetDefault::class, ['language' => $newDefault]);
+    $component
+        ->set('control', $component->get('confirm'))
         ->call('setDefaultLanguage')
         ->assertHasErrors(['setDefaultLanguage' => 'Error setting language as default.'])
         ->assertDispatched('language_default_fail');

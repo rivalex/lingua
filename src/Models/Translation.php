@@ -7,20 +7,22 @@ namespace Rivalex\Lingua\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use LaravelLang\Locales\Facades\Locales;
+use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\Factories\TranslationFactory;
 use Rivalex\Lingua\Enums\LinguaType;
-use Spatie\TranslationLoader\LanguageLine;
+use Rivalex\Lingua\Locales\LocaleRegistry;
+use Rivalex\Lingua\TranslationManager\CacheKey;
 
 /**
  * Class Translation
  * Package: App\Models\System
  *
  * Translation model for managing language translations in the application.
- * Extends LanguageLine to provide advanced translation management capabilities.
  *
  * @property string $id UUID identifier for the translation
  * @property string $group Translation group name (e.g., 'single', 'validation', etc.)
@@ -35,7 +37,7 @@ use Spatie\TranslationLoader\LanguageLine;
  * @property-read string $lang_key Get the full group key (e.g., 'single.welcome')
  */
 #[UseFactory(TranslationFactory::class)]
-class Translation extends LanguageLine
+class Translation extends Model
 {
     /**
      * The database table used by the model.
@@ -107,11 +109,54 @@ class Translation extends LanguageLine
             }
         });
         // Suppress per-row cache clears during bulk sync; a single clear fires in the finally block.
-        static::saved(function () {
+        static::saved(function (self $model) {
             if (! self::$syncing) {
-                Artisan::call('cache:clear');
+                $model->forgetCacheForLocales();
             }
         });
+        static::deleted(function (self $model) {
+            $model->forgetCacheForLocales();
+        });
+    }
+
+    /**
+     * Retrieve all translations for the given locale and group, caching the result forever.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getTranslationsForGroup(string $locale, string $group): array
+    {
+        return Cache::store(config('lingua.cache.store'))->rememberForever(
+            CacheKey::forGroup($locale, $group),
+            fn () => static::where('group', $group)
+                ->get()
+                ->reduce(function (array $carry, self $translation) use ($locale): array {
+                    $value = $translation->text[$locale] ?? null;
+                    if ($value !== null) {
+                        data_set($carry, $translation->key, $value);
+                    }
+
+                    return $carry;
+                }, [])
+        );
+    }
+
+    /**
+     * Forget all cache keys for every locale present in this model's text column.
+     * Unions current and original text to catch locale removals.
+     */
+    protected function forgetCacheForLocales(): void
+    {
+        $locales = array_unique(array_merge(
+            array_keys($this->text ?? []),
+            array_keys($this->getOriginal('text') ?? [])
+        ));
+
+        $store = Cache::store(config('lingua.cache.store'));
+
+        foreach ($locales as $locale) {
+            $store->forget(CacheKey::forGroup($locale, $this->group));
+        }
     }
 
     protected function groupKey(): Attribute
@@ -137,6 +182,20 @@ class Translation extends LanguageLine
     public function getLangKeyAttribute(): string
     {
         return self::buildGroupKey($this->group, $this->key, $this->is_vendor ?? false, $this->vendor);
+    }
+
+    /**
+     * Set the translation value for a specific locale and persist.
+     *
+     * @param  string  $locale  The locale code
+     * @param  string  $value  The translated string
+     */
+    public function setTranslation(string $locale, string $value): static
+    {
+        $this->text = array_merge($this->text ?? [], [$locale => $value]);
+        $this->save();
+
+        return $this;
     }
 
     /**
@@ -308,15 +367,13 @@ class Translation extends LanguageLine
     {
         $langPath = config('lingua.lang_dir');
 
-        if (Locales::installed()->count() === 0) {
-            Artisan::call('lang:add', ['locales' => [config('lingua.default_locale')]]);
-        }
-
         $defaultLocale = Language::default()?->code ?? config('lingua.default_locale', 'en');
+
+        $bundledSource = app(BaseTranslationSource::class);
 
         $allLocales = array_values(array_unique(array_merge(
             self::discoverLocales($langPath),
-            Locales::installed()->pluck('code')->all()
+            $bundledSource->available()
         )));
 
         $remainingLocales = array_values(array_diff($allLocales, [$defaultLocale]));
@@ -495,7 +552,19 @@ class Translation extends LanguageLine
      */
     private static function ensureLanguageRecord(string $locale): void
     {
-        $localeInfo = Locales::info($locale);
+        $localeInfo = app(LocaleRegistry::class)->info($locale);
+
+        if ($localeInfo === null) {
+            Language::firstOrCreate(['code' => $locale], [
+                'regional' => null,
+                'type' => 'Latn',
+                'name' => $locale,
+                'native' => $locale,
+                'direction' => 'ltr',
+            ]);
+
+            return;
+        }
 
         Language::updateOrCreate(
             [
@@ -504,9 +573,9 @@ class Translation extends LanguageLine
             ],
             [
                 'type' => $localeInfo->type,
-                'name' => $localeInfo->locale->name,
+                'name' => $localeInfo->name,
                 'native' => $localeInfo->native,
-                'direction' => $localeInfo->direction->value,
+                'direction' => $localeInfo->direction,
             ]
         );
     }

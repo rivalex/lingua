@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Rivalex\Lingua\Livewire\Language;
 
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
-use LaravelLang\Locales\Facades\Locales;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -46,7 +44,7 @@ class Create extends Component
      * This property is bound to the form input and validated to ensure
      * a language is selected before creation.
      */
-    #[Validate('required|string')]
+    #[Validate('required|string|regex:/^[a-zA-Z]{2,8}([_\-][a-zA-Z0-9]{1,8})*$/')]
     public string $language = '';
 
     /**
@@ -74,14 +72,15 @@ class Create extends Component
         $this->reset('availableLanguages');
 
         foreach (Lingua::notInstalled() as $locale) {
-            try {
-                $lang = Lingua::info($locale);
-            } catch (\Throwable) {
+            $lang = Lingua::info($locale);
+
+            if ($lang === null) {
                 continue;
             }
+
             $this->availableLanguages[] = [
                 'code' => $lang->code,
-                'label' => $lang->locale->name,
+                'label' => $lang->name,
                 'description' => $lang->native,
             ];
         }
@@ -101,34 +100,20 @@ class Create extends Component
     }
 
     /**
-     * Add a new language to the application.
+     * Add a new language to the application (DB-native, no filesystem writes).
      *
-     * This method performs the following operations:
-     * 1. Validates the selected language code
-     * 2. Retrieves language information from Laravel Lang
-     * 3. Executes the 'lang:add' Artisan command to install language files
-     * 4. Creates a new Language record in the database with all locale details
-     * 5. Synchronizes translations to the database
-     * 6. Dispatches success events and refreshes the language list
-     * 7. Closes the modal and resets the form
+     * 1. Validates the selected locale code
+     * 2. Delegates record creation to Lingua::addLanguage()
+     * 3. Synchronizes translations to the database
+     * 4. Dispatches success events and refreshes the language list
      *
-     * On failure, logs the error, dispatches a failure event, and closes the modal.
+     * On failure, logs the error and dispatches a failure event.
      */
     public function addNewLanguage(): void
     {
         $this->validate();
         try {
-            $newLanguage = Lingua::info(locale: $this->language);
             Lingua::addLanguage(locale: $this->language);
-            app(Language::class)->create([
-                'code' => $newLanguage->code,
-                'regional' => $newLanguage->regional,
-                'type' => $newLanguage->type,
-                'name' => $newLanguage->locale->name,
-                'native' => $newLanguage->native,
-                'direction' => $newLanguage->direction,
-                'is_default' => false,
-            ]);
             app(Translation::class)->syncToDatabase();
             $this->dispatch('refreshLanguages');
             $this->dispatch('language_added');

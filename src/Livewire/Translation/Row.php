@@ -58,7 +58,11 @@ class Row extends Component
     {
         $this->translation->refresh();
         $this->value = $this->translation->text[$this->currentLocale] ?? '';
-        $this->defaultValue = $this->translation->text[linguaDefaultLocale()] ?? '';
+        $rawDefault = $this->translation->text[linguaDefaultLocale()] ?? '';
+        // Strip dangerous tags from HTML previews to prevent stored XSS in the admin UI.
+        $this->defaultValue = $this->translation->type->value === 'html'
+            ? strip_tags($rawDefault, '<p><br><b><i><em><strong><ul><ol><li><a><img><h1><h2><h3><h4><h5><h6><span><div><table><tr><td><th><thead><tbody><hr><blockquote><pre><code>')
+            : $rawDefault;
         $this->translationType = $this->translation->type->value;
     }
 

@@ -47,52 +47,61 @@
         {{--    </div>--}}
         {{--    @endif--}}
 
+        @php
+            $stickyRaw = \Rivalex\Lingua\Models\LinguaSetting::get(
+                \Rivalex\Lingua\Models\LinguaSetting::KEY_UI_STICKY_TOP,
+                config('lingua.ui.sticky_top', 0),
+            );
+            $stickyTop = is_numeric($stickyRaw) ? $stickyRaw.'rem' : $stickyRaw;
+        @endphp
         <div
-            class="flex flex-col lg:flex-row w-full items-center justify-between sticky top-0 z-1 bg-white dark:bg-zinc-800 py-4 gap-4">
-            <div class="flex flex-col lg:flex-row w-full lg:w-max items-center gap-4">
-                <flux:input type="search" wire:model.live.debounce.1000ms="search" class="search-input"
-                            :placeholder="__('lingua::lingua.global.search')"
-                            icon="magnifying-glass"
-                            wire:island="translationTable"
-                            name="searchTranslations" id="searchTranslations"/>
-                <flux:select wire:model.change.live="currentLocale"
-                             :variant="Flux::pro() ? 'listbox' : null"
-                             :searchable="Flux::pro()"
-                             wire:island="translationTable">
-                    @foreach($availableLocale as $code => $localeItem)
-                        <flux:select.option :value="$code" :key="$code">{{ $localeItem }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-                <flux:select wire:model.change.live="group"
-                             :variant="Flux::pro() ? 'listbox' : null"
-                             :searchable="Flux::pro()"
-                             clearable
-                             :placeholder="Flux::pro() ? __('lingua::lingua.translations.group.placeholder') : null"
-                             wire:island="translationTable">
-                    @if(!Flux::pro())
-                        <flux:select.option
-                            value="">@lang('lingua::lingua.translations.group.all_groups')</flux:select.option>
+            class="-mx-4 px-4 sm:px-6 lg:px-8 sticky z-30 backdrop-blur-md bg-white/70 dark:bg-zinc-900/70 border-b border-zinc-200/50 dark:border-white/10 py-4"
+            style="top: {{ $stickyTop }};">
+            <div class="grid grid-cols-12 w-full gap-4 items-center">
+                <div class="col-span-12 lg:col-span-3">
+                    <flux:input type="search" wire:model.blur.live="search" class="w-full"
+                                :placeholder="__('lingua::lingua.global.search')"
+                                icon="magnifying-glass"
+                                wire:island="translationTable"
+                                name="searchTranslations" id="searchTranslations"/>
+                </div>
+                <div class="col-span-12 lg:col-span-2">
+                    <x-lingua::select wire:model.change.live="currentLocale"
+                                      searchable
+                                      wire:island="translationTable">
+                        @foreach($availableLocale as $code => $localeItem)
+                            <x-lingua::select.option :value="$code" :label="$localeItem">{{ $localeItem }}</x-lingua::select.option>
+                        @endforeach
+                    </x-lingua::select>
+                </div>
+                <div class="col-span-12 lg:col-span-2">
+                    <x-lingua::select wire:model.change.live="group"
+                                      searchable clearable
+                                      :placeholder="__('lingua::lingua.translations.group.placeholder')"
+                                      wire:island="translationTable">
+                        @foreach($availableGroups as $groupItem)
+                            <x-lingua::select.option :value="$groupItem" :label="$groupItem">{{ $groupItem }}</x-lingua::select.option>
+                        @endforeach
+                    </x-lingua::select>
+                </div>
+                <div class="col-span-12 lg:col-span-2">
+                    @if($currentLocale !== linguaDefaultLocale())
+                        <flux:field variant="inline" class="flex items-center gap-2 w-fit">
+                            <flux:label><p
+                                    style="white-space: nowrap; font-weight: 400;">@lang('lingua::lingua.translations.table.show_only_missing')</p>
+                            </flux:label>
+                            <flux:switch wire:model.change.live="showOnlyMissing" wire:island="translationTable"/>
+                            <flux:error name="showOnlyMissing"/>
+                        </flux:field>
                     @endif
-                    @foreach($availableGroups as $groupItem)
-                        <flux:select.option :value="$groupItem" :key="$groupItem">{{ $groupItem }}</flux:select.option>
+                </div>
+                <div class="col-span-12 lg:col-span-3">
+                    <livewire:lingua::translation.create :key="'newTranslation'" :$group/>
+                    {{-- lingua extension hook: translation.actions --}}
+                    @foreach ($linguaExtensions->allTranslationActionComponents() as $cls)
+                        <livewire:dynamic-component :component="$cls" :key="'ext_action_'.$cls"/>
                     @endforeach
-                </flux:select>
-                @if($currentLocale !== linguaDefaultLocale())
-                    <flux:field variant="inline" class="flex items-center gap-2 w-fit">
-                        <flux:label><p
-                                style="white-space: nowrap; font-weight: 400;">@lang('lingua::lingua.translations.table.show_only_missing')</p>
-                        </flux:label>
-                        <flux:switch wire:model.change.live="showOnlyMissing" wire:island="translationTable"/>
-                        <flux:error name="showOnlyMissing"/>
-                    </flux:field>
-                @endif
-            </div>
-            <div class="w-max gap-2">
-                <livewire:lingua::translation.create :key="'newTranslation'" :$group/>
-                {{-- lingua extension hook: translation.actions --}}
-                @foreach ($linguaExtensions->allTranslationActionComponents() as $cls)
-                    <livewire:dynamic-component :component="$cls" :key="'ext_action_'.$cls"/>
-                @endforeach
+                </div>
             </div>
         </div>
         <div class="flex flex-col w-full gap-2">

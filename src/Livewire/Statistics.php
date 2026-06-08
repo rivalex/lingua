@@ -203,6 +203,9 @@ final class Statistics extends Component
      */
     public function toggleMissingKeys(string $locale): void
     {
+        if (! preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $locale)) {
+            return;
+        }
         $this->expandedLocale = $this->expandedLocale === $locale ? null : $locale;
     }
 
@@ -233,7 +236,10 @@ final class Statistics extends Component
 
     public function render(): View
     {
-        return view('lingua::statistics');
+        $view = view('lingua::statistics');
+        $layout = config('lingua.layout');
+
+        return $layout ? $view->layout($layout) : $view;
     }
 
     // -------------------------------------------------------------------------

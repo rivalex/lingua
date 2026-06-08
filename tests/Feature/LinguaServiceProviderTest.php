@@ -6,7 +6,7 @@ use Illuminate\Translation\Translator;
 use Rivalex\Lingua\LinguaServiceProvider;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Services\ExtensionRegistry;
-use Spatie\TranslationLoader\TranslationLoaderManager;
+use Rivalex\Lingua\TranslationManager\LinguaManager;
 
 it('provides the expected service names', function (): void {
     $provider = new LinguaServiceProvider(app());
@@ -14,8 +14,8 @@ it('provides the expected service names', function (): void {
     expect($provider->provides())->toBe(['translator', 'translation.loader', ExtensionRegistry::class]);
 });
 
-it('resolves the translation loader as a TranslationLoaderManager', function (): void {
-    expect(app('translation.loader'))->toBeInstanceOf(TranslationLoaderManager::class);
+it('resolves the translation loader as a LinguaManager', function (): void {
+    expect(app('translation.loader'))->toBeInstanceOf(LinguaManager::class);
 });
 
 it('resolves the translator as a Translator instance', function (): void {

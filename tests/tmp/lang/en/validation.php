@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 return [
     'accepted' => 'The :attribute field must be accepted.',
     'accepted_if' => 'The :attribute field must be accepted when :other is :value.',

@@ -15,7 +15,7 @@
     ],
     "homepage": "https://github.com/rivalex/lingua",
     "type": "library",
-    "version": "v1.1.7",
+    "version": "v2.0.0",
     "license": "MIT",
     "authors": [
         {
@@ -27,13 +27,11 @@
     "require": {
         "php": "^8.3",
         "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
-        "laravel-lang/common": "^6.7",
         "league/html-to-markdown": "^5.1",
         "livewire/flux": "^v2.12.0",
         "livewire/livewire": "^v4.1.0",
         "outhebox/blade-flags": "^1.6",
-        "spatie/laravel-package-tools": "^1.92",
-        "spatie/laravel-translation-loader": "^2.8"
+        "spatie/laravel-package-tools": "^1.92"
     },
     "require-dev": {
         "larastan/larastan": "^v3.0.0",

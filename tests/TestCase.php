@@ -8,13 +8,11 @@ use BladeUI\Icons\BladeIconsServiceProvider;
 use Flux\FluxServiceProvider;
 use Illuminate\Config\Repository;
 use Illuminate\Support\Facades\Route;
-use LaravelLang\Locales\ServiceProvider;
 use Livewire\LivewireServiceProvider;
 use OutheBox\BladeFlags\BladeFlagsServiceProvider;
 use Rivalex\Lingua\Database\Seeders\LinguaSeeder;
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\LinguaServiceProvider;
-use Spatie\TranslationLoader\TranslationServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -25,14 +23,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
             FluxServiceProvider::class,
             BladeIconsServiceProvider::class,
             BladeFlagsServiceProvider::class,
-            TranslationServiceProvider::class,
-            ServiceProvider::class,
-            \LaravelLang\Config\ServiceProvider::class,
-            \LaravelLang\Publisher\ServiceProvider::class,
-            \LaravelLang\Lang\ServiceProvider::class,
-            \LaravelLang\Attributes\ServiceProvider::class,
-            \LaravelLang\Actions\ServiceProvider::class,
-            \LaravelLang\HttpStatuses\ServiceProvider::class,
             LinguaServiceProvider::class,
         ];
     }

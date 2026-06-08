@@ -141,34 +141,13 @@ it('catch `Sync database ERRORS` for `Translation::syncToDatabase()`', function 
         ->assertDispatched('synced_database_fail');
 });
 
-it('can `Update` translations from `Laravel Lang`', function () {
+it('can `Update` translations', function () {
     Livewire::test(Languages::class)
         ->assertStatus(200)
         ->call('updateLanguages')
         ->assertHasNoErrors()
         ->assertDispatched('lang_updated')
         ->assertDispatched('refreshLanguages');
-});
-
-it('catch `Update translations ERRORS` for `Artisan::call(\'lang:update\')`', function () {
-    $originalKernel = app(Kernel::class);
-    Artisan::swap(
-        Mockery::mock(Kernel::class, function ($mock) {
-            $mock->shouldReceive('call')
-                ->once()
-                ->with('lang:update')
-                ->andThrow(new Exception('Artisan command failed.'));
-        })
-    );
-
-    try {
-        Livewire::test(Languages::class)
-            ->call('updateLanguages')
-            ->assertHasErrors(['updateLanguagesError'])
-            ->assertDispatched('lang_updated_fail');
-    } finally {
-        Artisan::swap($originalKernel);
-    }
 });
 
 it('catch `Update translations ERRORS` for `Translation::syncToDatabase()`', function () {
@@ -187,17 +166,12 @@ it('catch `Update translations ERRORS` for `Translation::syncToDatabase()`', fun
 it('catch `Update translations ERRORS` for `Artisan::call(\'optimize:clear\')`', function () {
     $this->mock(Translation::class, function ($mock) {
         $mock->shouldReceive('syncToDatabase')
-            ->once()
             ->andReturnNull();
     });
 
     $originalKernel = app(Kernel::class);
     Artisan::swap(
         Mockery::mock(Kernel::class, function ($mock) {
-            $mock->shouldReceive('call')
-                ->once()
-                ->with('lang:update')
-                ->andReturnNull();
             $mock->shouldReceive('call')
                 ->once()
                 ->with('optimize:clear')

@@ -66,15 +66,18 @@ trait ManagesLocale
             return;
         }
 
-        // Guard against open redirect — only allow same-origin redirects.
+        // Guard against open redirect — block non-http/https schemes and cross-origin hosts.
         $parsed = parse_url($this->currentUrl);
         $appHost = parse_url(config('app.url'), PHP_URL_HOST);
-        if (isset($parsed['host']) && $parsed['host'] !== $appHost) {
+        $isRelative = ! isset($parsed['host']) && ! isset($parsed['scheme']);
+        $isSameOrigin = isset($parsed['host']) && $parsed['host'] === $appHost;
+        $isSafeScheme = ! isset($parsed['scheme']) || in_array($parsed['scheme'], ['http', 'https'], true);
+        if (! (($isRelative || $isSameOrigin) && $isSafeScheme)) {
             $this->currentUrl = '/';
         }
 
         Session::put(config('lingua.session_variable'), $locale);
         app()->setLocale($locale);
-        $this->redirect(url: $this->currentUrl, navigate: true);
+        $this->redirect(url: $this->currentUrl, navigate: (bool) config('lingua.navigate', false));
     }
 }

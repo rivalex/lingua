@@ -4,20 +4,23 @@ use Illuminate\Support\Facades\Route;
 
 $middleware = array_unique(array_merge(['web'], config('lingua.middleware', 'web')));
 
+$extraParams = config('lingua.routes_extra_parameters');
+$suffix = $extraParams ? '/'.ltrim((string) $extraParams, '/') : '';
+
 Route::group([
     'middleware' => $middleware,
     'prefix' => config('lingua.routes_prefix', 'lingua'),
-], function () {
-    Route::livewire('languages', 'lingua::languages')
+], function () use ($suffix) {
+    Route::livewire('languages'.$suffix, 'lingua::languages')
         ->name('lingua.languages');
 
-    Route::livewire('translations/{locale?}', 'lingua::translations')
+    Route::livewire('translations/{locale?}'.$suffix, 'lingua::translations')
         ->name('lingua.translations');
 
-    Route::livewire('statistics', 'lingua::statistics')
+    Route::livewire('statistics'.$suffix, 'lingua::statistics')
         ->name('lingua.statistics');
 
-    Route::livewire('settings', 'lingua::settings')
+    Route::livewire('settings'.$suffix, 'lingua::settings')
         ->name('lingua.settings');
 
     Route::get('assets/{path}', function (string $path) {

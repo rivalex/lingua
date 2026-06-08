@@ -1,5 +1,4 @@
 @php
-    use LaravelLang\Locales\Facades\Locales;
     use Rivalex\Lingua\Facades\Lingua;
 @endphp
 <div class="lingua">
@@ -22,24 +21,27 @@
         <livewire:lingua::language.sort :key="'sortLanguages_'. uniqid()"/>
         @endisland
         <flux:separator/>
-        <div
-            class="flex flex-col lg:flex-row w-full items-center justify-between sticky top-0 z-1 bg-white dark:bg-zinc-800 py-4 gap-4">
-            <div class="flex w-1/4">
-                <div class="relative w-full items-center justify-between">
-                    <flux:input type="search" wire:model.live.debounce.1000ms="search"
-                                :placeholder="__('lingua::lingua.global.search')"
-                                icon="magnifying-glass" wire:island="languagesRows"
-                                name="searchLanguage" id="searchLanguage"/>
-                </div>
+        <div class="-mx-4 px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-12 gap-4 bg-white/70 dark:bg-zinc-900/70 border-b border-zinc-200/50 dark:border-white/10">
+            <div class="col-span-12 xl:col-span-4">
+                <flux:input type="search" wire:model.live.debounce.1000ms="search"
+                            :placeholder="__('lingua::lingua.global.search')"
+                            icon="magnifying-glass" wire:island="languagesRows"
+                            name="searchLanguage" id="searchLanguage"/>
             </div>
-            <div class="flex flex-col lg:flex-row w-max gap-2 items-center">
-                <flux:button wire:click="syncToLocal" icon="arrow-path" variant="primary"
+            <div class="col-span-6 lg:col-span-3 xl:col-span-2">
+                <flux:button wire:click="syncToLocal" icon="arrow-path" variant="primary" class="w-full"
                              color="sky">@lang('lingua::lingua.languages.actions.sync.local')</flux:button>
-                <flux:button wire:click="syncToDatabase" icon="arrow-path" variant="primary"
+            </div>
+            <div class="col-span-6 lg:col-span-3 xl:col-span-2">
+                <flux:button wire:click="syncToDatabase" icon="arrow-path" variant="primary" class="w-full"
                              color="sky">@lang('lingua::lingua.languages.actions.sync.database')</flux:button>
-                <flux:button wire:click="updateLanguages" icon="arrow-down-on-square" variant="primary"
+            </div>
+            <div class="col-span-6 lg:col-span-3 xl:col-span-2">
+                <flux:button wire:click="updateLanguages" icon="arrow-down-on-square" variant="primary" class="w-full"
                              color="orange">@lang('lingua::lingua.languages.actions.update_lang')</flux:button>
-                <livewire:lingua::language.create :key="'newLanguage_'. uniqid()"/>
+            </div>
+            <div class="col-span-6 lg:col-span-3 xl:col-span-2">
+                <livewire:lingua::language.create :key="'newLanguage_'. uniqid()" />
             </div>
         </div>
         <div class="flex flex-col w-full gap-2">

@@ -11,7 +11,7 @@
                 <div class="mt-2 text-sm text-danger-700">
                     <ul role="list" class="list-disc space-y-1 ps-5">
                         @foreach ($errors->all() as $error)
-                            <li>{!! $error !!}</li>
+                            <li>{{ $error }}</li>
                         @endforeach
                     </ul>
                 </div>

@@ -76,10 +76,12 @@ it('`deleteTranslation` deletes entire translation for default locale', function
 
     expect(Translation::find($id))->not->toBeNull();
 
-    Livewire::test(Delete::class, [
+    $component = Livewire::test(Delete::class, [
         'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
-    ])
+    ]);
+    $component
+        ->set('control', $component->get('confirm'))
         ->call('deleteTranslation')
         ->assertDispatched('translation_deleted')
         ->assertDispatched('refreshTranslationsTableDefaults');
@@ -93,10 +95,12 @@ it('`deleteTranslation` forgets locale translation for non-default locale', func
 
     expect($translation->text['it'])->toBe('Italian value');
 
-    Livewire::test(Delete::class, [
+    $component = Livewire::test(Delete::class, [
         'translation' => $translation,
         'currentLocale' => 'it',
-    ])
+    ]);
+    $component
+        ->set('control', $component->get('confirm'))
         ->call('deleteTranslation')
         ->assertDispatched('translation_locale_deleted')
         ->assertDispatched('refreshTranslationRow.'.$translation->id);
@@ -113,10 +117,11 @@ it('translation is gone from DB after global delete', function () {
     $translation = makeTranslationWithLocale();
     $id = $translation->id;
 
-    Livewire::test(Delete::class, [
+    $component = Livewire::test(Delete::class, [
         'translation' => $translation,
         'currentLocale' => linguaDefaultLocale(),
-    ])->call('deleteTranslation');
+    ]);
+    $component->set('control', $component->get('confirm'))->call('deleteTranslation');
 
     expect(Translation::find($id))->toBeNull();
 });
@@ -126,10 +131,11 @@ it('translation EN value still exists after locale-only delete of IT', function 
     $translation = makeTranslationWithLocale();
     $id = $translation->id;
 
-    Livewire::test(Delete::class, [
+    $component = Livewire::test(Delete::class, [
         'translation' => $translation,
         'currentLocale' => 'it',
-    ])->call('deleteTranslation');
+    ]);
+    $component->set('control', $component->get('confirm'))->call('deleteTranslation');
 
     $fresh = Translation::find($id);
     expect($fresh)->not->toBeNull();

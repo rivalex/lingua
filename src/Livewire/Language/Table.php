@@ -42,11 +42,13 @@ class Table extends Component
             default => 'LIKE',
         };
 
+        $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $this->search);
+
         return Language::query()->active()
             ->when(! empty($this->search),
                 fn ($query) => $query->whereAny(['code', 'regional', 'name', 'native'],
                     $like,
-                    "%$this->search%"))->paginate(5);
+                    "%{$search}%"))->paginate(5);
     }
 
     public function render()

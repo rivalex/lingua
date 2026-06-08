@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Artisan;
-use LaravelLang\Locales\Facades\Locales;
+declare(strict_types=1);
+
 use Livewire\Livewire;
-use Rivalex\Lingua\Livewire\Language\Create;
 use Rivalex\Lingua\Livewire\Language\Row;
 use Rivalex\Lingua\Livewire\Language\SetDefault;
 use Rivalex\Lingua\Models\Language;
@@ -22,27 +21,15 @@ it('renders a `LANGUAGE ROW` with statistics for `default Language`', function (
 });
 
 it('renders a `LANGUAGE ROW` with statistics for `NON default Languages`', function () {
-    expect(Language::where('code', 'it')->exists())->toBeFalse()
-        ->and(Locales::isInstalled('it'))->toBeFalse()
-        ->and(Translation::whereNotNull('text->it')->count())
-        ->toBe(0);
+    expect(Language::where('code', 'it')->exists())->toBeFalse();
 
-    Livewire::test(Create::class)
-        ->set('language', 'it')
-        ->assertSet('language', 'it')
-        ->call('addNewLanguage')
-        ->assertHasNoErrors('language')
-        ->assertDispatched('refreshLanguages')
-        ->assertDispatched('language_added')
-        ->assertSet('language', '');
+    $language = Language::factory()->create([
+        'code' => 'it',
+        'is_default' => false,
+    ]);
 
-    expect(Language::where('code', 'it')->exists())->toBeTrue()
-        ->and(is_dir(lang_path('it')))->toBeTrue()
-        ->and(file_exists(lang_path('it.json')))->toBeTrue()
-        ->and(Translation::whereNotNull('text->it')->count())
-        ->toBeGreaterThan(0);
+    expect(Language::where('code', 'it')->exists())->toBeTrue();
 
-    $language = Language::where('code', 'it')->first();
     $stringsCount = Translation::where('text->'.$language->code)->count();
 
     Livewire::test(Row::class, ['languageId' => $language->id])
@@ -53,7 +40,6 @@ it('renders a `LANGUAGE ROW` with statistics for `NON default Languages`', funct
         ->assertSee('Set as DEFAULT');
 
     Language::where('code', 'it')->delete();
-    Artisan::call('lang:rm it --force');
 });
 
 it('react on `refreshLanguageRows` event dispatched', function () {

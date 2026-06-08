@@ -218,3 +218,8 @@ Temporary Items
 .claude/settings.local.json
 .claude/hooks/__pycache__/
 CLAUDE.md.backup
+/build-tools/cache/
+!/build-tools/cache/.gitkeep
+build-tools/.env
+tests/tmp/lang/.lingua-managed.json
+tests/tmp/lang/*.json

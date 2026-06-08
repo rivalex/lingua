@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
-use LaravelLang\Locales\Facades\Locales;
-use Rivalex\Lingua\Models\Language;
+use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Translation;
 
 class AddLangCommand extends Command
@@ -36,22 +34,8 @@ class AddLangCommand extends Command
         $this->info("Adding language: {$locale}...");
 
         try {
-            $newLanguage = Locales::info(locale: $locale);
-
-            $this->info('Installing language files via Laravel Lang...');
-            Artisan::call('lang:add', ['locales' => [$locale]]);
-
             $this->info('Creating language record in database...');
-            app(Language::class)->updateOrCreate(
-                ['code' => $newLanguage->code, 'regional' => $newLanguage->regional],
-                [
-                    'type' => $newLanguage->type,
-                    'name' => $newLanguage->locale->name,
-                    'native' => $newLanguage->native,
-                    'direction' => $newLanguage->direction,
-                    'is_default' => false,
-                ]
-            );
+            Lingua::addLanguage($locale);
 
             $this->info('Syncing translations to database...');
             app(Translation::class)->syncToDatabase();
