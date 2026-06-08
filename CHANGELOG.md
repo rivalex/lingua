@@ -2,6 +2,78 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Phase 2 — Bundled translation dataset** (`resources/translations/`). 25 locales × 5 groups (`auth`, `pagination`, `passwords`, `validation`, `http-statuses`) machine-translated from Laravel framework `v12.19.3` EN strings via Claude Haiku. Read directly by `BundledTranslationSource` with zero runtime changes. 0% discard rate.
+- **Bundled notification translations** (`resources/notifications/`). 25 locales × 8 email strings (password reset + email verify) projected into user app's `lang/{locale}.json` at locale install-time via `NotificationProjector`, enabling `Lang::getFromJson()` resolution out-of-the-box.
+- **`NotificationProjector`** (`src/Locales/NotificationProjector.php`) — Merge is non-destructive (user keys never overwritten), idempotent, with selective removal on locale uninstall via `.lingua-managed.json` sidecar manifest.
+- **`lingua.base_notifications_path` config key** — Configurable path for bundled notification translations.
+- **`build-tools/` offline build tool** (`rivalex/lingua-build-tools`). Standalone PHP CLI (Symfony Console + Guzzle) that downloads pinned Laravel EN lang files, translates them in batches via Anthropic Messages API, validates token/pipe/choice preservation with a gate, and writes idempotent output. Excluded from Composer distribution via `export-ignore`.
+- **`build-tools/src/Source/SymfonyStatusSource`** — RFC HTTP status codes (Symfony table + Laravel/nginx/Cloudflare extras) as `[code => text]`.
+- **`build-tools/src/Source/NotificationSource`** — Downloads `VerifyEmail.php` + `ResetPassword.php` at pinned tag, extracts exact EN strings passed to `Lang::get()`, maps to 8 semantic keys.
+- **`build-tools/src/Output/NotificationWriter`** — Writes `resources/notifications/{locale}.php` as `['source EN' => 'translation']`.
+- **`build-tools/src/Translation/ValidationGate`** — Post-translation gate: pipe count, placeholder frequency, no-new-placeholder, choice token checks. Discards non-conforming strings with explicit reason.
+- **`build-tools/cache/manifest.json`** — Source-hash–keyed idempotency manifest; enables incremental re-runs and resume after interruption.
+- **`resources/translations/.meta.json`** — Run metadata: Laravel tag, model, timestamp, locale/group list, total/discard counts.
+- **`tests/Unit/BundledTranslationSourceTest.php`** — Verifies `available()` returns all 25 generated locales and `translationsFor()` returns valid flat entries.
+- **`tests/Unit/Locales/NotificationProjectorTest.php`** — 12 tests: project/unproject lifecycle, non-destructive merge, selective removal, sidecar manifest, no-op guards, path safety.
+
+---
+
+## Lingua 2.0.0 - 2026-06-08
+
+### Breaking Changes
+
+- **Removed `laravel-lang/common` dependency.** All locale metadata now served by the internal `LocaleRegistry`. See `UPGRADE.md` for migration.
+- **`Lingua::info()` return type changed** from `LocaleData` to `?LocaleInfo`. Property access updated: `->locale->name` / `->localized` → `->name`; `->direction->value` → `->direction` (string).
+- **`addLanguage()` / `removeLanguage()` no longer write to filesystem.** DB-native only; `lang:add` / `lang:rm` are no longer invoked. Translation files must be pre-populated or will be provided by Phase 2 bundled dataset.
+- **Removed `spatie/laravel-translation-loader` dependency.** `Translation` model now extends `Illuminate\Database\Eloquent\Model` directly. Custom translation loaders must implement `Rivalex\Lingua\Contracts\TranslationLoader`.
+- **`LinguaManager` now extends `Illuminate\Translation\FileLoader`** instead of Spatie's `TranslationLoaderManager`.
+
+### Added
+
+- **`LocaleRegistry` service** — Static locale dataset (129 locales) replaces `laravel-lang/common` facade. Singleton binding, resolves by `code` and `regional`. API: `all()`, `info()`, `availableCodes()`, `has()`.
+- **`LocaleInfo` value object** — `final readonly` VO with `code`, `regional`, `type`, `name`, `native`, `direction` (all strings).
+- **`BaseTranslationSource` contract** — Extension point for Phase 2 bundled translation dataset. Methods: `available(): array<string>`, `translationsFor(string): array`.
+- **`BundledTranslationSource`** — Phase 1 no-op implementation; reads from `resources/translations/` (empty until Phase 2).
+- **`lingua.base_translations_path` config key** — Configurable path for bundled translation dataset.
+- **Flexible lang routing** — Optional route parameters (`routes_extra_parameters`), direct embed mode (no route), configurable `navigate` flag, layout override via `layout` config key.
+- **`links.translations` config block** — `enabled` flag + `route` key to toggle and customize the translations management link in the language switcher row.
+- **`ui.sticky_top` setting** — Configurable top offset (px/rem) for the sticky filter bar; persisted in `lingua_settings` via `LinguaSetting`.
+- **Settings page partials** — `_routing.blade.php`, `_editor.blade.php` (13 toolbar toggles), `_save.blade.php`. `_selector.blade.php` migrated to `flux:select`.
+- **Autocomplete component** — Flux Pro `flux:listbox` + Alpine.js fallback; dead `autocomplete.css` removed.
+- **Config reordered** — `config/lingua.php` reorganised into 5 domain groups: `routing`, `ui`, `cache`, `features`, `links`.
+- `Rivalex\Lingua\Contracts\TranslationLoader` — internal contract replacing Spatie's interface.
+- `Rivalex\Lingua\Exceptions\InvalidConfiguration` — typed exception replacing Spatie's version.
+- `Rivalex\Lingua\TranslationManager\CacheKey` — helper that builds `lingua.trans.{locale}.{group}` cache keys.
+- `Translation::getTranslationsForGroup(string $locale, string $group): array` — DB query with `Cache::rememberForever` per (locale, group) pair.
+- `config('lingua.cache.store')` and `config('lingua.cache.prefix')` — optional cache driver and key prefix override.
+- `static::deleted` hook on `Translation` — forgets cache keys for all locales in `text` when a record is deleted.
+
+### Changed
+
+- `LinguaSeeder`, `Translation::syncToDatabase()`, `LanguageFactory` migrated from `Locales::` facade to `LocaleRegistry`.
+- `Lingua::updateLanguages()` — DB-native sync; no longer invokes `lang:update` or `lang:rm`.
+- **Cache invalidation is now surgical.** On `Translation::saved`, only the affected `(locale, group)` cache keys are forgotten. Global clear still issued once at end of `syncToDatabase()`.
+- `LinguaServiceProvider::registerLoader()` uses `extend()` to correctly wrap any underlying `translation.loader` binding; moved from `boot()` to `register()` phase.
+- All 8 locale files updated with new settings translation keys (`routing`, `editor` sections).
+- `Settings.php` Livewire component: 6 new properties, validation rules, and persistence for routing/editor/UI settings.
+- **Tailwind `@source` glob** extended to `src/**/*.php`.
+
+### Fixed
+
+- `WireDirective::getAttributes()` undefined method fatal in `autocomplete.blade.php` — replaced with safe attribute forwarding.
+- `sticky_top` setting not persisting — views now read from `LinguaSetting` instead of hardcoded config.
+
+### Removed
+
+- `laravel-lang/common` and all `LaravelLang\*` service providers.
+- `spatie/laravel-translation-loader` dependency.
+
+---
+
 ## Lingua 1.1.7 - 2026-05-11
 
 ### Security
