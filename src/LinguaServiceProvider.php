@@ -9,7 +9,6 @@ use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
-use Illuminate\Translation\FileLoader;
 use Illuminate\Translation\Translator;
 use Livewire\Livewire;
 use Rivalex\Lingua\Commands\AddLangCommand;
@@ -17,8 +16,12 @@ use Rivalex\Lingua\Commands\RemoveLangCommand;
 use Rivalex\Lingua\Commands\SyncToDatabaseCommand;
 use Rivalex\Lingua\Commands\SyncToLocalCommand;
 use Rivalex\Lingua\Commands\UpdateLangCommand;
+use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\Seeders\LinguaSeeder;
 use Rivalex\Lingua\Http\Middleware\LinguaMiddleware;
+use Rivalex\Lingua\Locales\BundledTranslationSource;
+use Rivalex\Lingua\Locales\LocaleRegistry;
+use Rivalex\Lingua\Locales\NotificationProjector;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Services\ExtensionRegistry;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -40,6 +43,29 @@ class LinguaServiceProvider extends PackageServiceProvider
         parent::register();
 
         $this->app->singleton(ExtensionRegistry::class);
+
+        $this->app->singleton(LocaleRegistry::class, function () {
+            return new LocaleRegistry(
+                dataPath: __DIR__.'/../resources/data/locales.php',
+            );
+        });
+
+        $this->app->bind(BaseTranslationSource::class, function ($app) {
+            return new BundledTranslationSource(
+                basePath: config('lingua.base_translations_path',
+                    __DIR__.'/../resources/translations'),
+            );
+        });
+
+        $this->app->bind(NotificationProjector::class, function ($app) {
+            return new NotificationProjector(
+                notificationsPath: config('lingua.base_notifications_path',
+                    __DIR__.'/../resources/notifications'),
+                langPath: config('lingua.lang_dir', lang_path()),
+            );
+        });
+
+        $this->registerLoader();
     }
 
     public function configurePackage(Package $package): void
@@ -113,17 +139,16 @@ class LinguaServiceProvider extends PackageServiceProvider
 
         $this->app->make(Kernel::class)->appendMiddlewareToGroup('web', LinguaMiddleware::class);
 
-        $this->registerLoader();
         $this->registerTranslator();
     }
 
     protected function registerLoader(): void
     {
-        $this->app->singleton('translation.loader', function ($app) {
+        $this->app->extend('translation.loader', function ($original, $app) {
             $class = config('lingua.translation_manager');
 
             if (! $class || ! class_exists($class)) {
-                return new FileLoader($app['files'], $app['path.lang']);
+                return new LinguaManager($app['files'], $app['path.lang']);
             }
 
             return new $class($app['files'], $app['path.lang']);
