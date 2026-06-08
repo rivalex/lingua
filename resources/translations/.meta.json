@@ -1,0 +1,43 @@
+{
+    "laravel_tag": "v12.19.3",
+    "generated_at_utc": "2026-06-08T17:30:46Z",
+    "model": "claude-haiku-4-5-20251001",
+    "locales_generated": [
+        "ar",
+        "de",
+        "es",
+        "fa",
+        "fr",
+        "he",
+        "hi",
+        "id",
+        "it",
+        "ja",
+        "ko",
+        "ms",
+        "nb",
+        "nl",
+        "pl",
+        "pt",
+        "pt_BR",
+        "ro",
+        "ru",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "vi",
+        "zh_CN"
+    ],
+    "groups_generated": [
+        "auth",
+        "pagination",
+        "passwords",
+        "validation",
+        "http-statuses",
+        "errors",
+        "notifications"
+    ],
+    "total_strings": 5600,
+    "discarded_count": 0
+}
