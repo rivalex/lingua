@@ -18,6 +18,14 @@ All notable changes to `lingua` will be documented in this file.
 - **`Translation::syncToLocal` robust I/O** — All `file_put_contents`/`mkdir` calls replaced with `AtomicFileWriter`; errors throw instead of silently producing partial files.
 - **`Translation::syncToDatabase` targeted cache invalidation** — Replaced `Artisan::call('cache:clear')` (wiped entire application cache) with per-`(locale, group)` `Cache::store()->forget(CacheKey::forGroup(...))` on keys actually touched during sync. Unrelated cache entries are preserved.
 
+### Phase 3 — Test isolation fixes + pint config
+
+- **`pint.json`** — Added to exclude `build-tools/cache/` (downloaded Laravel framework files) from style checks.
+- **`DeleteTest`** — Changed locale from `it` to `af` (Afrikaans): Italian is now pre-seeded via bundled dataset, causing `Language::where('code','it')->exists()` to return `true` before the test adds it.
+- **`TableTest` COMPUTED** — Changed `it`/`es` to `af`/`am`: both are pre-seeded by `syncToDatabase()` at seeder time; non-bundled locales pass `assertDatabaseMissing`.
+- **`TableTest` SEARCH** — Added delete of pre-seeded `it`/`ar` records before `Language::create()` to prevent UNIQUE constraint violations.
+- **`LanguageSelectorTest`** — Changed `assertCount('languages', 1)` to `assertCount('languages', Language::count())`: seeder now creates 26 Language records (all bundled locales).
+
 ### Phase 3 — Bug fixes (missing use imports in Language, Translation, LinguaServiceProvider)
 
 - **`Language.php` missing `use Illuminate\Support\Facades\DB`** — `setDefault()` called `DB::transaction()` without the facade import, causing `Class "Rivalex\Lingua\Models\DB" not found` at runtime. Import added.
