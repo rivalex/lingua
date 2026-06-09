@@ -6,6 +6,7 @@ All notable changes to `lingua` will be documented in this file.
 
 ### Added
 
+- **`InstallCommand` driver selection** (`src/LinguaServiceProvider.php`) — `lingua:install` prompts `choice('Translation storage driver?', ['database', 'file'], 0)`. Prints `LINGUA_STORAGE_DRIVER={driver}` `.env` instruction (no auto-write). File driver: 4 `warn()` lines about deploy pipeline risks (Forge/Envoyer/CI overwrite, dirty working tree). `endWith` seeder (`LinguaSeeder`) conditional on `driver === 'database'` — file-mode install skips seeding (lang files are the source of truth).
 - **`SetStorageDriverCommand`** (`src/Commands/SetStorageDriverCommand.php`) — New `lingua:storage {driver : database|file} {--force} {--write-env}` command. Counts html/markdown rows in PHP (no SQL JSON), warns + confirms before DB→file switch; syncs translations before switching; prints `LINGUA_STORAGE_DRIVER={driver}` `.env` instruction (or writes `.env` with `--write-env`).
 - **`SyncToLocalCommand --force`** — File-mode guard: without `--force` the command is a no-op with a warning; with `--force` it asks for explicit confirmation before proceeding.
 - **`SyncToDatabaseCommand` file-mode note** — Prints `Note: file-mode active — DB is a staging copy only.` when driver is `file` (non-blocking).

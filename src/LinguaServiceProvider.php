@@ -119,25 +119,42 @@ class LinguaServiceProvider extends PackageServiceProvider
                 SetStorageDriverCommand::class,
             )
             ->hasInstallCommand(function (InstallCommand $command) {
+                $driver = 'database';
+
                 $command
-                    ->startWith(function (InstallCommand $command) {
+                    ->startWith(function (InstallCommand $command) use (&$driver) {
                         $command->info('Hello, and welcome to Lingua new package!');
                         $command->info('Starting the installation process...');
+
+                        $driver = $command->choice('Translation storage driver?', ['database', 'file'], 0);
+
+                        $command->info("Set LINGUA_STORAGE_DRIVER={$driver} in your .env, then run 'php artisan config:clear'.");
+
+                        if ($driver === 'file') {
+                            $command->warn('FILE DRIVER: translations are written directly to lang/.');
+                            $command->warn('Your deploy pipeline (Forge/Envoyer/CI) may overwrite these files');
+                            $command->warn('or fail on a dirty working tree. Commit lang/ changes deliberately.');
+                            $command->warn('See docs: Storage Drivers > File mode caveats.');
+                        }
                     })
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()
                     ->askToStarRepoOnGitHub('rivalex/lingua')
-                    ->endWith(function (InstallCommand $command) {
+                    ->endWith(function (InstallCommand $command) use (&$driver) {
                         $tablesCreated = Schema::hasTable('languages') && Schema::hasTable('language_lines');
                         if ($tablesCreated) {
                             $command->info('Installing Lingua package...');
-                            $command->call('db:seed', ['--class' => LinguaSeeder::class]);
+                            if ($driver === 'database') {
+                                $command->call('db:seed', ['--class' => LinguaSeeder::class]);
+                            }
                             $command->info('Lingua package installed successfully!');
                         } else {
                             $command->info('Lingua package installed successfully!');
                             $command->info('Please run "php artisan migrate" to create the database tables.');
-                            $command->info('Please run "php artisan db:seed" to populate the database with default data.');
+                            if ($driver === 'database') {
+                                $command->info('Please run "php artisan db:seed" to populate the database with default data.');
+                            }
                         }
                     });
             });
