@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
@@ -67,10 +68,10 @@ class Delete extends Component
         try {
             $locale = $this->language->code;
             Lingua::removeLanguage($locale);
-            $translations = Translation::whereNotNull('text->'.$locale)->get();
-            foreach ($translations as $translation) {
-                $translation->forgetTranslation($locale);
-            }
+            $repo = app(TranslationRepository::class);
+            $repo->all()
+                ->filter(fn ($line) => $line->value($locale) !== '')
+                ->each(fn ($line) => $repo->forgetLocale($line, $locale));
             $this->language->delete();
             app(Language::class)->reorderLanguages();
             app(Translation::class)->syncToDatabase();

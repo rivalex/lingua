@@ -3,6 +3,7 @@
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Support\TranslationLine;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -227,7 +228,7 @@ it('translations returns a collection of all translation records', function () {
 
     $all = Lingua::translations();
     expect($all)->not->toBeEmpty()
-        ->and($all->first())->toBeInstanceOf(Translation::class);
+        ->and($all->first())->toBeInstanceOf(TranslationLine::class);
 
     $t->delete();
 });

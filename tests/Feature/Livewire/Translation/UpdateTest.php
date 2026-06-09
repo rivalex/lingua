@@ -19,9 +19,10 @@ function makeTextTranslation(): Translation
 
 it('can render `UPDATE translation` component', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])->assertStatus(200);
 
@@ -30,9 +31,10 @@ it('can render `UPDATE translation` component', function () {
 
 it('populates defaults from `translation` on mount', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->assertSet('group', $translation->group)
@@ -45,9 +47,10 @@ it('populates defaults from `translation` on mount', function () {
 
 it('sets `required` to true for default locale', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => linguaDefaultLocale(),
     ])->assertSet('required', true)
         ->assertSet('locked', false);
@@ -58,9 +61,10 @@ it('sets `required` to true for default locale', function () {
 it('sets `locked` to true for non-default locale', function () {
     Language::factory()->create(['code' => 'it', 'is_default' => false]);
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'it',
     ])->assertSet('locked', true)
         ->assertSet('required', false);
@@ -71,16 +75,17 @@ it('sets `locked` to true for non-default locale', function () {
 
 it('can `UPDATE` a text translation value', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('textValue', 'Updated text value')
         ->call('updateTranslation')
         ->assertHasNoErrors()
         ->assertDispatched('translation_updated')
-        ->assertDispatched('refreshTranslationRow.'.$translation->id);
+        ->assertDispatched('refreshTranslationRow.'.$identity);
 
     $translation->refresh();
     expect($translation->text['en'])->toBe('Updated text value');
@@ -97,9 +102,10 @@ it('can `UPDATE` an HTML translation value', function () {
         'is_vendor' => false,
         'vendor' => null,
     ]);
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('translationType', 'html')
@@ -123,9 +129,10 @@ it('can `UPDATE` a Markdown translation value', function () {
         'is_vendor' => false,
         'vendor' => null,
     ]);
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('translationType', 'markdown')
@@ -142,9 +149,10 @@ it('can `UPDATE` a Markdown translation value', function () {
 
 it('catches `Validation ERRORS` for missing `group` on update', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('group', '')
@@ -157,9 +165,10 @@ it('catches `Validation ERRORS` for missing `group` on update', function () {
 
 it('catches `Validation ERRORS` for missing `key` on update', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('key', '')
@@ -172,9 +181,10 @@ it('catches `Validation ERRORS` for missing `key` on update', function () {
 
 it('does not allow updating `key` to less than 2 characters', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('key', 'x')
@@ -187,9 +197,10 @@ it('does not allow updating `key` to less than 2 characters', function () {
 
 it('dispatches `translation_updated` after a successful update', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('textValue', 'Dispatched successfully')
@@ -201,9 +212,10 @@ it('dispatches `translation_updated` after a successful update', function () {
 
 it('normalizes extra whitespace in `group` and `key` before saving', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('group', '  actions  ')
@@ -229,12 +241,13 @@ it('does NOT update `group` and `key` for vendor translations', function () {
         'is_vendor' => true,
         'vendor' => 'acme',
     ]);
+    $identity = $vendor->group.'|'.$vendor->key.'|1|'.$vendor->vendor;
 
     $originalGroup = $vendor->group;
     $originalKey = $vendor->key;
 
     Livewire::test(Update::class, [
-        'translation' => $vendor,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('group', 'hacked_group')
@@ -252,15 +265,16 @@ it('does NOT update `group` and `key` for vendor translations', function () {
     $vendor->delete();
 });
 
-it('responds to `updateTranslationModal.{id}` event by refreshing defaults', function () {
+it('responds to `updateTranslationModal.{identity}` event by refreshing defaults', function () {
     $translation = makeTextTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('group', 'changed_group')
-        ->dispatch('updateTranslationModal.'.$translation->id)
+        ->dispatch('updateTranslationModal.'.$identity)
         ->assertSet('group', $translation->group);
 
     $translation->delete();

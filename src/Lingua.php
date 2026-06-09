@@ -12,10 +12,11 @@ declare(strict_types=1);
 namespace Rivalex\Lingua;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Locales\LocaleInfo;
 use Rivalex\Lingua\Locales\LocaleRegistry;
@@ -497,7 +498,7 @@ class Lingua
      */
     public static function translations(): Collection|array
     {
-        return Translation::all();
+        return app(TranslationRepository::class)->all(includeVendor: true);
     }
 
     /**
@@ -516,7 +517,7 @@ class Lingua
      */
     public static function getTranslations(?string $key): array
     {
-        return self::translation($key)?->text ?? [];
+        return app(TranslationRepository::class)->findByKey((string) $key)?->text ?? [];
     }
 
     /**
@@ -540,7 +541,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::translation($key)?->text[$locale] ?? '';
+        return app(TranslationRepository::class)->findByKey((string) $key)?->value($locale) ?? '';
     }
 
     /**
@@ -563,12 +564,11 @@ class Lingua
     public static function setTranslation(?string $key, string $value, ?string $locale = null): void
     {
         $locale = $locale ?? app()->getLocale();
-        $translation = self::translation($key);
-        if (! $translation) {
+        $line = app(TranslationRepository::class)->findByKey((string) $key);
+        if (! $line) {
             return;
         }
-        $translation->setTranslation($locale, $value);
-        $translation->save();
+        app(TranslationRepository::class)->setValue($line, $locale, $value);
     }
 
     /**
@@ -593,29 +593,30 @@ class Lingua
     public static function forgetTranslation(?string $key, ?string $locale = null): void
     {
         $locale = $locale ?? app()->getLocale();
-        $translation = self::translation($key);
-        if (! $translation) {
+        $repo = app(TranslationRepository::class);
+        $line = $repo->findByKey((string) $key);
+        if (! $line) {
             return;
         }
-        if ($translation->is_vendor) {
+        if ($line->isVendor) {
             throw new VendorTranslationProtectedException;
         }
         if (self::isDefaultLocale($locale)) {
-            $translation->delete();
+            $repo->deleteKey($line);
         } else {
-            $translation->forgetTranslation(locale: $locale);
+            $repo->forgetLocale($line, $locale);
         }
     }
 
     /**
      * Get translations by group.
      *
-     * Retrieves a collection of Translation models that belong to the specified group.
+     * Retrieves a collection of Translation lines that belong to the specified group.
      * Optionally filters to only include translations that have a value for the specified locale.
      *
      * @param  string  $group  The translation group name (e.g., 'messages', 'validation')
      * @param  string|null  $locale  Optional locale code to filter translations
-     * @return Collection|array Collection of Translation models
+     * @return Collection|array Collection of TranslationLine objects
      *
      * @example
      * $messages = Lingua::getTranslationByGroup('messages');
@@ -630,9 +631,10 @@ class Lingua
             self::validateLocale($locale);
         }
 
-        return Translation::where('group', Str::of($group)->squish()->trim())
-            ->when($locale, fn ($query) => $query->whereNotNull('text->'.$locale))
-            ->get();
+        return app(TranslationRepository::class)->byGroup(
+            Str::of($group)->squish()->trim()->toString(),
+            $locale,
+        );
     }
 
     /**
@@ -712,7 +714,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return Translation::getLocaleStats($locale);
+        return app(TranslationRepository::class)->localeStats($locale);
     }
 
     /**
@@ -757,10 +759,10 @@ class Lingua
             self::validateLocale($locale);
         }
 
-        return Translation::where('is_vendor', true)
-            ->where('vendor', Str::of($vendor)->squish()->trim())
-            ->when($locale, fn ($q) => $q->whereNotNull('text->'.$locale))
-            ->get();
+        return app(TranslationRepository::class)->vendor(
+            Str::of($vendor)->squish()->trim()->toString(),
+            $locale,
+        );
     }
 
     /**
@@ -788,12 +790,16 @@ class Lingua
         ?string $locale = null): void
     {
         $locale = $locale ?? app()->getLocale();
-        $translation = Translation::where('is_vendor', true)
-            ->where('vendor', Str::of($vendor)->squish()->trim())
-            ->where('group', Str::of($group)->squish()->trim())
-            ->where('key', Str::of($key)->squish()->trim())
-            ->firstOrFail();
-        $translation->setTranslation($locale, $value);
-        $translation->save();
+        $repo = app(TranslationRepository::class);
+        $line = $repo->find(
+            group: Str::of($group)->squish()->trim()->toString(),
+            key: Str::of($key)->squish()->trim()->toString(),
+            isVendor: true,
+            vendor: Str::of($vendor)->squish()->trim()->toString(),
+        );
+        if (! $line) {
+            throw new ModelNotFoundException;
+        }
+        $repo->setValue($line, $locale, $value);
     }
 }

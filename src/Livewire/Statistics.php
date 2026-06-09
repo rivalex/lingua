@@ -9,8 +9,9 @@ use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Support\TranslationLine;
 
 /**
  * Statistics component.
@@ -68,13 +69,7 @@ final class Statistics extends Component
     #[Computed(cache: true)]
     public function lines(): Collection
     {
-        $query = Translation::select(['id', 'group', 'key', 'group_key', 'text', 'is_vendor', 'vendor']);
-
-        if (! $this->includeVendor) {
-            $query->where('is_vendor', false);
-        }
-
-        return $query->get();
+        return app(TranslationRepository::class)->all(includeVendor: $this->includeVendor);
     }
 
     /**
@@ -116,7 +111,7 @@ final class Statistics extends Component
             $locale = $language->code;
 
             $translated = $lines->filter(
-                fn (Translation $line): bool => $this->isTranslated($line->text, $locale)
+                fn (TranslationLine $line): bool => $this->isTranslated($line->text, $locale)
             )->count();
 
             $missing = $total - $translated;
@@ -152,7 +147,7 @@ final class Statistics extends Component
 
                 foreach ($localeCodes as $locale) {
                     $localeCounts[$locale] = $groupLines->filter(
-                        fn (Translation $line): bool => $this->isTranslated($line->text, $locale)
+                        fn (TranslationLine $line): bool => $this->isTranslated($line->text, $locale)
                     )->count();
                 }
 
@@ -184,11 +179,11 @@ final class Statistics extends Component
         $locale = $this->expandedLocale;
 
         return $this->lines
-            ->filter(fn (Translation $line): bool => ! $this->isTranslated($line->text, $locale))
-            ->map(fn (Translation $line): array => [
+            ->filter(fn (TranslationLine $line): bool => ! $this->isTranslated($line->text, $locale))
+            ->map(fn (TranslationLine $line): array => [
                 'group' => $line->group,
                 'key' => $line->key,
-                'group_key' => $line->group_key,
+                'group_key' => $line->groupKey,
             ])
             ->values();
     }

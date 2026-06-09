@@ -213,8 +213,8 @@
                 @island(name: 'translationRows', always: true)
                 <flux:table.rows>
                     @foreach ($this->translations as $translation)
-                        <livewire:lingua::translation.row :$currentLocale :$translation
-                                                          :key="'translationRow_'. $translation->id"/>
+                        <livewire:lingua::translation.row :$currentLocale :translation-identity="$translation->identity()"
+                                                          :key="'translationRow_'.md5($translation->identity())"/>
                     @endforeach
                 </flux:table.rows>
                 @endisland

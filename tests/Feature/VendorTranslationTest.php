@@ -230,9 +230,10 @@ it('Create component does not expose is_vendor as a settable property', function
 
 it('Delete component dispatches vendor_translation_protected for vendor records (default locale)', function () {
     $translation = makeVendorTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Delete::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => linguaDefaultLocale(),
     ])
         ->call('deleteTranslation')
@@ -247,9 +248,10 @@ it('Delete component dispatches vendor_translation_protected for vendor records 
 it('Delete component dispatches vendor_translation_protected for vendor records (non-default locale)', function () {
     Language::factory()->create(['code' => 'it', 'is_default' => false]);
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Hello', 'it' => 'Ciao']);
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Delete::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'it',
     ])
         ->call('deleteTranslation')
@@ -270,9 +272,10 @@ it('Delete component still deletes non-vendor translations normally', function (
         'is_vendor' => false, 'vendor' => null,
     ]);
     $id = $translation->id;
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     $component = Livewire::test(Delete::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => linguaDefaultLocale(),
     ]);
     $component
@@ -314,9 +317,10 @@ it('Facade forgetTranslation still works for non-vendor translations', function 
 
 it('Update component can save a new text value for a vendor translation', function () {
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Original']);
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('textValue', 'Updated vendor value')
@@ -333,9 +337,10 @@ it('Update component can save a new text value for a vendor translation', functi
 it('Update component can add a new locale translation to a vendor record', function () {
     Language::factory()->create(['code' => 'es', 'is_default' => false]);
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Hello']);
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'es',
     ])
         ->set('textValue', 'Hola')
@@ -352,9 +357,10 @@ it('Update component can add a new locale translation to a vendor record', funct
 
 it('Update component does NOT change group or key for vendor translations', function () {
     $translation = makeVendorTranslation('acme', 'original_group', 'original_key', ['en' => 'Value']);
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('group', 'hacked_group')
@@ -372,9 +378,10 @@ it('Update component does NOT change group or key for vendor translations', func
 
 it('Update component exposes isVendor=true for vendor translations', function () {
     $translation = makeVendorTranslation();
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])->assertSet('isVendor', true);
 
@@ -387,9 +394,10 @@ it('Update component exposes isVendor=false for non-vendor translations', functi
         'type' => 'text', 'text' => ['en' => 'Value'],
         'is_vendor' => false, 'vendor' => null,
     ]);
+    $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Update::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])->assertSet('isVendor', false);
 
@@ -398,9 +406,10 @@ it('Update component exposes isVendor=false for non-vendor translations', functi
 
 it('Row component allows inline editing of a vendor translation value', function () {
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Vendor text']);
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Row::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'en',
     ])
         ->set('value', 'Updated inline vendor text')
@@ -415,9 +424,10 @@ it('Row component allows inline editing of a vendor translation value', function
 it('Row component does NOT call forgetTranslation when value cleared on a vendor record', function () {
     Language::factory()->create(['code' => 'nl', 'is_default' => false]);
     $translation = makeVendorTranslation('acme', 'messages', null, ['en' => 'Hello', 'nl' => 'Hallo']);
+    $identity = $translation->group.'|'.$translation->key.'|1|'.$translation->vendor;
 
     Livewire::test(Row::class, [
-        'translation' => $translation,
+        'translationIdentity' => $identity,
         'currentLocale' => 'nl',
     ])->set('value', ''); // clearing — should NOT remove the nl entry
 
@@ -438,11 +448,11 @@ it('Facade getVendorTranslations returns only records for the given vendor', fun
     $t3 = makeVendorTranslation('pkg_b', 'messages', 'k3', ['en' => 'B1']);
 
     $results = Lingua::getVendorTranslations('pkg_a');
-    $ids = $results->pluck('id');
+    $keys = $results->pluck('key');
 
-    expect($ids)->toContain($t1->id)
-        ->and($ids)->toContain($t2->id)
-        ->and($ids)->not->toContain($t3->id);
+    expect($keys)->toContain($t1->key)
+        ->and($keys)->toContain($t2->key)
+        ->and($keys)->not->toContain($t3->key);
 
     $t1->delete();
     $t2->delete();

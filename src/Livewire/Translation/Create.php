@@ -10,8 +10,8 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
-use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\Modals;
 
 class Create extends Component
@@ -71,7 +71,7 @@ class Create extends Component
     protected function getGroupsList(): void
     {
         $this->reset('groups', 'translationsTypes');
-        foreach (Translation::orderBy('group')->groupBy('group')->pluck('group')->toArray() as $group) {
+        foreach (app(TranslationRepository::class)->groups() as $group) {
             $this->groups[] = ['id' => $group, 'name' => $group, 'disabled' => false];
         }
         $this->translationsTypes = LinguaType::selectValues();
@@ -90,14 +90,13 @@ class Create extends Component
 
             // is_vendor is intentionally NOT exposed in the form — vendor translations
             // are managed exclusively through file sync and cannot be created manually.
-            Translation::create([
-                'group' => Str::of($this->group)->squish()->trim(),
-                'key' => Str::of($this->key)->squish()->trim(),
-                'type' => $this->translationType,
-                'text' => [linguaDefaultLocale() => $translationValue],
-                'is_vendor' => false,
-                'vendor' => null,
-            ]);
+            app(TranslationRepository::class)->create(
+                group: Str::of($this->group)->squish()->trim()->toString(),
+                key: Str::of($this->key)->squish()->trim()->toString(),
+                type: LinguaType::from($this->translationType),
+                locale: linguaDefaultLocale(),
+                value: $translationValue,
+            );
             $this->closeModal();
             $this->reset('key', 'translationType', 'textValue', 'htmlValue', 'mdValue');
             $this->getGroupsList();

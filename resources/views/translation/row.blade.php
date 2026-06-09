@@ -122,14 +122,14 @@
         </flux:button.group>
         @if($this->currentLocale === linguaDefaultLocale())
             <livewire:lingua::translation.update
-                :$translation :$currentLocale
-                wire:key="update-translation-{{ $translation->id }}"
+                :translation-identity="$translation->identity()" :$currentLocale
+                wire:key="update-translation-{{ md5($translation->identity()) }}"
                 :modal-name="$editModalName"/>
         @endif
         @if(!$translation->is_vendor)
             <livewire:lingua::translation.delete
-                :$translation :$currentLocale
-                wire:key="delete-translation-{{ $translation->id }}"
+                :translation-identity="$translation->identity()" :$currentLocale
+                wire:key="delete-translation-{{ md5($translation->identity()) }}"
                 :modal-name="$deleteModalName"/>
         @endif
     </flux:table.cell>

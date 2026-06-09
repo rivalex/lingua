@@ -10,8 +10,8 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
 
 #[Title('Translations Manager')]
 class Translations extends Component
@@ -54,7 +54,7 @@ class Translations extends Component
     protected function setDefaults(): void
     {
         $this->availableLocale = Language::query()->active()->pluck('native', 'code')->toArray();
-        $this->availableGroups = Translation::orderBy('group')->groupBy('group')->pluck('group')->toArray();
+        $this->availableGroups = app(TranslationRepository::class)->groups();
     }
 
     #[On('refreshTranslationsTableDefaults')]
@@ -85,23 +85,13 @@ class Translations extends Component
     #[Computed]
     public function translations()
     {
-        // Validate locale format before interpolating into JSON column paths to prevent SQL injection.
-        // currentLocale is a Livewire public property and can be tampered via the network layer.
-        $safeLocale = preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $this->currentLocale)
-            ? $this->currentLocale
-            : linguaDefaultLocale();
-
-        $defaultLocale = linguaDefaultLocale();
-
-        return Translation::query()
-            ->when(! empty($this->search),
-                fn ($q) => $q->where(fn ($query) => $query->whereLike('group_key', "%{$this->search}%")
-                    ->orWhereLike('text->'.$defaultLocale, "%{$this->search}%")
-                    ->orWhereLike('text->'.$safeLocale, "%{$this->search}%"))
-            )
-            ->when($this->showOnlyMissing, fn ($q) => $q->whereNull('text->'.$safeLocale))
-            ->when($this->group, fn ($q) => $q->where('group', '=', $this->group))
-            ->paginate($this->perPage);
+        return app(TranslationRepository::class)->paginate(
+            locale: $this->currentLocale,
+            search: $this->search,
+            group: $this->group,
+            onlyMissing: $this->showOnlyMissing,
+            perPage: $this->perPage,
+        );
     }
 
     public function render()

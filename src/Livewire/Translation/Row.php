@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Rivalex\Lingua\Livewire\Translation;
 
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Contracts\TranslationRepository;
+use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Support\TranslationLine;
 
 class Row extends Component
 {
     public string $currentLocale;
 
-    public Translation $translation;
+    public string $translationIdentity;
 
     public string $key;
 
@@ -28,6 +31,29 @@ class Row extends Component
 
     public string $translationType = '';
 
+    /**
+     * Re-fetch the TranslationLine from the repository using the stable identity.
+     * Falls back to a stub when the key has just been deleted (between dispatches).
+     */
+    #[Computed]
+    public function line(): TranslationLine
+    {
+        $parts = explode('|', $this->translationIdentity, 4);
+        $isVendor = ($parts[2] ?? '0') === '1';
+        $vendor = (($parts[3] ?? '') !== '') ? $parts[3] : null;
+
+        return app(TranslationRepository::class)->find($parts[0], $parts[1], $isVendor, $vendor)
+            ?? new TranslationLine(
+                group: $parts[0],
+                key: $parts[1],
+                groupKey: $parts[0].'.'.$parts[1],
+                type: LinguaType::text,
+                text: [],
+                isVendor: $isVendor,
+                vendor: $vendor,
+            );
+    }
+
     protected function rules(): array
     {
         return [
@@ -39,10 +65,10 @@ class Row extends Component
     public function validationAttributes(): array
     {
         return [
-            'value' => match ($this->translation->type->value) {
+            'value' => match ($this->line->type->value) {
                 'text' => __('lingua::lingua.translations.attributes.text_value'),
                 'html' => __('lingua::lingua.translations.attributes.html_value'),
-                'markdown' => __('lingua::lingua.translations.attributes.md_value')
+                'markdown' => __('lingua::lingua.translations.attributes.md_value'),
             },
         ];
     }
@@ -50,23 +76,23 @@ class Row extends Component
     public function mount(): void
     {
         $this->setDefaults();
-        $this->editModalName = 'translation-update-modal-'.$this->translation->id;
-        $this->deleteModalName = 'translation-delete-modal-'.$this->translation->id;
+        $this->editModalName = 'translation-update-modal-'.md5($this->translationIdentity);
+        $this->deleteModalName = 'translation-delete-modal-'.md5($this->translationIdentity);
     }
 
     protected function setDefaults(): void
     {
-        $this->translation->refresh();
-        $this->value = $this->translation->text[$this->currentLocale] ?? '';
-        $rawDefault = $this->translation->text[linguaDefaultLocale()] ?? '';
-        // Strip dangerous tags from HTML previews to prevent stored XSS in the admin UI.
-        $this->defaultValue = $this->translation->type->value === 'html'
+        unset($this->line);
+        $line = $this->line;
+        $this->value = $line->value($this->currentLocale);
+        $rawDefault = $line->value(linguaDefaultLocale());
+        $this->defaultValue = $line->type->value === 'html'
             ? strip_tags($rawDefault, '<p><br><b><i><em><strong><ul><ol><li><a><img><h1><h2><h3><h4><h5><h6><span><div><table><tr><td><th><thead><tbody><hr><blockquote><pre><code>')
             : $rawDefault;
-        $this->translationType = $this->translation->type->value;
+        $this->translationType = $line->type->value;
     }
 
-    #[On('refreshTranslationRow.{translation.id}')]
+    #[On('refreshTranslationRow.{translationIdentity}')]
     public function refreshTranslationRow(): void
     {
         $this->setDefaults();
@@ -80,21 +106,21 @@ class Row extends Component
             return;
         }
         $testValue = trim(preg_replace('%<p(.*?)>|</p>%s', '', $this->value));
+        $repo = app(TranslationRepository::class);
         if (empty($testValue)) {
             $this->reset('value');
             $this->validateOnly('value');
-            // Vendor locale entries are protected — clearing a value does not remove the locale.
-            if ($this->currentLocale != linguaDefaultLocale() && ! $this->translation->is_vendor) {
-                $this->translation->forgetTranslation($this->currentLocale);
+            if ($this->currentLocale !== linguaDefaultLocale() && ! $this->line->isVendor) {
+                $repo->forgetLocale($this->line, $this->currentLocale);
+                unset($this->line);
             }
         } else {
-            $this->translation->setTranslation($this->currentLocale, $this->value);
-            $this->translation->save();
-            $this->translation->refresh();
+            $repo->setValue($this->line, $this->currentLocale, $this->value);
+            unset($this->line);
         }
         $this->setDefaults();
-        $this->dispatch('updateTranslationModal.'.$this->translation->id);
-        $this->dispatch($this->translation->group_key.'_updated');
+        $this->dispatch('updateTranslationModal.'.$this->translationIdentity);
+        $this->dispatch($this->line->groupKey.'_updated');
     }
 
     public function syncFromDefault(): void
@@ -133,6 +159,8 @@ class Row extends Component
 
     public function render()
     {
-        return view('lingua::translation.row');
+        return view('lingua::translation.row', [
+            'translation' => $this->line,
+        ]);
     }
 }

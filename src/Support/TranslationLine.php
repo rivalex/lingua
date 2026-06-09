@@ -45,4 +45,17 @@ final readonly class TranslationLine
     {
         return $this->text[$locale] ?? '';
     }
+
+    /**
+     * Snake-case and legacy aliases used by Blade templates.
+     * Keeps views working without renaming every property access.
+     */
+    public function __get(string $name): mixed
+    {
+        return match ($name) {
+            'is_vendor' => $this->isVendor,
+            'group_key', 'lang_key' => $this->groupKey,
+            default => null,
+        };
+    }
 }

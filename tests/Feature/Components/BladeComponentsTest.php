@@ -133,7 +133,8 @@ it('renders `x-lingua::editor` in `html` mode inside a Livewire component', func
         'is_vendor' => false, 'vendor' => null,
     ]);
 
-    Livewire::test(Row::class, ['translation' => $translation, 'currentLocale' => 'en'])
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+    Livewire::test(Row::class, ['translationIdentity' => $identity, 'currentLocale' => 'en'])
         ->assertStatus(200)
         ->assertSeeHtml('lingua-editor');
 
@@ -147,7 +148,8 @@ it('renders `x-lingua::editor` in `markdown` mode inside a Livewire component', 
         'is_vendor' => false, 'vendor' => null,
     ]);
 
-    Livewire::test(Row::class, ['translation' => $translation, 'currentLocale' => 'en'])
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+    Livewire::test(Row::class, ['translationIdentity' => $identity, 'currentLocale' => 'en'])
         ->assertStatus(200)
         ->assertSeeHtml('lingua-editor');
 

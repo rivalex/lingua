@@ -7,7 +7,7 @@
         <x-lingua::validation-errors class="text-start"/>
         <form wire:submit.prevent="deleteTranslation" id="deleteTranslation" class="flex flex-col gap-4">
             @csrf
-            <p>@lang('lingua::lingua.translations.delete.alert', ['key' => $translation->key])</p>
+            <p>@lang('lingua::lingua.translations.delete.alert', ['key' => $this->line->key])</p>
             @if($this->isDefaultLocale)
                 <p>@lang('lingua::lingua.translations.delete.alert_translations')</p>
             @endif

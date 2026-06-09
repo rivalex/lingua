@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Livewire\Translation;
 
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Rivalex\Lingua\Contracts\TranslationRepository;
+use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Support\TranslationLine;
 use Rivalex\Lingua\Traits\ModalsConfirm;
 
 class Delete extends Component
@@ -18,13 +21,32 @@ class Delete extends Component
 
     public string $localName;
 
-    public Translation $translation;
+    public string $translationIdentity;
 
     public string $deleteAction;
 
     public string $deleteHeader;
 
     public bool $isDefaultLocale;
+
+    #[Computed]
+    public function line(): TranslationLine
+    {
+        $parts = explode('|', $this->translationIdentity, 4);
+        $isVendor = ($parts[2] ?? '0') === '1';
+        $vendor = (($parts[3] ?? '') !== '') ? $parts[3] : null;
+
+        return app(TranslationRepository::class)->find($parts[0], $parts[1], $isVendor, $vendor)
+            ?? new TranslationLine(
+                group: $parts[0],
+                key: $parts[1],
+                groupKey: $parts[0].'.'.$parts[1],
+                type: LinguaType::text,
+                text: [],
+                isVendor: $isVendor,
+                vendor: $vendor,
+            );
+    }
 
     public function mount(): void
     {
@@ -43,7 +65,7 @@ class Delete extends Component
 
     public function deleteTranslation(): void
     {
-        if ($this->translation->is_vendor) {
+        if ($this->line->isVendor) {
             $this->closeModal();
             $this->dispatch('vendor_translation_protected');
 
@@ -54,14 +76,15 @@ class Delete extends Component
 
         try {
             $this->closeModal();
+            $repo = app(TranslationRepository::class);
             if ($this->isDefaultLocale) {
-                $this->translation->delete();
+                $repo->deleteKey($this->line);
                 $this->dispatch('translation_deleted');
                 $this->dispatch('refreshTranslationsTableDefaults');
             } else {
-                $this->translation->forgetTranslation($this->currentLocale);
+                $repo->forgetLocale($this->line, $this->currentLocale);
                 $this->dispatch('translation_locale_deleted');
-                $this->dispatch('refreshTranslationRow.'.$this->translation->id);
+                $this->dispatch('refreshTranslationRow.'.$this->translationIdentity);
             }
         } catch (\Exception $e) {
             $this->closeModal();
