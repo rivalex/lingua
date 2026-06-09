@@ -39,8 +39,18 @@ class Create extends Component
 
     public array $groups = [];
 
+    public bool $fileMode = false;
+
     public function rules(): array
     {
+        if ($this->fileMode) {
+            return [
+                'group' => 'required|string',
+                'key' => ['required', 'string', 'min:2'],
+                'textValue' => ['required', 'string'],
+            ];
+        }
+
         return [
             'group' => 'required|string',
             'key' => [
@@ -59,6 +69,7 @@ class Create extends Component
     public function mount(): void
     {
         $this->modalName = 'translation-create-modal';
+        $this->fileMode = linguaIsFileMode();
         $this->getGroupsList();
     }
 
@@ -74,26 +85,30 @@ class Create extends Component
         foreach (app(TranslationRepository::class)->groups() as $group) {
             $this->groups[] = ['id' => $group, 'name' => $group, 'disabled' => false];
         }
-        $this->translationsTypes = LinguaType::selectValues();
+        if (! $this->fileMode) {
+            $this->translationsTypes = LinguaType::selectValues();
+        }
     }
 
     public function addNewTranslation(): void
     {
         $this->validate();
         try {
-            $translationValue = match ($this->translationType) {
-                'text' => $this->textValue,
-                'html' => $this->htmlValue,
-                'markdown' => $this->mdValue,
-                default => ''
-            };
+            $translationValue = $this->fileMode
+                ? $this->textValue
+                : match ($this->translationType) {
+                    'text' => $this->textValue,
+                    'html' => $this->htmlValue,
+                    'markdown' => $this->mdValue,
+                    default => ''
+                };
 
             // is_vendor is intentionally NOT exposed in the form — vendor translations
             // are managed exclusively through file sync and cannot be created manually.
             app(TranslationRepository::class)->create(
                 group: Str::of($this->group)->squish()->trim()->toString(),
                 key: Str::of($this->key)->squish()->trim()->toString(),
-                type: LinguaType::from($this->translationType),
+                type: $this->fileMode ? LinguaType::text : LinguaType::from($this->translationType),
                 locale: linguaDefaultLocale(),
                 value: $translationValue,
             );

@@ -1,10 +1,12 @@
 <flux:table.row>
     <flux:table.cell class="lingua-row">
         <div class="flex flex-col gap-2">
+            @if(!$fileMode)
             <div class="flex flex-row gap-2 items-center text-sm">
                 {!! $translation->type->iconColor(6) !!}
                 <p class="translation-group-key" style="font-weight: bold;">{{ $translation->type->label() }}</p>
             </div>
+            @endif
             <flux:separator @class(['vendor' => $translation->is_vendor])/>
             @if($translation->is_vendor)
                 <div class="flex flex-row gap-2 items-center">
@@ -62,7 +64,9 @@
     <flux:table.cell class="lingua-row">
         <div class="lingua-preview">
             <x-lingua::clipboard text-to-copy="{{ $defaultValue }}">
-                @if($translation->type->value === 'markdown')
+                @if($fileMode)
+                    <div class="preview">{{ $defaultValue }}</div>
+                @elseif($translation->type->value === 'markdown')
                     <div x-data="{ showMarkdown: @js($defaultValue) }">
                         <pre class="markdown" x-text="showMarkdown"></pre>
                     </div>
@@ -83,18 +87,23 @@
         </div>
     </flux:table.cell>
     <flux:table.cell class="lingua-row">
-        <div x-cloak x-show="$wire.translationType === 'text'">
-            <x-lingua::editor wire:model.blur.live="value" type="text"
-                              :placeholder="__('lingua::lingua.translations.fields.text')"/>
-        </div>
-        <div x-cloak x-show="$wire.translationType === 'html'">
-            <x-lingua::editor wire:model.blur.live="value" type="html"
-                              :placeholder="__('lingua::lingua.translations.fields.html')"/>
-        </div>
-        <div x-cloak x-show="$wire.translationType === 'markdown'">
-            <x-lingua::editor wire:model.blur.live="value" type="markdown"
-                              :placeholder="__('lingua::lingua.translations.fields.md')"/>
-        </div>
+        @if($fileMode)
+            <flux:textarea wire:model.blur.live="value"
+                           :placeholder="__('lingua::lingua.translations.fields.text')"/>
+        @else
+            <div x-cloak x-show="$wire.translationType === 'text'">
+                <x-lingua::editor wire:model.blur.live="value" type="text"
+                                  :placeholder="__('lingua::lingua.translations.fields.text')"/>
+            </div>
+            <div x-cloak x-show="$wire.translationType === 'html'">
+                <x-lingua::editor wire:model.blur.live="value" type="html"
+                                  :placeholder="__('lingua::lingua.translations.fields.html')"/>
+            </div>
+            <div x-cloak x-show="$wire.translationType === 'markdown'">
+                <x-lingua::editor wire:model.blur.live="value" type="markdown"
+                                  :placeholder="__('lingua::lingua.translations.fields.md')"/>
+            </div>
+        @endif
     </flux:table.cell>
 
     <flux:table.cell align="center" class="lingua-row center" wire:loading.class="pointer-events-none">

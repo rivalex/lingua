@@ -378,7 +378,7 @@ final class FileRepository implements TranslationRepository
                 if (! isset($indexed[$identKey])) {
                     $indexed[$identKey] = [
                         'group' => $entry['group'],
-                        'key' => $entry['key'],
+                        'key' => (string) $entry['key'],
                         'is_vendor' => $entry['is_vendor'],
                         'vendor' => $entry['vendor'],
                         'text' => [],

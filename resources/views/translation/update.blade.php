@@ -7,11 +7,12 @@
         <form wire:submit.prevent="updateTranslation" id="updateTranslation" class="flex flex-col gap-4">
             @csrf
             <div class="grid grid-cols-3 gap-2">
-                <div class="col-span-2">
+                <div @class(['col-span-2' => !$fileMode, 'col-span-3' => $fileMode])>
                     <x-lingua::autocomplete wire:model.blur.live="group" required :options="$groups" :disabled="$locked"
                                             :label="__('lingua::lingua.translations.fields.group')"
                                             :placeholder="__('lingua::lingua.translations.fields.group_placeholder')"/>
                 </div>
+                @if(!$fileMode)
                 <div class="col-span-1">
                     <x-lingua::select wire:model.change.live="translationType"
                                       required :disabled="$locked"
@@ -27,6 +28,7 @@
                         @endforeach
                     </x-lingua::select>
                 </div>
+                @endif
                 <div class="col-span-3">
                     <flux:input wire:model.blur.live="key" type="text" icon="key" :disabled="$locked"
                                 :label="__('lingua::lingua.translations.fields.key')"
@@ -34,24 +36,31 @@
                                 required :badge="__('lingua::lingua.global.required')"/>
                 </div>
                 <div class="col-span-3">
-                    <div x-cloak x-show="$wire.translationType === 'text'">
-                        <flux:textarea wire:key="editor-text" wire:model.blur="textValue" rows="3" :helper="false"
+                    @if($fileMode)
+                        <flux:textarea wire:model.blur="textValue" rows="3"
                                        :required="$required"
                                        :label="__('lingua::lingua.translations.fields.textValue')"
                                        :placeholder="__('lingua::lingua.translations.fields.text')"/>
-                    </div>
-                    <div x-cloak x-show="$wire.translationType === 'html'">
-                        <x-lingua::editor wire:model.blur="htmlValue" type="html" :helper="false"
-                                          :required="$required"
-                                          :label="__('lingua::lingua.translations.fields.htmlValue')"
-                                          :placeholder="__('lingua::lingua.translations.fields.html')"/>
-                    </div>
-                    <div x-cloak x-show="$wire.translationType === 'markdown'">
-                        <x-lingua::editor wire:model.blur="mdValue" type="markdown" :helper="false"
-                                          :required="$required"
-                                          :label="__('lingua::lingua.translations.fields.mdValue')"
-                                          :placeholder="__('lingua::lingua.translations.fields.md')"/>
-                    </div>
+                    @else
+                        <div x-cloak x-show="$wire.translationType === 'text'">
+                            <flux:textarea wire:key="editor-text" wire:model.blur="textValue" rows="3" :helper="false"
+                                           :required="$required"
+                                           :label="__('lingua::lingua.translations.fields.textValue')"
+                                           :placeholder="__('lingua::lingua.translations.fields.text')"/>
+                        </div>
+                        <div x-cloak x-show="$wire.translationType === 'html'">
+                            <x-lingua::editor wire:model.blur="htmlValue" type="html" :helper="false"
+                                              :required="$required"
+                                              :label="__('lingua::lingua.translations.fields.htmlValue')"
+                                              :placeholder="__('lingua::lingua.translations.fields.html')"/>
+                        </div>
+                        <div x-cloak x-show="$wire.translationType === 'markdown'">
+                            <x-lingua::editor wire:model.blur="mdValue" type="markdown" :helper="false"
+                                              :required="$required"
+                                              :label="__('lingua::lingua.translations.fields.mdValue')"
+                                              :placeholder="__('lingua::lingua.translations.fields.md')"/>
+                        </div>
+                    @endif
                 </div>
             </div>
             <flux:separator/>

@@ -31,6 +31,8 @@ class Row extends Component
 
     public string $translationType = '';
 
+    public bool $fileMode = false;
+
     /**
      * Re-fetch the TranslationLine from the repository using the stable identity.
      * Falls back to a stub when the key has just been deleted (between dispatches).
@@ -65,16 +67,19 @@ class Row extends Component
     public function validationAttributes(): array
     {
         return [
-            'value' => match ($this->line->type->value) {
-                'text' => __('lingua::lingua.translations.attributes.text_value'),
-                'html' => __('lingua::lingua.translations.attributes.html_value'),
-                'markdown' => __('lingua::lingua.translations.attributes.md_value'),
-            },
+            'value' => $this->fileMode
+                ? __('lingua::lingua.translations.attributes.text_value')
+                : match ($this->line->type->value) {
+                    'text' => __('lingua::lingua.translations.attributes.text_value'),
+                    'html' => __('lingua::lingua.translations.attributes.html_value'),
+                    'markdown' => __('lingua::lingua.translations.attributes.md_value'),
+                },
         ];
     }
 
     public function mount(): void
     {
+        $this->fileMode = linguaIsFileMode();
         $this->setDefaults();
         $this->editModalName = 'translation-update-modal-'.md5($this->translationIdentity);
         $this->deleteModalName = 'translation-delete-modal-'.md5($this->translationIdentity);
@@ -86,10 +91,10 @@ class Row extends Component
         $line = $this->line;
         $this->value = $line->value($this->currentLocale);
         $rawDefault = $line->value(linguaDefaultLocale());
-        $this->defaultValue = $line->type->value === 'html'
+        $this->defaultValue = (! $this->fileMode && $line->type->value === 'html')
             ? strip_tags($rawDefault, '<p><br><b><i><em><strong><ul><ol><li><a><img><h1><h2><h3><h4><h5><h6><span><div><table><tr><td><th><thead><tbody><hr><blockquote><pre><code>')
             : $rawDefault;
-        $this->translationType = $line->type->value;
+        $this->translationType = $this->fileMode ? LinguaType::text->value : $line->type->value;
     }
 
     #[On('refreshTranslationRow.{translationIdentity}')]
