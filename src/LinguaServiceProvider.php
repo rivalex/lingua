@@ -57,11 +57,14 @@ class LinguaServiceProvider extends PackageServiceProvider
             );
         });
 
+        $this->app->bind(AtomicFileWriter::class);
+
         $this->app->bind(NotificationProjector::class, function ($app) {
             return new NotificationProjector(
                 notificationsPath: config('lingua.base_notifications_path',
                     __DIR__.'/../resources/notifications'),
                 langPath: config('lingua.lang_dir', lang_path()),
+                writer: $app->make(AtomicFileWriter::class),
             );
         });
 
