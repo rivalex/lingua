@@ -5,6 +5,7 @@
     "locales_generated": [
         "ar",
         "de",
+        "en",
         "es",
         "fa",
         "fr",
@@ -39,5 +40,6 @@
         "notifications"
     ],
     "total_strings": 5600,
-    "discarded_count": 0
+    "discarded_count": 0,
+    "laravel_tag_en": "v13.14.0"
 }

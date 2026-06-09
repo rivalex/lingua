@@ -18,6 +18,22 @@ All notable changes to `lingua` will be documented in this file.
 - **`Translation::syncToLocal` robust I/O** — All `file_put_contents`/`mkdir` calls replaced with `AtomicFileWriter`; errors throw instead of silently producing partial files.
 - **`Translation::syncToDatabase` targeted cache invalidation** — Replaced `Artisan::call('cache:clear')` (wiped entire application cache) with per-`(locale, group)` `Cache::store()->forget(CacheKey::forGroup(...))` on keys actually touched during sync. Unrelated cache entries are preserved.
 
+### Phase 3 — Bug fixes (missing use imports in Language, Translation, LinguaServiceProvider)
+
+- **`Language.php` missing `use Illuminate\Support\Facades\DB`** — `setDefault()` called `DB::transaction()` without the facade import, causing `Class "Rivalex\Lingua\Models\DB" not found` at runtime. Import added.
+- **`LinguaServiceProvider.php` missing `use Rivalex\Lingua\Support\AtomicFileWriter`** — `AtomicFileWriter::class` resolved to `Rivalex\Lingua\AtomicFileWriter` (wrong namespace) in `register()`. Import added.
+- **`Translation.php` missing `use Rivalex\Lingua\Support\AtomicFileWriter`** — Same resolution bug in `syncToLocal()`: resolved to `Rivalex\Lingua\Models\AtomicFileWriter`. Import added.
+
+### Phase 3 — EN bundled dataset
+
+- **`resources/translations/en/`** — English locale added to bundled dataset as a direct copy of Laravel framework `v13.14.0` EN strings (no translation, no Haiku). 5 groups: `auth`, `pagination`, `passwords`, `validation`, `http-statuses`. Read by `BundledTranslationSource` like any other locale; users can freely edit the strings.
+- **`resources/notifications/en.php`** — English notification identity map (source EN = value). 9 strings from `ResetPassword` + `VerifyEmail` at `v13.14.0`.
+- **`resources/translations/.dataset-lock.json`** — Version lock file for the EN source tag (`v13.14.0`, resolved dynamically from GitHub API and locked for reproducibility). `--refresh-tag` re-resolves the latest stable 13.x release; subsequent runs use the locked tag.
+- **`build-tools/src/Source/TagResolver`** — Fetches latest stable `v13.x.y` release from GitHub releases API. Reads/writes `.dataset-lock.json`. Skips pre-releases and drafts; sorts candidates by semver descending.
+- **`build-tools/src/Command/GenerateEnCommand`** — New `generate:en` CLI command: resolves tag via `TagResolver`, writes EN files as direct source copies (bypasses Haiku and `ValidationGate`), writes identity notification map, updates lock + `.meta.json`. Options: `--refresh-tag`, `--test-fixtures`, `--laravel-tag`, `--force`.
+- **`build-tools/src/Source/NotificationSource::loadAllStrings()`** — New public method: returns all `Lang::get()` strings extracted from notification classes without semantic-key mapping. Used by `GenerateEnCommand` to bypass `SEMANTIC_PATTERNS` (subject strings changed in v13.x).
+- **`tests/tmp/lang/en/`** — Test fixtures regenerated from same `v13.14.0` EN source: `auth.php`, `pagination.php`, `passwords.php`, `validation.php`, `http-statuses.php`. Consistent with bundled dataset.
+
 ### Phase 2 — Bundled translation dataset
 
 - **Phase 2 — Bundled translation dataset** (`resources/translations/`). 25 locales × 5 groups (`auth`, `pagination`, `passwords`, `validation`, `http-statuses`) machine-translated from Laravel framework `v12.19.3` EN strings via Claude Haiku. Read directly by `BundledTranslationSource` with zero runtime changes. 0% discard rate.
