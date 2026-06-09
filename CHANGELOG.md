@@ -6,6 +6,10 @@ All notable changes to `lingua` will be documented in this file.
 
 ### Added
 
+- **`SetStorageDriverCommand`** (`src/Commands/SetStorageDriverCommand.php`) — New `lingua:storage {driver : database|file} {--force} {--write-env}` command. Counts html/markdown rows in PHP (no SQL JSON), warns + confirms before DB→file switch; syncs translations before switching; prints `LINGUA_STORAGE_DRIVER={driver}` `.env` instruction (or writes `.env` with `--write-env`).
+- **`SyncToLocalCommand --force`** — File-mode guard: without `--force` the command is a no-op with a warning; with `--force` it asks for explicit confirmation before proceeding.
+- **`SyncToDatabaseCommand` file-mode note** — Prints `Note: file-mode active — DB is a staging copy only.` when driver is `file` (non-blocking).
+
 - **`AtomicFileWriter`** (`src/Support/AtomicFileWriter.php`) — Internal `final` stateless I/O helper. Writes via temp-file + atomic `rename`; `json_encode` with `JSON_THROW_ON_ERROR`; verifies every `file_put_contents`/`rename` return; removes temp on any failure. Methods: `put`, `putJson`, `putPhp`, `ensureDir`.
 
 ### Fixed

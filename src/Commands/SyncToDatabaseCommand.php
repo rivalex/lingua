@@ -28,6 +28,10 @@ class SyncToDatabaseCommand extends Command
      */
     public function handle(): void
     {
+        if (linguaIsFileMode()) {
+            $this->info('Note: file-mode active — DB is a staging copy only.');
+        }
+
         $this->info('Syncing translations from local files to database...');
 
         try {

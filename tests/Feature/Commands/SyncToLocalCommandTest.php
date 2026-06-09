@@ -32,3 +32,22 @@ it('outputs error when sync to local fails', function () {
         ->assertSuccessful()
         ->expectsOutputToContain('Failed to sync translations to local files: Disk write error.');
 });
+
+// §8.7 — Guard sync anti-overwrite in file-mode
+
+it('lingua:sync-to-local in file-mode without --force is a no-op with warning', function () {
+    config(['lingua.storage.driver' => 'file']);
+
+    $this->artisan('lingua:sync-to-local')
+        ->expectsOutputToContain('Refusing: file-mode active')
+        ->assertSuccessful();
+});
+
+it('lingua:sync-to-local in file-mode with --force and confirm proceeds', function () {
+    config(['lingua.storage.driver' => 'file']);
+
+    $this->artisan('lingua:sync-to-local', ['--force' => true])
+        ->expectsConfirmation('File-mode is active. DB may be empty and overwrite your files. Proceed?', 'yes')
+        ->expectsOutputToContain('Syncing translations from database to local files')
+        ->assertSuccessful();
+});

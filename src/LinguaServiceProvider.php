@@ -14,6 +14,7 @@ use Illuminate\Translation\Translator;
 use Livewire\Livewire;
 use Rivalex\Lingua\Commands\AddLangCommand;
 use Rivalex\Lingua\Commands\RemoveLangCommand;
+use Rivalex\Lingua\Commands\SetStorageDriverCommand;
 use Rivalex\Lingua\Commands\SyncToDatabaseCommand;
 use Rivalex\Lingua\Commands\SyncToLocalCommand;
 use Rivalex\Lingua\Commands\UpdateLangCommand;
@@ -115,6 +116,7 @@ class LinguaServiceProvider extends PackageServiceProvider
                 UpdateLangCommand::class,
                 SyncToLocalCommand::class,
                 SyncToDatabaseCommand::class,
+                SetStorageDriverCommand::class,
             )
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
