@@ -1,0 +1,33 @@
+{
+    "laravel_tag": "v13.14.0",
+    "generated_at": "2026-06-09T06:56:15Z",
+    "source_commit": "13.x",
+    "locales": [
+        "ar",
+        "de",
+        "es",
+        "fa",
+        "fr",
+        "he",
+        "hi",
+        "id",
+        "it",
+        "ja",
+        "ko",
+        "ms",
+        "nb",
+        "nl",
+        "pl",
+        "pt",
+        "pt_BR",
+        "ro",
+        "ru",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "vi",
+        "zh_CN",
+        "en"
+    ]
+}

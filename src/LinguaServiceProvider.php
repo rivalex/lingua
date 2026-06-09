@@ -24,6 +24,8 @@ use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Locales\NotificationProjector;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Services\ExtensionRegistry;
+use Rivalex\Lingua\Support\AtomicFileWriter;
+use Rivalex\Lingua\TranslationManager\LinguaManager;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;

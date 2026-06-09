@@ -15,6 +15,7 @@ use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\Factories\TranslationFactory;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Locales\LocaleRegistry;
+use Rivalex\Lingua\Support\AtomicFileWriter;
 use Rivalex\Lingua\TranslationManager\CacheKey;
 
 /**
