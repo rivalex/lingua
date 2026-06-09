@@ -6,6 +6,20 @@ All notable changes to `lingua` will be documented in this file.
 
 ### Added
 
+- **`AtomicFileWriter`** (`src/Support/AtomicFileWriter.php`) — Internal `final` stateless I/O helper. Writes via temp-file + atomic `rename`; `json_encode` with `JSON_THROW_ON_ERROR`; verifies every `file_put_contents`/`rename` return; removes temp on any failure. Methods: `put`, `putJson`, `putPhp`, `ensureDir`.
+
+### Fixed
+
+- **`NotificationProjector::writeJson` atomic I/O** — Replaced bare `mkdir`/`file_put_contents` (return values ignored, `json_encode` could produce `false`) with `AtomicFileWriter::putJson`. JSON encode errors no longer silently write `"false\n"` over user files.
+- **`NotificationProjector` manifest ordering** — `project()` and `unproject()` now guarantee the file operation succeeds (or throws) _before_ `updateManagedManifest` runs, preventing manifest divergence on write failure.
+- **`BundledTranslationSource` dead `.json` branch removed** — Sibling `{locale}.json` path was unreachable (`available()` uses `GLOB_ONLYDIR`) and lacked `json_decode` guards. Removed; only per-group PHP files are loaded, matching Phase 2 dataset design.
+- **`Translation::countByLocale` multi-DB fix** — Replaced `whereRaw('(text->>?) IS NOT NULL', [$locale])` (PostgreSQL-only) with PHP aggregation via `translationCounts()`. Works on SQLite, MySQL, PostgreSQL, SQL Server; no SQL JSON functions.
+- **`Language` statistics — PHP aggregation, no SQL JSON** — Removed `jsonKeyExistsExpression` / `match($driver)` 4-dialect JSON-SQL. `scopeWithStatistics` is now a passthrough (call-site compatible). Four computed properties (`total_strings`, `translated_strings`, `missing_strings`, `completion_percentage`) implemented as Eloquent accessors backed by `Translation::translationCounts()`.
+- **`Translation::syncToLocal` robust I/O** — All `file_put_contents`/`mkdir` calls replaced with `AtomicFileWriter`; errors throw instead of silently producing partial files.
+- **`Translation::syncToDatabase` targeted cache invalidation** — Replaced `Artisan::call('cache:clear')` (wiped entire application cache) with per-`(locale, group)` `Cache::store()->forget(CacheKey::forGroup(...))` on keys actually touched during sync. Unrelated cache entries are preserved.
+
+### Phase 2 — Bundled translation dataset
+
 - **Phase 2 — Bundled translation dataset** (`resources/translations/`). 25 locales × 5 groups (`auth`, `pagination`, `passwords`, `validation`, `http-statuses`) machine-translated from Laravel framework `v12.19.3` EN strings via Claude Haiku. Read directly by `BundledTranslationSource` with zero runtime changes. 0% discard rate.
 - **Bundled notification translations** (`resources/notifications/`). 25 locales × 8 email strings (password reset + email verify) projected into user app's `lang/{locale}.json` at locale install-time via `NotificationProjector`, enabling `Lang::getFromJson()` resolution out-of-the-box.
 - **`NotificationProjector`** (`src/Locales/NotificationProjector.php`) — Merge is non-destructive (user keys never overwritten), idempotent, with selective removal on locale uninstall via `.lingua-managed.json` sidecar manifest.
