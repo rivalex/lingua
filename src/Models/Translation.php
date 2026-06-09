@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -82,6 +81,14 @@ class Translation extends Model
      * Set to true by syncToDatabase() and restored in a finally block.
      */
     private static bool $syncing = false;
+
+    /**
+     * Collects (locale, group) pairs touched during syncToDatabase() for
+     * targeted cache invalidation in the finally block.
+     *
+     * @var array<int, array{0: string, 1: string}>
+     */
+    private static array $touchedCacheKeys = [];
 
     /**
      * Bootstrap the model and its traits.
@@ -235,6 +242,7 @@ class Translation extends Model
 
     public static function syncToLocal(): void
     {
+        $writer = app(AtomicFileWriter::class);
         $languages = Language::orderBy('sort', 'desc')->get();
         $translations = self::all();
         $langPath = config('lingua.lang_dir');
@@ -270,8 +278,11 @@ class Translation extends Model
 
             // Core JSON
             $jsonFile = $langPath.'/'.$locale.'.json';
-            file_put_contents($jsonFile,
-                json_encode($coreGroups['single'] ?? (object) [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $writer->putJson(
+                $jsonFile,
+                $coreGroups['single'] ?? [],
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+            );
 
             // Core PHP
             foreach ($coreGroups as $group => $groupTranslations) {
@@ -281,13 +292,10 @@ class Translation extends Model
 
                 self::assertSafePathSegment($group, 'group');
                 $langFolder = $langPath.'/'.$locale;
-                if (! is_dir($langFolder)) {
-                    mkdir($langFolder, 0755, true);
-                }
+                $writer->ensureDir($langFolder);
 
                 $phpFile = $langFolder.'/'.$group.'.php';
-                $content = "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n";
-                file_put_contents($phpFile, $content);
+                $writer->putPhp($phpFile, "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n");
             }
 
             // Vendor JSON + PHP
@@ -296,12 +304,13 @@ class Translation extends Model
                 $vendorRoot = $langPath.'/vendor/'.$vendor;
 
                 if (isset($groups['single'])) {
-                    if (! is_dir($vendorRoot)) {
-                        mkdir($vendorRoot, 0755, true);
-                    }
+                    $writer->ensureDir($vendorRoot);
                     $jsonFile = $vendorRoot.'/'.$locale.'.json';
-                    file_put_contents($jsonFile,
-                        json_encode($groups['single'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                    $writer->putJson(
+                        $jsonFile,
+                        $groups['single'],
+                        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+                    );
                 }
 
                 foreach ($groups as $group => $groupTranslations) {
@@ -311,13 +320,10 @@ class Translation extends Model
 
                     self::assertSafePathSegment($group, 'vendor group');
                     $vendorLangFolder = $vendorRoot.'/'.$locale;
-                    if (! is_dir($vendorLangFolder)) {
-                        mkdir($vendorLangFolder, 0755, true);
-                    }
+                    $writer->ensureDir($vendorLangFolder);
 
                     $phpFile = $vendorLangFolder.'/'.$group.'.php';
-                    $content = "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n";
-                    file_put_contents($phpFile, $content);
+                    $writer->putPhp($phpFile, "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n");
                 }
             }
         }
@@ -457,7 +463,11 @@ class Translation extends Model
             }
         } finally {
             self::$syncing = false;
-            Artisan::call('cache:clear');
+            $store = Cache::store(config('lingua.cache.store'));
+            foreach (self::$touchedCacheKeys as [$locale, $group]) {
+                $store->forget(CacheKey::forGroup($locale, $group));
+            }
+            self::$touchedCacheKeys = [];
         }
     }
 
@@ -627,6 +637,8 @@ class Translation extends Model
                 ),
             ]
         );
+
+        self::$touchedCacheKeys[] = [$translation['locale'], $translation['group']];
     }
 
     protected static function flattenTranslations(
@@ -695,20 +707,26 @@ class Translation extends Model
     }
 
     /**
-     * Count all translations for a specific locale
+     * Count all translations that have a non-null value for the given locale.
+     *
+     * Uses PHP aggregation over the text JSON column to stay compatible with
+     * every supported database driver (SQLite, MySQL, PostgreSQL, SQL Server).
      */
     public static function countByLocale(string $locale): int
     {
-        return self::whereRaw('(text->>?) IS NOT NULL', [$locale])->count() ?? 0;
+        return static::translationCounts()['byLocale'][$locale] ?? 0;
     }
 
     /**
-     * Get translation statistics for a specific locale
+     * Get translation statistics for a specific locale.
+     *
+     * @return array{total: int, translated: int, missing: int, percentage: float|int}
      */
     public static function getLocaleStats(string $locale): array
     {
-        $total = self::count();
-        $translated = self::countByLocale($locale);
+        $counts = static::translationCounts();
+        $total = $counts['total'];
+        $translated = $counts['byLocale'][$locale] ?? 0;
 
         return [
             'total' => $total,
@@ -716,5 +734,28 @@ class Translation extends Model
             'missing' => $total - $translated,
             'percentage' => $total > 0 ? round(($translated / $total) * 100, 2) : 0,
         ];
+    }
+
+    /**
+     * Load all language_lines rows (text column only) and count per-locale in PHP.
+     *
+     * Returns ['total' => int, 'byLocale' => [locale => count]].
+     * No SQL JSON functions used — compatible with all supported drivers.
+     *
+     * @return array{total: int, byLocale: array<string, int>}
+     */
+    public static function translationCounts(): array
+    {
+        $byLocale = [];
+        $total = 0;
+
+        self::select('text')->each(function (self $row) use (&$byLocale, &$total): void {
+            $total++;
+            foreach (array_keys($row->text ?? []) as $locale) {
+                $byLocale[$locale] = ($byLocale[$locale] ?? 0) + 1;
+            }
+        });
+
+        return ['total' => $total, 'byLocale' => $byLocale];
     }
 }

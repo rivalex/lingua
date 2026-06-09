@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Rivalex\Lingua\Database\Factories\LanguageFactory;
 
 /**
@@ -109,10 +108,6 @@ class Language extends Model
         'sort' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'total_strings' => 'integer',
-        'translated_strings' => 'integer',
-        'missing_strings' => 'integer',
-        'completion_percentage' => 'float',
     ];
 
     /**
@@ -219,72 +214,54 @@ class Language extends Model
      * @param  string  $keyColumn  The column name or value containing the key to search for (e.g., 'languages.code' or "'en'")
      * @return string Raw SQL expression string that evaluates to true if the key exists
      */
-    protected function jsonKeyExistsExpression(string $jsonColumn, string $keyColumn): string
-    {
-        $driver = DB::connection()->getDriverName();
-
-        return match ($driver) {
-            'pgsql' => "($jsonColumn ->> $keyColumn) IS NOT NULL",
-            'sqlsrv' => "JSON_VALUE($jsonColumn, CONCAT('$.\"', $keyColumn, '\"')) IS NOT NULL",
-            'sqlite' => "json_extract($jsonColumn, '$.' || $keyColumn) IS NOT NULL",
-            default => "JSON_EXTRACT($jsonColumn, CONCAT('$.\"', $keyColumn, '\"')) IS NOT NULL",
-        };
-    }
-
     /**
-     * ## Query scope to include translation statistics for each language.
-     *
-     * This scope adds computed columns that provide translation progress information:
-     * - **total_strings**: Total count of translatable strings in the system
-     * - **translated_strings**: Number of strings that have been translated for this language
-     * - **missing_strings**: Number of strings that still need translation
-     * - **completion_percentage**: Percentage of translated strings (0-100, rounded to 2 decimals)
-     *
-     * The statistics are calculated from the language_lines table where translations
-     * are stored in a JSONB 'text' column with language codes as keys.
-     *
-     *  ```
-     *  // Get language with translation statistics
-     *  $language = Language::query()->withStatistics()->find($id);
-     *  echo "Translation progress: {$language->completion_percentage}%";
-     *  echo "Missing: {$language->missing_strings} strings";
-     *
-     *  // Get all languages with statistics
-     *  $languages = Language::query()->withStatistics()->get();
-     *  foreach ($languages as $lang) {
-     *      if ($lang->completion_percentage < 80) {
-     *          echo "{$lang->name} needs more translations\n";
-     *      }
-     *  }
-     *
-     *  // Combine with other queries
-     *  $incompleteLangs = Language::withStatistics()
-     *      ->havingRaw('completion_percentage < 100')
-     *      ->orderBy('completion_percentage', 'desc')
-     *      ->get();
-     *  ```
+     * Passthrough scope — statistics are now computed via PHP accessors.
+     * Kept for call-site compatibility: Language::withStatistics()->find/get
+     * continues to work; the four metric properties are available on every
+     * Language instance regardless of whether this scope is used.
      *
      * @param  Builder  $query  Query builder instance
-     * @return Builder Modified query builder with statistics
+     * @return Builder Unmodified query builder
      */
     public function scopeWithStatistics(Builder $query): Builder
     {
-        $languageCodeColumn = $query->getModel()->qualifyColumn('code');
-        $jsonColumn = 'language_lines.text';
+        return $query;
+    }
 
-        $keyExists = $this->jsonKeyExistsExpression($jsonColumn, $languageCodeColumn);
+    /**
+     * Total number of translatable strings in the system.
+     * Computed via PHP aggregation — no SQL JSON functions.
+     */
+    public function getTotalStringsAttribute(): int
+    {
+        return Translation::translationCounts()['total'];
+    }
 
-        $total = DB::table('language_lines')->selectRaw('COUNT(*)');
-        $translated = DB::table('language_lines')->whereRaw($keyExists)->selectRaw('COUNT(*)');
-        $missing = DB::table('language_lines')->whereRaw("NOT ($keyExists)")->selectRaw('COUNT(*)');
-        $percentage = DB::table('language_lines')->selectRaw('ROUND(COUNT(CASE WHEN '.$keyExists.' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2)');
+    /**
+     * Number of strings translated for this language.
+     * Computed via PHP aggregation — no SQL JSON functions.
+     */
+    public function getTranslatedStringsAttribute(): int
+    {
+        return Translation::translationCounts()['byLocale'][$this->code] ?? 0;
+    }
 
-        return $query->addSelect([
-            'total_strings' => $total,
-            'translated_strings' => $translated,
-            'missing_strings' => $missing,
-            'completion_percentage' => $percentage,
-        ]);
+    /**
+     * Number of strings not yet translated for this language.
+     */
+    public function getMissingStringsAttribute(): int
+    {
+        return $this->total_strings - $this->translated_strings;
+    }
+
+    /**
+     * Translation completion percentage (0–100, rounded to 2 decimals).
+     */
+    public function getCompletionPercentageAttribute(): float
+    {
+        $total = $this->total_strings;
+
+        return $total > 0 ? round($this->translated_strings / $total * 100, 2) : 0.0;
     }
 
     /**
