@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Locales;
 
 use InvalidArgumentException;
+use Rivalex\Lingua\Support\AtomicFileWriter;
+use RuntimeException;
 
 /**
  * Projects bundled notification translations into the user app's lang/{locale}.json
@@ -16,12 +18,17 @@ use InvalidArgumentException;
  *
  * A sidecar manifest (lang/.lingua-managed.json) tracks which keys lingua projected
  * into each locale, so unproject() can remove only those keys — never user keys.
+ *
+ * All file writes are atomic (temp + rename via AtomicFileWriter). The manifest is
+ * updated only AFTER a successful write, so a failed write never leaves the manifest
+ * in a divergent state.
  */
 final class NotificationProjector
 {
     public function __construct(
         private readonly string $notificationsPath,
         private readonly string $langPath,
+        private readonly AtomicFileWriter $writer,
     ) {}
 
     /**
@@ -29,6 +36,7 @@ final class NotificationProjector
      * Called by Lingua::addLanguage() after the DB record is created.
      *
      * @throws InvalidArgumentException on unsafe locale path segment
+     * @throws RuntimeException on I/O failure (manifest is NOT updated in that case)
      */
     public function project(string $locale): void
     {
@@ -68,6 +76,7 @@ final class NotificationProjector
             return;
         }
 
+        // Write FIRST — throws on failure, so manifest is never updated on error.
         $this->writeJson($jsonFile, $merged);
         $this->updateManagedManifest($locale, $projectedKeys, 'add');
     }
@@ -78,6 +87,7 @@ final class NotificationProjector
      * User-defined keys in the JSON file are never touched.
      *
      * @throws InvalidArgumentException on unsafe locale path segment
+     * @throws RuntimeException on I/O failure (manifest is NOT cleaned in that case)
      */
     public function unproject(string $locale): void
     {
@@ -96,9 +106,15 @@ final class NotificationProjector
             unset($existing[$key]);
         }
 
+        // Write / delete FIRST — throws on failure so the manifest is not
+        // cleaned prematurely, keeping the keys recoverable on retry.
         if ($existing === []) {
             if (file_exists($jsonFile)) {
-                unlink($jsonFile);
+                if (! unlink($jsonFile)) {
+                    throw new RuntimeException(
+                        "[Lingua] Could not delete lang file: {$jsonFile}"
+                    );
+                }
             }
         } else {
             $this->writeJson($jsonFile, $existing);
@@ -127,17 +143,15 @@ final class NotificationProjector
         return is_array($decoded) ? $decoded : [];
     }
 
+    /**
+     * @throws RuntimeException on encode or write failure
+     */
     private function writeJson(string $path, array $data): void
     {
-        $dir = dirname($path);
-
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        file_put_contents(
+        $this->writer->putJson(
             $path,
-            json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)."\n"
+            $data,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
         );
     }
 

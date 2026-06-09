@@ -64,7 +64,9 @@ final class AtomicFileWriter
         $tmp = $path.'.tmp.'.getmypid();
 
         try {
-            $written = file_put_contents($tmp, $contents);
+            // @ suppresses the PHP warning that would otherwise become an
+            // ErrorException before we can check the return value ourselves.
+            $written = @file_put_contents($tmp, $contents);
 
             if ($written === false) {
                 throw new RuntimeException(
@@ -72,7 +74,7 @@ final class AtomicFileWriter
                 );
             }
 
-            if (! rename($tmp, $path)) {
+            if (! @rename($tmp, $path)) {
                 throw new RuntimeException(
                     "[Lingua] Could not rename {$tmp} → {$path}"
                 );

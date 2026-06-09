@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rivalex\Lingua\Locales\NotificationProjector;
+use Rivalex\Lingua\Support\AtomicFileWriter;
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ function makeProjector(string $notificationsPath, string $langPath): Notificatio
     return new NotificationProjector(
         notificationsPath: $notificationsPath,
         langPath: $langPath,
+        writer: new AtomicFileWriter,
     );
 }
 
@@ -221,3 +223,82 @@ test('project throws on unsafe locale path segment', function (string $unsafe): 
 
     cleanDir($base);
 })->with(['../etc', '/etc/passwd', "it\0evil", '']);
+
+// ── Fix #1: writeJson failure must not update manifest ─────────────────────────
+
+test('project: write failure throws and manifest is NOT updated', function (): void {
+    if (posix_geteuid() === 0) {
+        $this->markTestSkipped('not reliable as root');
+    }
+
+    [$notificationsPath, $langPath, $base] = makeTempDirs();
+
+    writeNotificationFile($notificationsPath, 'it', [
+        'Reset Password' => 'Ripristina Password',
+    ]);
+
+    // Make lang dir non-writable so file_put_contents fails
+    chmod($langPath, 0555);
+
+    try {
+        expect(fn () => makeProjector($notificationsPath, $langPath)->project('it'))
+            ->toThrow(RuntimeException::class);
+
+        // Manifest must NOT have been written
+        expect(file_exists($langPath.'/.lingua-managed.json'))->toBeFalse();
+    } finally {
+        chmod($langPath, 0755);
+        cleanDir($base);
+    }
+})->skip(PHP_OS_FAMILY === 'Windows', 'chmod not supported on Windows');
+
+test('project: invalid UTF-8 in source throws and manifest is NOT updated', function (): void {
+    [$notificationsPath, $langPath, $base] = makeTempDirs();
+
+    // Write a PHP file that returns a value with invalid UTF-8
+    $export = "<?php\n\nreturn [".var_export('Reset Password', true).' => '.var_export("\xB1\x31", true)."];\n";
+    file_put_contents($notificationsPath.'/it.php', $export);
+
+    expect(fn () => makeProjector($notificationsPath, $langPath)->project('it'))
+        ->toThrow(RuntimeException::class);
+
+    expect(file_exists($langPath.'/.lingua-managed.json'))->toBeFalse();
+
+    cleanDir($base);
+});
+
+// ── Fix #2: unproject write failure must not clean manifest ────────────────────
+
+test('unproject: write failure throws and manifest keys are NOT removed', function (): void {
+    if (posix_geteuid() === 0) {
+        $this->markTestSkipped('not reliable as root');
+    }
+
+    [$notificationsPath, $langPath, $base] = makeTempDirs();
+
+    // Seed the lang file and the manifest
+    file_put_contents($langPath.'/it.json', json_encode([
+        'Reset Password' => 'Ripristina Password',
+        'My Custom Key' => 'Valore',
+    ]));
+    file_put_contents($langPath.'/.lingua-managed.json', json_encode([
+        'it' => ['Reset Password'],
+    ]));
+
+    // Make lang dir non-writable so writing the updated it.json fails
+    chmod($langPath, 0555);
+
+    try {
+        expect(fn () => makeProjector($notificationsPath, $langPath)->unproject('it'))
+            ->toThrow(RuntimeException::class);
+
+        // Manifest must still contain 'it' keys (not cleaned)
+        chmod($langPath, 0755);
+        $manifest = readJson($langPath.'/.lingua-managed.json');
+        expect($manifest)->toHaveKey('it');
+        expect($manifest['it'])->toContain('Reset Password');
+    } finally {
+        chmod($langPath, 0755);
+        cleanDir($base);
+    }
+})->skip(PHP_OS_FAMILY === 'Windows', 'chmod not supported on Windows');
