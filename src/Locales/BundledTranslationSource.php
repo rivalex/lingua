@@ -12,9 +12,12 @@ use Rivalex\Lingua\Contracts\BaseTranslationSource;
  * Phase 1: the bundled translations directory is empty (.gitkeep only),
  * so available() returns [] and translationsFor() returns [].
  *
- * Phase 2: populate resources/translations/{locale}/ with PHP/JSON files.
+ * Phase 2: populate resources/translations/{locale}/ with PHP group files.
  * Override lingua.base_translations_path in config to point to a custom
  * directory, e.g. for a rivalex/lingua-translations satellite package.
+ *
+ * Only PHP files inside per-locale subdirectories are loaded. Sibling
+ * {locale}.json files are intentionally ignored — the dataset is PHP-only.
  */
 final class BundledTranslationSource implements BaseTranslationSource
 {
@@ -65,23 +68,6 @@ final class BundledTranslationSource implements BaseTranslationSource
             }
 
             $this->flatten($translations, $result, $locale, $group, '');
-        }
-
-        $jsonFile = $localeDir.'.json';
-        if (file_exists($jsonFile)) {
-            $decoded = json_decode(file_get_contents($jsonFile), true);
-            if (is_array($decoded)) {
-                foreach ($decoded as $key => $value) {
-                    $result[] = [
-                        'locale' => $locale,
-                        'group' => 'single',
-                        'key' => $key,
-                        'value' => $value ?? '',
-                        'is_vendor' => false,
-                        'vendor' => null,
-                    ];
-                }
-            }
         }
 
         return $result;
