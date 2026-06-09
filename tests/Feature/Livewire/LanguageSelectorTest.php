@@ -9,7 +9,7 @@ it('can get `COMPUTED` property `languages`', function () {
     Livewire::test(LanguageSelector::class)
         ->set('mode', 'sidebar')
         ->assertSet('mode', 'sidebar')
-        ->assertCount('languages', 1);
+        ->assertCount('languages', Language::count());
 });
 
 it('can show the `Language SIDEBAR` selector component', function () {

@@ -17,8 +17,9 @@ it('can render `TABLE component`', function () {
 });
 
 it('can access to `COMPUTED` property `languages`', function () {
-    assertDatabaseMissing('languages', ['code' => 'it']);
-    assertDatabaseMissing('languages', ['code' => 'es']);
+    // Use 'af' (Afrikaans) and 'am' (Amharic) — not in bundled dataset, not pre-seeded.
+    assertDatabaseMissing('languages', ['code' => 'af']);
+    assertDatabaseMissing('languages', ['code' => 'am']);
 
     $count = Language::count();
 
@@ -26,7 +27,7 @@ it('can access to `COMPUTED` property `languages`', function () {
         ->assertCount('languages', $count);
 
     $registry = app(LocaleRegistry::class);
-    foreach (['it', 'es'] as $code) {
+    foreach (['af', 'am'] as $code) {
         $data = $registry->info($code);
         Language::create([
             'code' => $data->code,
@@ -39,18 +40,22 @@ it('can access to `COMPUTED` property `languages`', function () {
         ]);
     }
 
-    assertDatabaseHas('languages', ['code' => 'it']);
-    assertDatabaseHas('languages', ['code' => 'es']);
+    assertDatabaseHas('languages', ['code' => 'af']);
+    assertDatabaseHas('languages', ['code' => 'am']);
 
     Livewire::test(Table::class)
         ->assertCount('languages', $count + 2);
 
-    Language::where('code', 'it')->delete();
-    Language::where('code', 'es')->delete();
+    Language::where('code', 'af')->delete();
+    Language::where('code', 'am')->delete();
 });
 
 it('can `SEARCH/FILTER` languages by code, regional, name and native', function () {
     $registry = app(LocaleRegistry::class);
+
+    // Both 'it' and 'ar' are bundled and pre-seeded — delete before re-creating so create() succeeds.
+    Language::where('code', 'it')->delete();
+    Language::where('code', 'ar')->delete();
 
     $it = $registry->info('it');
     Language::create([

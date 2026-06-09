@@ -9,17 +9,18 @@ use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
 it('can `delete language`', function () {
-    expect(Language::where('code', 'it')->exists())->toBeFalse();
+    // Use 'af' (Afrikaans) — not in the bundled dataset, so not pre-seeded.
+    expect(Language::where('code', 'af')->exists())->toBeFalse();
 
     Livewire::test(Create::class)
-        ->set('language', 'it')
+        ->set('language', 'af')
         ->call('addNewLanguage')
         ->assertHasNoErrors('language')
         ->assertDispatched('language_added');
 
-    expect(Language::where('code', 'it')->exists())->toBeTrue();
+    expect(Language::where('code', 'af')->exists())->toBeTrue();
 
-    $language = Language::where('code', 'it')->first();
+    $language = Language::where('code', 'af')->first();
     $component = Livewire::test(Delete::class, ['language' => $language]);
     $component
         ->assertSet('language', $language)
@@ -28,8 +29,8 @@ it('can `delete language`', function () {
         ->assertHasNoErrors('control')
         ->assertDispatched('refreshLanguages');
 
-    expect(Language::where('code', 'it')->exists())->toBeFalse()
-        ->and(Translation::whereNotNull('text->it')->count())->toBe(0);
+    expect(Language::where('code', 'af')->exists())->toBeFalse()
+        ->and(Translation::whereNotNull('text->af')->count())->toBe(0);
 });
 
 it('catch `Validation ERRORS` on `deleteLanguage`', function () {
