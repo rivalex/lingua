@@ -164,6 +164,17 @@ return [
      * ========================================================================= */
 
     /*
+     * Storage driver for translation lines.
+     * 'database' — reads/writes via the language_lines table (default, full-featured).
+     * 'file'     — reads/writes lang/ PHP and JSON files directly; DB is not used for runtime lookups.
+     *              Sync commands (lingua:sync-to-database) are still available to migrate.
+     * Override via LINGUA_STORAGE_DRIVER env variable.
+     */
+    'storage' => [
+        'driver' => env('LINGUA_STORAGE_DRIVER', 'database'),
+    ],
+
+    /*
      * Language lines will be fetched by these loaders. You can put any class here that implements
      * the Rivalex\Lingua\Contracts\TranslationLoader interface.
      */

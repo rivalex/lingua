@@ -19,6 +19,27 @@ if (! function_exists('linguaDefaultLocale')) {
     }
 }
 
+if (! function_exists('linguaStorageDriver')) {
+    /**
+     * Returns the configured storage driver ('database' or 'file').
+     * Reads ONLY from config — never from LinguaSetting (avoids circular DB read in file-mode).
+     */
+    function linguaStorageDriver(): string
+    {
+        return config('lingua.storage.driver', 'database');
+    }
+}
+
+if (! function_exists('linguaIsFileMode')) {
+    /**
+     * Returns true when the file storage driver is active.
+     */
+    function linguaIsFileMode(): bool
+    {
+        return linguaStorageDriver() === 'file';
+    }
+}
+
 if (! function_exists('linguaLanguageCode')) {
     /**
      * Converts the given locale string to a standardized format by converting it to lowercase

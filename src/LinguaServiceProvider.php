@@ -7,6 +7,7 @@ namespace Rivalex\Lingua;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Http\Kernel;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Translation\Translator;
@@ -17,6 +18,8 @@ use Rivalex\Lingua\Commands\SyncToDatabaseCommand;
 use Rivalex\Lingua\Commands\SyncToLocalCommand;
 use Rivalex\Lingua\Commands\UpdateLangCommand;
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
+use Rivalex\Lingua\Contracts\TranslationRepository;
+use Rivalex\Lingua\Database\DatabaseRepository;
 use Rivalex\Lingua\Database\Seeders\LinguaSeeder;
 use Rivalex\Lingua\Http\Middleware\LinguaMiddleware;
 use Rivalex\Lingua\Locales\BundledTranslationSource;
@@ -24,7 +27,9 @@ use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Locales\NotificationProjector;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Services\ExtensionRegistry;
+use Rivalex\Lingua\Storage\FileRepository;
 use Rivalex\Lingua\Support\AtomicFileWriter;
+use Rivalex\Lingua\Support\TranslationFileReader;
 use Rivalex\Lingua\TranslationManager\LinguaManager;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -70,6 +75,20 @@ class LinguaServiceProvider extends PackageServiceProvider
                 langPath: config('lingua.lang_dir', lang_path()),
                 writer: $app->make(AtomicFileWriter::class),
             );
+        });
+
+        $this->app->bind(TranslationRepository::class, function ($app) {
+            $driver = config('lingua.storage.driver', 'database');
+
+            if ($driver === 'file') {
+                return new FileRepository(
+                    writer: $app->make(AtomicFileWriter::class),
+                    reader: $app->make(TranslationFileReader::class),
+                    langPath: config('lingua.lang_dir', lang_path()),
+                );
+            }
+
+            return new DatabaseRepository;
         });
 
         $this->registerLoader();
@@ -147,18 +166,23 @@ class LinguaServiceProvider extends PackageServiceProvider
         $this->app->make(Kernel::class)->appendMiddlewareToGroup('web', LinguaMiddleware::class);
 
         $this->registerTranslator();
+
+        if (linguaIsFileMode()) {
+            Log::notice('[Lingua] Running in file-mode (LINGUA_STORAGE_DRIVER=file). Database sync commands are still available via lingua:sync-to-database.');
+        }
     }
 
     protected function registerLoader(): void
     {
         $this->app->extend('translation.loader', function ($original, $app) {
             $class = config('lingua.translation_manager');
+            $langPath = config('lingua.lang_dir', lang_path());
 
             if (! $class || ! class_exists($class)) {
-                return new LinguaManager($app['files'], $app['path.lang']);
+                return new LinguaManager($app['files'], $langPath);
             }
 
-            return new $class($app['files'], $app['path.lang']);
+            return new $class($app['files'], $langPath);
         });
     }
 
