@@ -59,6 +59,8 @@ class LinguaServiceProvider extends PackageServiceProvider
             );
         });
 
+        $this->app->singleton(TranslationFileReader::class);
+
         $this->app->bind(AtomicFileWriter::class);
 
         $this->app->bind(NotificationProjector::class, function ($app) {

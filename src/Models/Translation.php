@@ -16,6 +16,9 @@ use Rivalex\Lingua\Database\Factories\TranslationFactory;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Support\AtomicFileWriter;
+use Rivalex\Lingua\Support\PathGuard;
+use Rivalex\Lingua\Support\PhpArrayExporter;
+use Rivalex\Lingua\Support\TranslationFileReader;
 use Rivalex\Lingua\TranslationManager\CacheKey;
 
 /**
@@ -219,28 +222,6 @@ class Translation extends Model
         $this->save();
     }
 
-    /**
-     * Synchronize database translations to local files.
-     * Generates JSON and PHP translation files for each language.
-     */
-    /**
-     * Reject path segments that could enable directory traversal.
-     * Throws on separators, null bytes, or dot-dot sequences.
-     */
-    private static function assertSafePathSegment(string $segment, string $context = ''): void
-    {
-        if ($segment === '' ||
-            str_contains($segment, '/') ||
-            str_contains($segment, '\\') ||
-            str_contains($segment, '..') ||
-            str_contains($segment, "\0")
-        ) {
-            throw new \InvalidArgumentException(
-                '[Lingua] Unsafe path segment'.($context !== '' ? " ({$context})" : '').": {$segment}"
-            );
-        }
-    }
-
     public static function syncToLocal(): void
     {
         $writer = app(AtomicFileWriter::class);
@@ -250,7 +231,7 @@ class Translation extends Model
 
         foreach ($languages as $language) {
             $locale = $language->code;
-            self::assertSafePathSegment($locale, 'locale');
+            PathGuard::assertSafeSegment($locale, 'locale');
 
             $coreGroups = [];
             $vendorGroups = [];
@@ -291,17 +272,17 @@ class Translation extends Model
                     continue;
                 }
 
-                self::assertSafePathSegment($group, 'group');
+                PathGuard::assertSafeSegment($group, 'group');
                 $langFolder = $langPath.'/'.$locale;
                 $writer->ensureDir($langFolder);
 
                 $phpFile = $langFolder.'/'.$group.'.php';
-                $writer->putPhp($phpFile, "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n");
+                $writer->putPhp($phpFile, "<?php\n\nreturn ".PhpArrayExporter::export($groupTranslations).";\n");
             }
 
             // Vendor JSON + PHP
             foreach ($vendorGroups as $vendor => $groups) {
-                self::assertSafePathSegment($vendor, 'vendor');
+                PathGuard::assertSafeSegment($vendor, 'vendor');
                 $vendorRoot = $langPath.'/vendor/'.$vendor;
 
                 if (isset($groups['single'])) {
@@ -319,39 +300,15 @@ class Translation extends Model
                         continue;
                     }
 
-                    self::assertSafePathSegment($group, 'vendor group');
+                    PathGuard::assertSafeSegment($group, 'vendor group');
                     $vendorLangFolder = $vendorRoot.'/'.$locale;
                     $writer->ensureDir($vendorLangFolder);
 
                     $phpFile = $vendorLangFolder.'/'.$group.'.php';
-                    $writer->putPhp($phpFile, "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n");
+                    $writer->putPhp($phpFile, "<?php\n\nreturn ".PhpArrayExporter::export($groupTranslations).";\n");
                 }
             }
         }
-    }
-
-    /**
-     * Export array to PHP code string format.
-     *
-     * @param  array  $array  Array to be exported
-     * @param  string  $indent  Current indentation level
-     * @return string PHP code representation of the array
-     */
-    protected static function exportArray(array $array, string $indent = ''): string
-    {
-        $content = "[\n";
-        foreach ($array as $key => $value) {
-            $content .= $indent.'    '.var_export($key, true).' => ';
-            if (is_array($value)) {
-                $content .= self::exportArray($value, $indent.'    ');
-            } else {
-                $content .= var_export($value, true);
-            }
-            $content .= ",\n";
-        }
-        $content .= $indent.']';
-
-        return $content;
     }
 
     /**
@@ -377,9 +334,10 @@ class Translation extends Model
         $defaultLocale = Language::default()?->code ?? config('lingua.default_locale', 'en');
 
         $bundledSource = app(BaseTranslationSource::class);
+        $reader = app(TranslationFileReader::class);
 
         $allLocales = array_values(array_unique(array_merge(
-            self::discoverLocales($langPath),
+            $reader->discoverLocales($langPath),
             $bundledSource->available()
         )));
 
@@ -393,7 +351,7 @@ class Translation extends Model
 
         try {
             // ─── Pass 1: Default locale ────────────────────────────────────────────
-            $defaultTranslations = self::collectLocaleTranslations($langPath, $defaultLocale);
+            $defaultTranslations = $reader->collect($langPath, $defaultLocale);
             self::ensureLanguageRecord($defaultLocale);
             $installedCodes[$defaultLocale] = true;
 
@@ -408,7 +366,7 @@ class Translation extends Model
 
             // ─── Pass 2: Remaining locales ─────────────────────────────────────────
             foreach ($remainingLocales as $locale) {
-                $translations = self::collectLocaleTranslations($langPath, $locale);
+                $translations = $reader->collect($langPath, $locale);
                 $localeEnsured = false;
 
                 // Sub-pass A: Non-vendor keys — must exist in default locale key set.
@@ -470,87 +428,6 @@ class Translation extends Model
             }
             self::$touchedCacheKeys = [];
         }
-    }
-
-    /**
-     * Collect all translation entries for a single locale from the filesystem.
-     *
-     * Reads core JSON, core PHP, vendor JSON, and vendor PHP files in order.
-     * Returns a flat array; each item has keys:
-     *   locale, group, key, value, is_vendor, vendor.
-     *
-     * @param  string  $langPath  Absolute path to the lang directory.
-     * @param  string  $locale  ISO locale code to collect files for.
-     * @return array<int, array{locale: string, group: string, key: string, value: string, is_vendor: bool, vendor: string|null}>
-     */
-    private static function collectLocaleTranslations(string $langPath, string $locale): array
-    {
-        $result = [];
-
-        // 1) Core JSON
-        $jsonFile = $langPath.'/'.$locale.'.json';
-        if (file_exists($jsonFile)) {
-            $decoded = json_decode(file_get_contents($jsonFile), true);
-            if (is_array($decoded)) {
-                foreach ($decoded as $key => $value) {
-                    $result[] = [
-                        'locale' => $locale,
-                        'group' => 'single',
-                        'key' => $key,
-                        'value' => $value ?? '',
-                        'is_vendor' => false,
-                        'vendor' => null,
-                    ];
-                }
-            }
-        }
-
-        // 2) Core PHP
-        $langFolder = $langPath.'/'.$locale;
-        if (is_dir($langFolder)) {
-            foreach (glob($langFolder.'/*.php') ?: [] as $file) {
-                $group = basename($file, '.php');
-                $groupTranslations = include $file;
-                if (is_array($groupTranslations)) {
-                    self::flattenTranslations($groupTranslations, $result, $locale, $group, false, null);
-                }
-            }
-        }
-
-        // 3) Vendor JSON + PHP
-        foreach (self::discoverVendorPackages($langPath) as $vendor) {
-            $vendorRoot = $langPath.'/vendor/'.$vendor;
-
-            $vendorJson = $vendorRoot.'/'.$locale.'.json';
-            if (file_exists($vendorJson)) {
-                $decoded = json_decode(file_get_contents($vendorJson), true);
-                if (is_array($decoded)) {
-                    foreach ($decoded as $key => $value) {
-                        $result[] = [
-                            'locale' => $locale,
-                            'group' => 'single',
-                            'key' => $key,
-                            'value' => $value ?? '',
-                            'is_vendor' => true,
-                            'vendor' => $vendor,
-                        ];
-                    }
-                }
-            }
-
-            $vendorLangFolder = $vendorRoot.'/'.$locale;
-            if (is_dir($vendorLangFolder)) {
-                foreach (glob($vendorLangFolder.'/*.php') ?: [] as $file) {
-                    $group = basename($file, '.php');
-                    $groupTranslations = include $file;
-                    if (is_array($groupTranslations)) {
-                        self::flattenTranslations($groupTranslations, $result, $locale, $group, true, $vendor);
-                    }
-                }
-            }
-        }
-
-        return $result;
     }
 
     /**
@@ -640,71 +517,6 @@ class Translation extends Model
         );
 
         self::$touchedCacheKeys[] = [$translation['locale'], $translation['group']];
-    }
-
-    protected static function flattenTranslations(
-        array $array,
-        array &$result,
-        string $locale,
-        string $group,
-        bool $isVendor,
-        ?string $vendor,
-        string $prefix = ''
-    ): void {
-        foreach ($array as $key => $value) {
-            $fullKey = $prefix ? $prefix.'.'.$key : $key;
-
-            if (is_array($value)) {
-                self::flattenTranslations($value, $result, $locale, $group, $isVendor, $vendor, $fullKey);
-            } else {
-                $result[] = [
-                    'locale' => $locale,
-                    'group' => $group,
-                    'key' => $fullKey,
-                    'value' => $value ?? '',
-                    'is_vendor' => $isVendor,
-                    'vendor' => $vendor,
-                ];
-            }
-        }
-    }
-
-    protected static function discoverLocales(string $langPath): array
-    {
-        $locales = [];
-
-        foreach (glob($langPath.'/*.json') ?: [] as $file) {
-            $locales[] = basename($file, '.json');
-        }
-
-        foreach (glob($langPath.'/*', GLOB_ONLYDIR) ?: [] as $dir) {
-            $name = basename($dir);
-            if ($name !== 'vendor') {
-                $locales[] = $name;
-            }
-        }
-
-        foreach (self::discoverVendorPackages($langPath) as $vendor) {
-            $vendorRoot = $langPath.'/vendor/'.$vendor;
-            foreach (glob($vendorRoot.'/*.json') ?: [] as $file) {
-                $locales[] = basename($file, '.json');
-            }
-            foreach (glob($vendorRoot.'/*', GLOB_ONLYDIR) ?: [] as $dir) {
-                $locales[] = basename($dir);
-            }
-        }
-
-        return array_values(array_unique($locales));
-    }
-
-    protected static function discoverVendorPackages(string $langPath): array
-    {
-        $vendorDir = $langPath.'/vendor';
-        if (! is_dir($vendorDir)) {
-            return [];
-        }
-
-        return array_map('basename', glob($vendorDir.'/*', GLOB_ONLYDIR) ?: []);
     }
 
     /**
