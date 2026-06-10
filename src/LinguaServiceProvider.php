@@ -17,6 +17,7 @@ use Rivalex\Lingua\Commands\RemoveLangCommand;
 use Rivalex\Lingua\Commands\SetStorageDriverCommand;
 use Rivalex\Lingua\Commands\SyncToDatabaseCommand;
 use Rivalex\Lingua\Commands\SyncToLocalCommand;
+use Rivalex\Lingua\Commands\UninstallCommand;
 use Rivalex\Lingua\Commands\UpdateLangCommand;
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Contracts\TranslationRepository;
@@ -30,11 +31,14 @@ use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Services\ExtensionRegistry;
 use Rivalex\Lingua\Storage\FileRepository;
 use Rivalex\Lingua\Support\AtomicFileWriter;
+use Rivalex\Lingua\Support\MigrationPublisher;
 use Rivalex\Lingua\Support\TranslationFileReader;
 use Rivalex\Lingua\TranslationManager\LinguaManager;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+
+use function Laravel\Prompts\select;
 
 class LinguaServiceProvider extends PackageServiceProvider
 {
@@ -118,16 +122,23 @@ class LinguaServiceProvider extends PackageServiceProvider
                 SyncToLocalCommand::class,
                 SyncToDatabaseCommand::class,
                 SetStorageDriverCommand::class,
+                UninstallCommand::class,
             )
             ->hasInstallCommand(function (InstallCommand $command) {
                 $driver = 'database';
 
                 $command
                     ->startWith(function (InstallCommand $command) use (&$driver) {
-                        $command->info('Hello, and welcome to Lingua new package!');
+                        $command->info('Hello, and welcome to Lingua!');
                         $command->info('Starting the installation process...');
 
-                        $driver = $command->choice('Translation storage driver?', ['database', 'file'], 0);
+                        // Arrow-key selector (falls back to numbered choice in non-interactive/CI).
+                        $driver = select(
+                            label: 'Translation storage driver?',
+                            options: ['database', 'file'],
+                            default: 'database',
+                            hint: '"database" uses the language_lines table. "file" writes translations directly to lang/.',
+                        );
 
                         $command->info("Set LINGUA_STORAGE_DRIVER={$driver} in your .env, then run 'php artisan config:clear'.");
 
@@ -139,13 +150,26 @@ class LinguaServiceProvider extends PackageServiceProvider
                         }
                     })
                     ->publishConfigFile()
-                    ->publishMigrations()
-                    ->askToRunMigrations()
                     ->askToStarRepoOnGitHub('rivalex/lingua')
                     ->endWith(function (InstallCommand $command) use (&$driver) {
-                        $tablesCreated = Schema::hasTable('languages') && Schema::hasTable('language_lines');
+                        // Publish only the migrations needed for the chosen driver, then offer to run them.
+                        $publisher = new MigrationPublisher(app('files'));
+                        $newlyPublished = $publisher->publishFor($driver);
+
+                        if (! empty($newlyPublished)) {
+                            $command->info('Published migrations: '.implode(', ', $newlyPublished).'.');
+                        }
+
+                        if ($command->confirm('Would you like to run the migrations now?')) {
+                            $command->call('migrate');
+                        }
+
+                        // Seed / bootstrap once the tables are available.
+                        $tablesCreated = Schema::hasTable('languages') && Schema::hasTable('lingua_settings');
+
                         if ($tablesCreated) {
                             $command->info('Installing Lingua package...');
+
                             if ($driver === 'database') {
                                 $command->call('db:seed', ['--class' => LinguaSeeder::class]);
                             } elseif ($driver === 'file') {
@@ -156,12 +180,14 @@ class LinguaServiceProvider extends PackageServiceProvider
                                     $command->warn('Could not seed default language: '.$e->getMessage());
                                 }
                             }
+
                             $command->info('Lingua package installed successfully!');
                         } else {
                             $command->info('Lingua package installed successfully!');
                             $command->info('Please run "php artisan migrate" to create the database tables.');
+
                             if ($driver === 'database') {
-                                $command->info('Please run "php artisan db:seed" to populate the database with default data.');
+                                $command->info('Then run "php artisan db:seed --class='.LinguaSeeder::class.'" to populate default data.');
                             } elseif ($driver === 'file') {
                                 $command->info('After migrating, run "php artisan lingua:storage file" to seed default lang/ files.');
                             }

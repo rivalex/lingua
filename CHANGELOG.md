@@ -4,6 +4,18 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 6 — Install/driver/uninstall overhaul (feat/remove-spatie-translation-loader)
+
+#### Added
+- **`MigrationPublisher`** (`src/Support/MigrationPublisher.php`) — driver-aware selective migration publisher. Copies only the migrations required by the chosen driver (`language_lines` skipped in file mode). Idempotent: skips basenames already present. Used by `lingua:install` and `lingua:storage`.
+- **`lingua:uninstall`** (`src/Commands/UninstallCommand.php`) — safe package teardown: exports DB translations to `lang/` files first (database driver only, no data loss), drops three Lingua tables, removes published config and views/migrations. `lang/` files always preserved. Options: `--force`, `--keep-config`, `--keep-published`.
+- **Arrow-key driver selector** — `lingua:install` now uses `Laravel\Prompts\select()` instead of a numbered `choice()` prompt. Falls back to standard choice in non-interactive/CI environments.
+
+#### Changed
+- **`lingua:install` migration handling** — Replaced blanket `->publishMigrations()->askToRunMigrations()` (all three files always) with driver-scoped `MigrationPublisher::publishFor($driver)` + confirm-to-migrate in `endWith`. File mode no longer publishes or runs `create_language_lines_table`.
+- **`lingua:storage {driver}`** — Now calls `MigrationPublisher::ensureMigrations()` before syncing: if the target driver's required migrations are not yet published, publishes and (unless `--no-migrate`) runs them. Prevents `syncToDatabase()` crashing on a missing `language_lines` table after a driver switch.
+- **`lingua:storage` signature** — Added `{--no-migrate}` option: publish missing migrations but do not run them.
+
 ### Phase 5b — File-mode bootstrap fix (feat/remove-spatie-translation-loader)
 
 #### Bug Fixes

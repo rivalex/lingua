@@ -7,6 +7,7 @@ namespace Rivalex\Lingua\Commands;
 use Illuminate\Console\Command;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Support\MigrationPublisher;
 
 final class SetStorageDriverCommand extends Command
 {
@@ -16,7 +17,8 @@ final class SetStorageDriverCommand extends Command
     protected $signature = 'lingua:storage
         {driver : Target driver: database|file}
         {--force : Skip type-loss confirmation when switching to file}
-        {--write-env : Attempt to write LINGUA_STORAGE_DRIVER to .env}';
+        {--write-env : Attempt to write LINGUA_STORAGE_DRIVER to .env}
+        {--no-migrate : Publish required migrations but do not run them}';
 
     /**
      * @var string
@@ -44,6 +46,9 @@ final class SetStorageDriverCommand extends Command
             return self::SUCCESS;
         }
 
+        // Ensure the target driver's required migrations are published and run.
+        $this->ensureMigrations($driver);
+
         if ($driver === 'file') {
             $typed = Translation::select('type')->get()
                 ->filter(fn ($r) => $r->type === LinguaType::html || $r->type === LinguaType::markdown)
@@ -69,6 +74,37 @@ final class SetStorageDriverCommand extends Command
         $this->applyDriver($driver);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Publish any missing migrations for the target driver and optionally run them.
+     *
+     * Skipped entirely when all required migrations are already published.
+     * When --no-migrate is set, migrations are published but not executed.
+     */
+    private function ensureMigrations(string $driver): void
+    {
+        $publisher = new MigrationPublisher(app('files'));
+
+        if ($publisher->isPublishedFor($driver)) {
+            return;
+        }
+
+        $this->info("Publishing missing migrations for driver '{$driver}'...");
+        $published = $publisher->publishFor($driver);
+
+        foreach ($published as $basename) {
+            $this->line("  Published: {$basename}");
+        }
+
+        if ($this->option('no-migrate')) {
+            $this->warn('Migrations published. Run `php artisan migrate` to apply them before syncing.');
+
+            return;
+        }
+
+        $this->info('Running migrations...');
+        $this->call('migrate');
     }
 
     /**
