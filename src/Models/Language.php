@@ -114,15 +114,13 @@ class Language extends Model
     /**
      * ## Boot the model and register event listeners.
      *
-     * This method automatically generates a UUID for new language records and sets
-     * the sort order to the next available position (max + 1) to ensure new languages
-     * are added at the end of the list.
-     * When creating a new language, ID and sort are auto-generated:
+     * Sets the sort order of every new language to the next available
+     * position (max + 1) so new languages are appended to the end of the list.
+     *
      *  ```
      *  $lang = new Language(['code' => 'fr', 'name' => 'French']);
      *  $lang->save();
      *
-     *  $lang->id // is now a UUID string.
      *  $lang->sort // is automatically set to the highest sort value + 1
      *  ```
      */
@@ -170,51 +168,6 @@ class Language extends Model
         return $this->scopeOrdered($query);
     }
 
-    /**
-     * ## Generate database-specific SQL expression to check if a JSON key exists.
-     *
-     * This method creates a raw SQL expression that checks whether a specific key exists
-     * in a JSON column. The expression varies based on the database driver (PostgreSQL,
-     * SQL Server, SQLite, or MySQL/MariaDB) to ensure compatibility across different
-     * database systems.
-     *
-     * The method is primarily used internally by the `withStatistics()` scope to determine
-     * which translations exist for a specific language code in the JSONB 'text' column
-     * of the language_lines table.
-     *
-     * **Supported Databases:**
-     * - **PostgreSQL**: Uses the `->>` operator to extract and check for NULL
-     * - **SQL Server**: Uses `JSON_VALUE()` function with dynamic path construction
-     * - **SQLite**: Uses `json_extract()` function with concatenated path
-     * - **MySQL/MariaDB**: Uses `JSON_EXTRACT()` function with concatenated path (default)
-     *
-     *  ```
-     *  // Internal usage in withStatistics scope
-     *  $languageCodeColumn = $query->getModel()->qualifyColumn('code');
-     *  $jsonColumn = 'language_lines.text';
-     *  $keyExists = $this->jsonKeyExistsExpression($jsonColumn, $languageCodeColumn);
-     *
-     *  // The generated expression will be different based on the database:
-     *  // PostgreSQL: "(language_lines.text ->> languages.code) IS NOT NULL"
-     *  // MySQL: "JSON_EXTRACT(language_lines.text, CONCAT('$.\"', languages.code, '\"')) IS NOT NULL"
-     *  // SQLite: "json_extract(language_lines.text, '$.' || languages.code) IS NOT NULL"
-     *  // SQL Server: "JSON_VALUE(language_lines.text, CONCAT('$.\"', languages.code, '\"')) IS NOT NULL"
-     *
-     *  // Use in raw query
-     *  $query->whereRaw($keyExists);
-     *
-     *  // Example: Count translations for a specific language
-     *  $language = Language::find($id);
-     *  $jsonColumn = 'language_lines.text';
-     *  $keyColumn = "'{$language->code}'";
-     *  $expression = $language->jsonKeyExistsExpression($jsonColumn, $keyColumn);
-     *  $count = DB::table('language_lines')->whereRaw($expression)->count();
-     *  ```
-     *
-     * @param  string  $jsonColumn  The name of the JSON column to check (e.g., 'language_lines.text')
-     * @param  string  $keyColumn  The column name or value containing the key to search for (e.g., 'languages.code' or "'en'")
-     * @return string Raw SQL expression string that evaluates to true if the key exists
-     */
     /**
      * Passthrough scope — statistics are now computed via PHP accessors.
      * Kept for call-site compatibility: Language::withStatistics()->find/get

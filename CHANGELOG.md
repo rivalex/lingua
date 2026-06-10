@@ -4,6 +4,34 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 5 — Residual hardening (feat/remove-spatie-translation-loader)
+
+#### Security
+- **`HtmlSanitizer`** (`src/Support/HtmlSanitizer.php`) — New DOM-based whitelist sanitizer replaces `strip_tags()` in `Translation\Row`. `strip_tags()` removed disallowed tags but preserved ALL attributes on allowed ones (event handlers, `javascript:` URIs) — a stored XSS vector in the admin HTML preview (`{!! !!}`). `HtmlSanitizer::sanitize()` parses with `DOMDocument`, unwraps non-whitelisted elements (preserving text content), drops any attribute not explicitly allowed per-tag, and validates URI attributes against an `http`/`https`/`mailto` scheme whitelist.
+- **`RemoveLangCommand` locale-format validation** — Validates the locale argument against `/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/` before it reaches any JSON path expression.
+
+#### Added
+- **Bundled dataset wired into `syncToDatabase()`** (`src/Models/Translation.php`) — Pass 1 (default locale): bundled base translations merged first, app lang files appended (app overrides bundled for same key). Pass 2 (remaining locales): bundled content only for INSTALLED locales — never auto-installs the whole bundled catalogue.
+- **`TranslationFactory` rewrite** — Previous factory called non-existent `Translation::getGroupKey()` and swapped `group`/`key` variables. Factory now only sets composable fields; the model's `creating`/`saving` hooks compute `group_key`. Added `->core()` and `->vendor(string $vendor)` factory states. `HasFactory` trait added to `Translation`.
+
+#### Fixed
+- **Translations resurrect after language delete** — `RemoveLangCommand` and `Language\Delete` no longer call `syncToDatabase()` after deletion. Re-syncing post-removal would re-import the locale from `lang/{locale}` files, silently undoing the deletion. `Language\Delete` also fixed a double-delete: `Lingua::removeLanguage()` already deletes the Language record; the redundant `$this->language->delete()` call is removed.
+- **Migrations multi-DB** — `language_lines.text` changed from `NOT NULL DEFAULT (JSON_ARRAY())` (MySQL/modern-PG/MSSQL-2022 syntax, broke PG < 16 at migration time) to `nullable()` with no SQL default. `languages.regional` changed to `nullable()` — unknown locales and several registry entries legitimately have no regional variant.
+- **`DatabaseRepository::paginate` onlyMissing parity** — Now counts empty-string values (`''`) as missing, matching `FileRepository` and `Statistics::isTranslated()` definition.
+- **`Translations::mount` TypeError** — Removed redundant `request('q'/'p'/'g'/'m')` re-reading in `mount()`. The `#[Url]` attributes already bind these properties; the previous `request('m', false)` assigned a string to a typed `bool` property — a fatal `TypeError` under `strict_types` with `?m=1`.
+- **`LinguaMiddleware` pre-migration safety** — DB lookup wrapped in `try/catch(\Throwable)` so a missing table (pre-migration) or unavailable DB never takes down the whole request. Session write now conditional on change (avoids marking session dirty on every request).
+- **`Language\Table` portable LIKE escaping** — Wildcard characters escaped with `!` and declared via `ESCAPE '!'`. Backslash escaping without an explicit `ESCAPE` clause is MySQL/PG-only; SQLite and SQL Server treated it literally, breaking search silently. `exists()` replaces `active()->get()->isEmpty()` for the bootstrap guard.
+- **`Modals::closeModal` early return** — Avoids calling `Flux::modal('')->close()` when `$modalName` is empty.
+- **`routes/web.php` asset route** — Moved outside the auth-protected route group. The language selector can be embedded on guest pages; its CSS/JS must be reachable without authentication.
+
+#### Breaking changes (host app notice)
+- **Route middleware default** — `config('lingua.middleware')` now defaults to `['web', 'auth']` (was `'web'`). Host apps relying on the old default to serve lingua routes without authentication must set `'middleware' => ['web']` explicitly in `config/lingua.php`.
+
+#### Tests
+- `tests/Unit/HtmlSanitizerTest.php` — 13 cases covering whitelist, XSS vectors (event handlers, `javascript:`/`data:` URIs, obfuscated schemes, iframes), Unicode, blank input.
+- `tests/Feature/Sync/BundledSyncTest.php` — 5 cases: bundled default-locale import, bundled non-default installed locale, bundled content NOT imported for uninstalled locales, app-override-bundled precedence, no-resurrect regression.
+- `tests/Feature/Commands/RemoveLangCommandTest.php`, `tests/Feature/Livewire/Language/DeleteTest.php` — Updated to mock-free no-resurrect regression tests.
+
 ### Added
 
 - **§8 test coverage (Phase 4 closure)** — 3 new test files covering §8 cases 4, 9, 11: `PathAlignmentTest` (driver=file resolves FileRepository at configured `lang_dir`, write→read round-trip); `FacadeFileModeTest` (`Lingua::getTranslation/getTranslations/getTranslationByGroup/setTranslation` in file-mode, `languages()` invariant on DB); `ComponentsFileModeTest` (Statistics + Translations render correctly from file data). 584/584 tests green, pint clean.

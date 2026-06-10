@@ -7,42 +7,30 @@ namespace Rivalex\Lingua\Enums;
 use Flux\Flux;
 
 /**
- * Enum TranslationType
+ * Enum LinguaType
  *
- * This enum represents different types of translation formats,
- * providing a standardized way to manage and label translation content.
+ * Represents the content format of a translation value.
  *
  * ### Cases:
- * - `any`: Represents any type of translation without restriction.
+ * - `any`: Any type of translation without restriction (filter value only).
  * - `text`: Simple text content with no formatting.
  * - `html`: HTML content with formatting.
- * - `markdown`: Markdown content, which allows lightweight text formatting.
+ * - `markdown`: Markdown content, lightweight text formatting.
  *
  * ### Methods:
- * - `label()`: Returns a human-readable label for the enum case.
- * - `description()`: Provides a brief description of what the enum case represents.
- * - `color()`: Returns a CSS class string for styling purposes.
- * - `icon()`: Provides an associated FontAwesome class string for icons.
+ * - `label()`: Human-readable label for the case.
+ * - `description()`: Brief description of the case.
+ * - `color()`: Tailwind class string for styling.
+ * - `icon()`: Inline SVG icon markup for the case.
  *
  * ### Example usage:
- * ```
- * use App\Enums\TranslationType;
+ * ```php
+ * use Rivalex\Lingua\Enums\LinguaType;
  *
- * // Get the label for a specific case
- * echo TranslationType::text->label(); // Output: Text
+ * echo LinguaType::text->label();        // 'Text'
+ * echo LinguaType::html->description();  // 'HTML with formatting'
  *
- * // Get a description for the enum case
- * echo TranslationType::html->description(); // Output: HTML with formatting
- *
- * // Retrieve the associated CSS class for styling
- * echo TranslationType::markdown->color(); // Output: text-raid-orange-600 dark:text-raid-orange-500
- *
- * // Get the FontAwesome icon classes
- * echo TranslationType::any->icon(); // Output: fa-duotone fa-light fa-border-all text-zinc-400 dark:text-zinc-600
- *
- * // You can use these enums in conditional logic:
- * $format = TranslationType::html;
- * if ($format === TranslationType::markdown) {
+ * if ($format === LinguaType::markdown) {
  *     // Markdown-specific logic here
  * }
  * ```

@@ -447,17 +447,15 @@ class Lingua
     /**
      * Get detailed information about a locale.
      *
-     * Retrieves LocaleInfo for the specified locale,
-     * optionally including country and currency information.
+     * Retrieves LocaleInfo for the specified locale from the static registry,
+     * resolving both code ('en') and regional ('en_US') forms.
      *
      * @param  mixed  $locale  The locale code to get information for
-     * @param  bool  $withCountry  Whether to include country information (default: false)
-     * @param  bool  $withCurrency  Whether to include currency information (default: false)
      * @return LocaleInfo|null LocaleInfo object, or null when unknown
      *
      * @example
-     * $info = Lingua::info('en-US', withCountry: true, withCurrency: true);
-     * echo $info->native; // 'English (United States)'
+     * $info = Lingua::info('en-US');
+     * echo $info->native; // 'English'
      */
     public static function info(mixed $locale): ?LocaleInfo
     {
