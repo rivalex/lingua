@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
@@ -35,9 +36,9 @@ it('outputs error when locale info fails', function () {
         ->expectsOutputToContain("Failed to add language 'x':");
 });
 
-it('outputs error when sync to database fails', function () {
-    $this->mock(Translation::class, function ($mock) {
-        $mock->shouldReceive('syncToDatabase')
+it('outputs error when install locale fails', function () {
+    $this->mock(TranslationRepository::class, function ($mock) {
+        $mock->shouldReceive('installLocale')
             ->once()
             ->andThrow(new Exception('Error syncing to database.'));
     });

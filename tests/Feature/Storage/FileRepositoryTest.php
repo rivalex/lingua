@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Locales\BundledTranslationSource;
 use Rivalex\Lingua\Storage\FileRepository;
 use Rivalex\Lingua\Support\AtomicFileWriter;
 use Rivalex\Lingua\Support\TranslationFileReader;
@@ -30,12 +31,18 @@ function fr_cleanDir(string $path): void
     rmdir($path);
 }
 
-function makeFileRepo(string $langDir): FileRepository
+/**
+ * Build a FileRepository pointed at $langDir.
+ * Pass $bundledPath to use real bundled data; defaults to a non-existent path
+ * (BundledTranslationSource returns [] when the directory is absent).
+ */
+function makeFileRepo(string $langDir, string $bundledPath = '/dev/null/no-bundled'): FileRepository
 {
     return new FileRepository(
         writer: new AtomicFileWriter,
         reader: new TranslationFileReader,
         langPath: $langDir,
+        bundled: new BundledTranslationSource(basePath: $bundledPath),
     );
 }
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Livewire\Livewire;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Livewire\Language\Create;
 use Rivalex\Lingua\Models\Language;
@@ -62,9 +63,9 @@ it('catch `ERRORS` on `addNewLanguage` for unknown locale', function () {
         ->assertSet('language', '');
 });
 
-it('catch `ERRORS` on `addNewLanguage` for `Translation::syncToDatabase()`', function () {
-    $this->mock(Translation::class, function ($mock) {
-        $mock->shouldReceive('syncToDatabase')
+it('catch `ERRORS` on `addNewLanguage` when installLocale fails', function () {
+    $this->mock(TranslationRepository::class, function ($mock) {
+        $mock->shouldReceive('installLocale')
             ->once()
             ->andThrow(new Exception('Error syncing'));
     });

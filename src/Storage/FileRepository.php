@@ -8,6 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator as LengthAwarePaginator
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
+use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Support\AtomicFileWriter;
@@ -29,6 +30,7 @@ final class FileRepository implements TranslationRepository
         private readonly AtomicFileWriter $writer,
         private readonly TranslationFileReader $reader,
         private readonly string $langPath,
+        private readonly BaseTranslationSource $bundled,
     ) {}
 
     /**
@@ -356,6 +358,90 @@ final class FileRepository implements TranslationRepository
         });
 
         return collect(array_values($items));
+    }
+
+    /**
+     * Seed lang/ files for a newly installed locale (file-mode).
+     *
+     * Writes bundled translations merged with the default-locale key structure
+     * (missing keys get empty-string values so the locale appears fully in the UI).
+     * Vendor entries are skipped. Always ensures the lang/ directory exists and
+     * always writes at least an empty {locale}.json so the locale is discoverable.
+     *
+     * @throws \InvalidArgumentException on unsafe locale path segment
+     */
+    public function installLocale(string $locale): void
+    {
+        PathGuard::assertSafeSegment($locale, 'locale');
+
+        $this->writer->ensureDir($this->langPath);
+
+        $default = linguaDefaultLocale();
+
+        // ── Step 1: collect bundled entries for this locale (non-vendor only)
+        $bundledEntries = array_filter(
+            $this->bundled->translationsFor($locale),
+            fn (array $e) => ! $e['is_vendor']
+        );
+
+        // ── Step 2: mirror default-locale keys with empty values (skip for the default itself)
+        $mirrored = [];
+        if ($locale !== $default) {
+            foreach ($this->buildUnifiedList() as $line) {
+                if ($line->isVendor) {
+                    continue;
+                }
+                if (! isset($line->text[$default])) {
+                    continue;
+                }
+                $indexKey = $line->group.'|'.$line->key;
+                $mirrored[$indexKey] = [
+                    'group' => $line->group,
+                    'key' => $line->key,
+                    'value' => '',
+                ];
+            }
+        }
+
+        // ── Step 3: merge — bundled values override empty mirrors
+        $merged = $mirrored;
+        foreach ($bundledEntries as $entry) {
+            $indexKey = $entry['group'].'|'.$entry['key'];
+            $merged[$indexKey] = [
+                'group' => $entry['group'],
+                'key' => $entry['key'],
+                'value' => $entry['value'],
+            ];
+        }
+
+        // ── Step 4: group entries by file
+        $singles = [];   // group === 'single' → {locale}.json flat array
+        $groups = [];    // other groups → {locale}/{group}.php nested array
+
+        foreach ($merged as $entry) {
+            if ($entry['group'] === 'single') {
+                $singles[$entry['key']] = $entry['value'];
+            } else {
+                PathGuard::assertSafeSegment($entry['group'], 'group');
+                data_set($groups[$entry['group']], $entry['key'], $entry['value']);
+            }
+        }
+
+        // ── Step 5: write — always write {locale}.json (even {}) to guarantee discovery
+        $this->writer->putJson(
+            $this->langPath.'/'.$locale.'.json',
+            $singles,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+        );
+
+        foreach ($groups as $group => $groupTranslations) {
+            $localeDir = $this->langPath.'/'.$locale;
+            $this->writer->ensureDir($localeDir);
+            $this->writer->putPhp(
+                $localeDir.'/'.$group.'.php',
+                "<?php\n\nreturn ".PhpArrayExporter::export($groupTranslations).";\n"
+            );
+        }
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────

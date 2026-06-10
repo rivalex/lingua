@@ -86,6 +86,7 @@ class LinguaServiceProvider extends PackageServiceProvider
                     writer: $app->make(AtomicFileWriter::class),
                     reader: $app->make(TranslationFileReader::class),
                     langPath: config('lingua.lang_dir', lang_path()),
+                    bundled: $app->make(BaseTranslationSource::class),
                 );
             }
 
@@ -147,6 +148,13 @@ class LinguaServiceProvider extends PackageServiceProvider
                             $command->info('Installing Lingua package...');
                             if ($driver === 'database') {
                                 $command->call('db:seed', ['--class' => LinguaSeeder::class]);
+                            } elseif ($driver === 'file') {
+                                try {
+                                    Lingua::installDefaultLanguage();
+                                    $command->info('Default language installed and lang/ files seeded.');
+                                } catch (\Throwable $e) {
+                                    $command->warn('Could not seed default language: '.$e->getMessage());
+                                }
                             }
                             $command->info('Lingua package installed successfully!');
                         } else {
@@ -154,6 +162,8 @@ class LinguaServiceProvider extends PackageServiceProvider
                             $command->info('Please run "php artisan migrate" to create the database tables.');
                             if ($driver === 'database') {
                                 $command->info('Please run "php artisan db:seed" to populate the database with default data.');
+                            } elseif ($driver === 'file') {
+                                $command->info('After migrating, run "php artisan lingua:storage file" to seed default lang/ files.');
                             }
                         }
                     });

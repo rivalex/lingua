@@ -11,7 +11,6 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\Modals;
 
 /**
@@ -114,7 +113,6 @@ final class Create extends Component
         $this->validate();
         try {
             Lingua::addLanguage(locale: $this->language);
-            app(Translation::class)->syncToDatabase();
             $this->dispatch('refreshLanguages');
             $this->dispatch('language_added');
             $this->reset('language');

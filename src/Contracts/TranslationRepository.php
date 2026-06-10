@@ -132,4 +132,18 @@ interface TranslationRepository
      * @return Collection<int, TranslationLine>
      */
     public function vendor(string $vendor, ?string $locale = null): Collection;
+
+    // ── Seeding ──────────────────────────────────────────────────────────────
+
+    /**
+     * Seed the storage backend for a newly installed locale.
+     *
+     * database-mode: delegates to Translation::syncToDatabase() — identical to previous call-site behaviour.
+     * file-mode: writes lang/{locale}.json and lang/{locale}/*.php using bundled translations
+     *            merged with default-locale key structure (empty values for missing bundled keys).
+     *            Always ensures lang/ directory exists.
+     *
+     * @throws \InvalidArgumentException on unsafe locale path segment
+     */
+    public function installLocale(string $locale): void;
 }

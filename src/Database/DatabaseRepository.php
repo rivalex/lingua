@@ -226,6 +226,17 @@ final class DatabaseRepository implements TranslationRepository
     }
 
     /**
+     * Seed the storage backend for a newly installed locale (database-mode).
+     *
+     * Delegates to Translation::syncToDatabase() which merges bundled and
+     * lang-file translations for all installed locales into language_lines.
+     */
+    public function installLocale(string $locale): void
+    {
+        Translation::syncToDatabase();
+    }
+
+    /**
      * Convert a Translation Eloquent model to a TranslationLine DTO.
      */
     public function toLine(Translation $model): TranslationLine

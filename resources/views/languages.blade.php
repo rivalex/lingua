@@ -22,12 +22,13 @@
         @endisland
         <flux:separator/>
         <div class="-mx-4 px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-12 gap-4 bg-white/70 dark:bg-zinc-900/70 border-b border-zinc-200/50 dark:border-white/10">
-            <div class="col-span-12 xl:col-span-4">
+            <div @class(['col-span-12 xl:col-span-4' => !$fileMode, 'col-span-12 xl:col-span-10' => $fileMode])>
                 <flux:input type="search" wire:model.live.debounce.1000ms="search"
                             :placeholder="__('lingua::lingua.global.search')"
                             icon="magnifying-glass" wire:island="languagesRows"
                             name="searchLanguage" id="searchLanguage"/>
             </div>
+            @unless($fileMode)
             <div class="col-span-6 lg:col-span-3 xl:col-span-2">
                 <flux:button wire:click="syncToLocal" icon="arrow-path" variant="primary" class="w-full"
                              color="sky">@lang('lingua::lingua.languages.actions.sync.local')</flux:button>
@@ -40,6 +41,7 @@
                 <flux:button wire:click="updateLanguages" icon="arrow-down-on-square" variant="primary" class="w-full"
                              color="orange">@lang('lingua::lingua.languages.actions.update_lang')</flux:button>
             </div>
+            @endunless
             <div class="col-span-6 lg:col-span-3 xl:col-span-2">
                 <livewire:lingua::language.create :key="'newLanguage_'. uniqid()" />
             </div>

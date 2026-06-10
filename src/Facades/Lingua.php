@@ -89,7 +89,8 @@ use Rivalex\Lingua\Models\Language;
  * @method static string getDirection(?string $locale = null) Text direction for the locale — 'ltr' or 'rtl'; defaults to 'ltr'
  * @method static string getDefaultLocale() The locale code of the default language (e.g. 'en')
  * @method static LocaleInfo|null info(mixed $locale) Locale metadata from the static registry; null when unknown
- * @method static void addLanguage(string $locale) Create Language DB record for the given locale (DB-native, no filesystem)
+ * @method static void addLanguage(string $locale) Create Language DB/file record and seed storage for the given locale
+ * @method static void installDefaultLanguage() Create/update the default Language record and seed its storage (file-mode: writes lang/ files; DB-mode: syncToDatabase)
  * @method static void removeLanguage(string $locale) Delete Language DB record for the given locale
  * @method static void optimize() @deprecated Retained for BC; translation cache is invalidated per-(locale,group) — calling this wipes the entire host-app cache unnecessarily
  * @method static void updateLanguages() Re-sync translations for all installed locales

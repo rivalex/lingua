@@ -6,7 +6,6 @@ namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
 use Rivalex\Lingua\Facades\Lingua;
-use Rivalex\Lingua\Models\Translation;
 
 final class AddLangCommand extends Command
 {
@@ -34,11 +33,8 @@ final class AddLangCommand extends Command
         $this->info("Adding language: {$locale}...");
 
         try {
-            $this->info('Creating language record in database...');
+            $this->info('Creating language record...');
             Lingua::addLanguage($locale);
-
-            $this->info('Syncing translations to database...');
-            app(Translation::class)->syncToDatabase();
 
             $this->info("Language '{$locale}' added successfully.");
         } catch (\Throwable $e) {

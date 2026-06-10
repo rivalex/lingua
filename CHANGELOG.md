@@ -4,6 +4,17 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 5b — File-mode bootstrap fix (feat/remove-spatie-translation-loader)
+
+#### Bug Fixes
+- **File-mode `lang/` never created on add-language** — `Lingua::addLanguage()` now calls `TranslationRepository::installLocale()`. In file mode writes `lang/{locale}.json` + `lang/{locale}/*.php` (bundled + default-locale key mirror). In DB mode identical to before.
+- **File-mode default language never bootstrapped** — New `Lingua::installDefaultLanguage()` creates default `Language` record and seeds storage. Called by `lingua:install` (file driver) and lazily by `Languages` mount when no languages exist in file mode.
+- **Sync UI shown in file mode** — `languages.blade.php` gates sync buttons behind `@unless($fileMode)`. `Languages` component exposes `$fileMode`; server-side no-op guards added to all three sync actions.
+
+#### Refactor
+- **`TranslationRepository` contract** — new `installLocale(string $locale): void`; `DatabaseRepository` → `syncToDatabase()`; `FileRepository` → writes lang files.
+- **`Language\Create` + `AddLangCommand`** — removed redundant `Translation::syncToDatabase()` calls.
+
 ### Phase 5 — Residual hardening (feat/remove-spatie-translation-loader)
 
 #### Security

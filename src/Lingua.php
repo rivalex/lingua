@@ -130,7 +130,10 @@ class Lingua
     }
 
     /**
-     * Add a new language by creating its DB record (DB-native, no filesystem writes).
+     * Add a new language by creating its DB record and seeding its storage.
+     *
+     * Database-mode: creates the Language row and syncs translations to DB.
+     * File-mode: creates the Language row and writes lang/{locale} files.
      *
      * @param  string  $locale  Locale code to add (e.g., 'it', 'fr', 'de')
      *
@@ -158,6 +161,40 @@ class Lingua
         );
 
         app(NotificationProjector::class)->project($info->code);
+        app(TranslationRepository::class)->installLocale($info->code);
+    }
+
+    /**
+     * Install the default language and seed its storage backend.
+     *
+     * Creates or updates the default Language record (is_default = true) and
+     * seeds its storage: database-mode → syncToDatabase; file-mode → writes lang/ files.
+     *
+     * Used by lingua:install (file-mode branch) and the Languages Livewire component
+     * when it mounts in file mode with no languages configured.
+     */
+    public static function installDefaultLanguage(): void
+    {
+        $locale = linguaDefaultLocale();
+        $registry = app(LocaleRegistry::class);
+        $info = $registry->info($locale);
+
+        Language::updateOrCreate(
+            [
+                'code' => $info?->code ?? $locale,
+                'regional' => $info?->regional ?? null,
+            ],
+            [
+                'type' => $info?->type ?? 'Latn',
+                'name' => $info?->name ?? $locale,
+                'native' => $info?->native ?? $locale,
+                'direction' => $info?->direction ?? 'ltr',
+                'is_default' => true,
+            ]
+        );
+
+        app(NotificationProjector::class)->project($locale);
+        app(TranslationRepository::class)->installLocale($locale);
     }
 
     /**

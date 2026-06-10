@@ -10,7 +10,8 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Rivalex\Lingua\Lingua;
+use Rivalex\Lingua\Facades\Lingua;
+use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
 #[Title('UI Translation Manager')]
@@ -18,9 +19,30 @@ final class Languages extends Component
 {
     public string $search = '';
 
+    public bool $fileMode = false;
+
+    public function mount(): void
+    {
+        $this->fileMode = linguaIsFileMode();
+
+        // Lazy bootstrap: when the driver is switched to file mode without re-running
+        // lingua:install, ensure the default language and its lang/ files exist.
+        if ($this->fileMode && Language::query()->count() === 0) {
+            try {
+                Lingua::installDefaultLanguage();
+            } catch (\Throwable $e) {
+                Log::error('[Lingua] Could not bootstrap default language in file mode: {error}', ['error' => $e->getMessage()]);
+            }
+        }
+    }
+
     #[Renderless, Async]
     public function updateLanguages(): void
     {
+        if ($this->fileMode) {
+            return;
+        }
+
         try {
             Lingua::updateLanguages();
             app(Translation::class)->syncToDatabase();
@@ -36,6 +58,10 @@ final class Languages extends Component
     #[Renderless, Async]
     public function syncToDatabase(): void
     {
+        if ($this->fileMode) {
+            return;
+        }
+
         try {
             app(Translation::class)->syncToDatabase();
             $this->dispatch('synced_database');
@@ -50,6 +76,10 @@ final class Languages extends Component
     #[Renderless, Async]
     public function syncToLocal(): void
     {
+        if ($this->fileMode) {
+            return;
+        }
+
         try {
             app(Translation::class)->syncToLocal();
             $this->dispatch('synced_local');
