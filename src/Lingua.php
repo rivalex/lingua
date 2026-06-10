@@ -102,6 +102,11 @@ class Lingua
      *
      * Executes the 'optimize:clear' artisan command to clear and rebuild
      * various caches, ensuring the application is optimized for the latest changes.
+     *
+     * @deprecated Translation cache is invalidated per-(locale,group) by model
+     *             hooks and the sync finally-block. Calling optimize:clear wipes
+     *             the entire host-app cache and is no longer invoked internally.
+     *             This method is retained for backward compatibility only.
      */
     public static function optimize(): void
     {

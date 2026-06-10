@@ -24,7 +24,6 @@ class Languages extends Component
         try {
             Lingua::updateLanguages();
             app(Translation::class)->syncToDatabase();
-            Lingua::optimize();
             $this->dispatch('lang_updated');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
@@ -39,7 +38,6 @@ class Languages extends Component
     {
         try {
             app(Translation::class)->syncToDatabase();
-            Lingua::optimize();
             $this->dispatch('synced_database');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
@@ -54,7 +52,6 @@ class Languages extends Component
     {
         try {
             app(Translation::class)->syncToLocal();
-            Lingua::optimize();
             $this->dispatch('synced_local');
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {

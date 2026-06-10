@@ -78,7 +78,7 @@ use Rivalex\Lingua\Models\Language;
  * Lingua::syncToDatabase();   // import local lang files → database
  * Lingua::syncToLocal();      // export database → local lang files
  * Lingua::updateLanguages();  // sync installed languages to database
- * Lingua::optimize();         // run optimize:clear
+ * Lingua::optimize();         // @deprecated — no longer called internally
  * ```
  * ---
  *
@@ -91,7 +91,7 @@ use Rivalex\Lingua\Models\Language;
  * @method static LocaleInfo|null info(mixed $locale) Locale metadata from the static registry; null when unknown
  * @method static void addLanguage(string $locale) Create Language DB record for the given locale (DB-native, no filesystem)
  * @method static void removeLanguage(string $locale) Delete Language DB record for the given locale
- * @method static void optimize() Clear the application cache (calls optimize:clear)
+ * @method static void optimize() @deprecated Retained for BC; translation cache is invalidated per-(locale,group) — calling this wipes the entire host-app cache unnecessarily
  * @method static void updateLanguages() Re-sync translations for all installed locales
  * @method static void syncToDatabase() Import local lang/ files into the database
  * @method static void syncToLocal() Export database translations to local lang/ files

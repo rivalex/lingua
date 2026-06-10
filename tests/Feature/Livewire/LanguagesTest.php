@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Contracts\Console\Kernel;
 use Livewire\Livewire;
 use Rivalex\Lingua\Livewire\Language\Create;
 use Rivalex\Lingua\Livewire\Language\Delete;
@@ -65,33 +64,6 @@ it('catch `Sync local files ERRORS` for `Translation::syncToLocal()`', function 
         ->assertDispatched('synced_local_fail');
 });
 
-it('catch `Sync local files ERRORS` for `Artisan::call(\'optimize:clear\')`', function () {
-    $this->mock(Translation::class, function ($mock) {
-        $mock->shouldReceive('syncToLocal')
-            ->once()
-            ->andReturnNull();
-    });
-
-    $originalKernel = app(Kernel::class);
-    Artisan::swap(
-        Mockery::mock(Kernel::class, function ($mock) {
-            $mock->shouldReceive('call')
-                ->once()
-                ->with('optimize:clear')
-                ->andThrow(new Exception('Artisan command failed.'));
-        })
-    );
-
-    try {
-        Livewire::test(Languages::class)
-            ->call('syncToLocal')
-            ->assertHasErrors(['syncToLocalError'])
-            ->assertDispatched('synced_local_fail');
-    } finally {
-        Artisan::swap($originalKernel);
-    }
-});
-
 it('can `Sync` translations to `DATABASE`', function () {
     Livewire::test(Languages::class)
         ->assertStatus(200)
@@ -99,33 +71,6 @@ it('can `Sync` translations to `DATABASE`', function () {
         ->assertHasNoErrors()
         ->assertDispatched('synced_database')
         ->assertDispatched('refreshLanguages');
-});
-
-it('catch `Sync database ERRORS` for `Artisan::call(\'optimize:clear\')`', function () {
-    $this->mock(Translation::class, function ($mock) {
-        $mock->shouldReceive('syncToDatabase')
-            ->once()
-            ->andReturnNull();
-    });
-
-    $originalKernel = app(Kernel::class);
-    Artisan::swap(
-        Mockery::mock(Kernel::class, function ($mock) {
-            $mock->shouldReceive('call')
-                ->once()
-                ->with('optimize:clear')
-                ->andThrow(new Exception('Artisan command failed.'));
-        })
-    );
-
-    try {
-        Livewire::test(Languages::class)
-            ->call('syncToDatabase')
-            ->assertHasErrors(['syncToDatabaseError'])
-            ->assertDispatched('synced_database_fail');
-    } finally {
-        Artisan::swap($originalKernel);
-    }
 });
 
 it('catch `Sync database ERRORS` for `Translation::syncToDatabase()`', function () {
@@ -161,30 +106,4 @@ it('catch `Update translations ERRORS` for `Translation::syncToDatabase()`', fun
         ->call('updateLanguages')
         ->assertHasErrors(['updateLanguagesError'])
         ->assertDispatched('lang_updated_fail');
-});
-
-it('catch `Update translations ERRORS` for `Artisan::call(\'optimize:clear\')`', function () {
-    $this->mock(Translation::class, function ($mock) {
-        $mock->shouldReceive('syncToDatabase')
-            ->andReturnNull();
-    });
-
-    $originalKernel = app(Kernel::class);
-    Artisan::swap(
-        Mockery::mock(Kernel::class, function ($mock) {
-            $mock->shouldReceive('call')
-                ->once()
-                ->with('optimize:clear')
-                ->andThrow(new Exception('Artisan command failed.'));
-        })
-    );
-
-    try {
-        Livewire::test(Languages::class)
-            ->call('updateLanguages')
-            ->assertHasErrors(['updateLanguagesError'])
-            ->assertDispatched('lang_updated_fail');
-    } finally {
-        Artisan::swap($originalKernel);
-    }
 });
