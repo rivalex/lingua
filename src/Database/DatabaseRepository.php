@@ -143,7 +143,14 @@ final class DatabaseRepository implements TranslationRepository
                     ->orWhereLike('text->'.$defaultLocale, "%{$search}%")
                     ->orWhereLike('text->'.$safeLocale, "%{$search}%")
             ))
-            ->when($onlyMissing, fn ($q) => $q->whereNull('text->'.$safeLocale))
+            // "Missing" = key absent, null, or empty string — same definition
+            // used by FileRepository and the Statistics component. whereNull
+            // alone missed empty-string values, so the two drivers disagreed.
+            ->when($onlyMissing, fn ($q) => $q->where(
+                fn ($inner) => $inner
+                    ->whereNull('text->'.$safeLocale)
+                    ->orWhere('text->'.$safeLocale, '=', '')
+            ))
             ->when($group, fn ($q) => $q->where('group', '=', $group))
             ->paginate($perPage)
             ->through(fn ($model) => $this->toLine($model));
