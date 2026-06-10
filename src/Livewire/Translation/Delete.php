@@ -13,7 +13,7 @@ use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Support\TranslationLine;
 use Rivalex\Lingua\Traits\ModalsConfirm;
 
-class Delete extends Component
+final class Delete extends Component
 {
     use ModalsConfirm;
 

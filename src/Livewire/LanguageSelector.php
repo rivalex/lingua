@@ -11,7 +11,7 @@ use Rivalex\Lingua\Models\LinguaSetting;
 use Rivalex\Lingua\Traits\ManagesLocale;
 use Rivalex\Lingua\Traits\Modals;
 
-class LanguageSelector extends Component
+final class LanguageSelector extends Component
 {
     use ManagesLocale;
     use Modals;

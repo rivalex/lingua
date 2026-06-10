@@ -14,7 +14,7 @@ use Livewire\WithPagination;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
-class Table extends Component
+final class Table extends Component
 {
     use WithPagination;
 

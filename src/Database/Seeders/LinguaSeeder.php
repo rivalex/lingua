@@ -9,7 +9,7 @@ use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
-class LinguaSeeder extends Seeder
+final class LinguaSeeder extends Seeder
 {
     /**
      * Run the database seeds.

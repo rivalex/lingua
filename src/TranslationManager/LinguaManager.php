@@ -15,7 +15,7 @@ use Rivalex\Lingua\Contracts\TranslationLoader;
  * Registered as `translation.loader` in LinguaServiceProvider so that
  * Laravel's Translator calls load() on every translation lookup.
  */
-class LinguaManager extends FileLoader
+final class LinguaManager extends FileLoader
 {
     /**
      * Load the messages for the given locale.

@@ -14,7 +14,7 @@ use Rivalex\Lingua\Lingua;
 use Rivalex\Lingua\Models\Translation;
 
 #[Title('UI Translation Manager')]
-class Languages extends Component
+final class Languages extends Component
 {
     public string $search = '';
 

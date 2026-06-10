@@ -23,7 +23,7 @@ use Rivalex\Lingua\Traits\ModalsConfirm;
  * - Updating language records and reordering
  * - Providing confirmation modal functionality via ModalsConfirm trait
  */
-class Delete extends Component
+final class Delete extends Component
 {
     use ModalsConfirm;
 

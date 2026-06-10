@@ -12,7 +12,7 @@ use Livewire\Attributes\Renderless;
 use Livewire\Component;
 use Rivalex\Lingua\Models\Language;
 
-class Sort extends Component
+final class Sort extends Component
 {
     #[Renderless, Async]
     public function updateLanguageOrder(int $item, mixed $position): void

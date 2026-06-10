@@ -13,7 +13,7 @@ use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Support\HtmlSanitizer;
 use Rivalex\Lingua\Support\TranslationLine;
 
-class Row extends Component
+final class Row extends Component
 {
     public string $currentLocale;
 

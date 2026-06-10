@@ -7,7 +7,7 @@ namespace Rivalex\Lingua\Livewire\Selector;
 use Livewire\Component;
 use Rivalex\Lingua\Models\LinguaSetting;
 
-class Icon extends Component
+final class Icon extends Component
 {
     public string $locale;
 

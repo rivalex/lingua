@@ -14,7 +14,7 @@ use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Models\Language;
 
 #[Title('Translations Manager')]
-class Translations extends Component
+final class Translations extends Component
 {
     use WithPagination;
 

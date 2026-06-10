@@ -22,7 +22,7 @@ use Rivalex\Lingua\Traits\Modals;
  * to fetch available locales, creates language records in the database, and triggers
  * Artisan commands to install language files.
  */
-class Create extends Component
+final class Create extends Component
 {
     use Modals;
 

@@ -10,11 +10,6 @@ trait Modals
 {
     public string $modalName = '';
 
-    public function openModal(): void
-    {
-        Flux::modal($this->modalName)->show();
-    }
-
     public function closeModal(): void
     {
         if ($this->modalName === '') {

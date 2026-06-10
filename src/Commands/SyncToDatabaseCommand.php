@@ -7,7 +7,7 @@ namespace Rivalex\Lingua\Commands;
 use Illuminate\Console\Command;
 use Rivalex\Lingua\Models\Translation;
 
-class SyncToDatabaseCommand extends Command
+final class SyncToDatabaseCommand extends Command
 {
     /**
      * The name and signature of the console command.

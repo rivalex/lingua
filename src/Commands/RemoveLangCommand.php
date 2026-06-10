@@ -9,7 +9,7 @@ use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
-class RemoveLangCommand extends Command
+final class RemoveLangCommand extends Command
 {
     /**
      * The name and signature of the console command.

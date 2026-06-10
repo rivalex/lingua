@@ -16,7 +16,7 @@ use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Support\TranslationLine;
 use Rivalex\Lingua\Traits\Modals;
 
-class Update extends Component
+final class Update extends Component
 {
     use Modals;
 

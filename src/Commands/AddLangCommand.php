@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Translation;
 
-class AddLangCommand extends Command
+final class AddLangCommand extends Command
 {
     /**
      * The name and signature of the console command.

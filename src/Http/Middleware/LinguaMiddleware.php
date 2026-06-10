@@ -7,7 +7,7 @@ namespace Rivalex\Lingua\Http\Middleware;
 use Illuminate\Support\Facades\Session;
 use Rivalex\Lingua\Models\Language;
 
-class LinguaMiddleware
+final class LinguaMiddleware
 {
     public function handle($request, \Closure $next)
     {

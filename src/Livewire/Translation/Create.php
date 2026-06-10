@@ -14,7 +14,7 @@ use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Traits\Modals;
 
-class Create extends Component
+final class Create extends Component
 {
     use Modals;
 
