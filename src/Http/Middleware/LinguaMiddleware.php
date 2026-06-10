@@ -12,7 +12,14 @@ class LinguaMiddleware
     public function handle($request, \Closure $next)
     {
         $sessionLocale = config('lingua.session_variable');
-        $defaultLocale = Language::default()?->code ?? config('app.locale');
+
+        try {
+            $defaultLocale = Language::default()?->code ?? config('app.locale');
+        } catch (\Throwable) {
+            // Table missing (pre-migration) or DB unavailable — never take the
+            // whole request down for a locale lookup.
+            $defaultLocale = config('app.locale');
+        }
 
         if (Session::has($sessionLocale)) {
             $locale = Session::get($sessionLocale, $defaultLocale);
@@ -26,7 +33,12 @@ class LinguaMiddleware
 
         app()->setFallbackLocale($defaultLocale);
         app()->setLocale($locale);
-        Session::put($sessionLocale, $locale);
+
+        // Write the session only on change: an unconditional put() marks the
+        // session dirty and forces a save on every single request.
+        if (Session::get($sessionLocale) !== $locale) {
+            Session::put($sessionLocale, $locale);
+        }
 
         return $next($request);
     }

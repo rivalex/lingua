@@ -31,7 +31,9 @@ class Table extends Component
     #[Computed]
     public function languages()
     {
-        if (Language::query()->active()->get()->isEmpty()) {
+        // Bootstrap convenience: import from lang files when no language exists
+        // yet. exists() avoids hydrating the whole table just to check emptiness.
+        if (! Language::query()->exists()) {
             Translation::syncToDatabase();
         }
 
@@ -42,13 +44,22 @@ class Table extends Component
             default => 'LIKE',
         };
 
-        $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $this->search);
+        // Escape LIKE wildcards with '!' and declare it via ESCAPE: backslash
+        // escaping without an ESCAPE clause is MySQL/PG-only — SQLite and SQL
+        // Server treat the backslash literally and the search silently breaks.
+        $search = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $this->search);
 
         return Language::query()->active()
-            ->when(! empty($this->search),
-                fn ($query) => $query->whereAny(['code', 'regional', 'name', 'native'],
-                    $like,
-                    "%{$search}%"))->paginate(5);
+            ->when($this->search !== '',
+                fn ($query) => $query->where(function ($inner) use ($like, $search) {
+                    $grammar = $inner->getQuery()->getGrammar();
+                    foreach (['code', 'regional', 'name', 'native'] as $column) {
+                        $inner->orWhereRaw(
+                            $grammar->wrap($column)." {$like} ? ESCAPE '!'",
+                            ["%{$search}%"]
+                        );
+                    }
+                }))->paginate(5);
     }
 
     public function render()

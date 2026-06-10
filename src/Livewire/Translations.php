@@ -40,11 +40,9 @@ class Translations extends Component
 
     public function mount(?string $locale = null): void
     {
-        $this->search = request('q', '');
-        $this->perPage = max(1, min((int) request('p', 10), 100));
-        $this->group = request('g', '');
-        $this->showOnlyMissing = request('m', false);
-
+        // q/p/g/m are bound by the #[Url] attributes — no manual request()
+        // re-reading. The previous request('m', false) assigned a string to a
+        // typed bool property, a fatal TypeError under strict_types with ?m=1.
         $this->language = Language::where('code', $locale ?? linguaDefaultLocale())->first();
         // Fall back to default locale when the requested locale does not exist in DB.
         $this->currentLocale = $this->language?->code ?? linguaDefaultLocale();
@@ -90,7 +88,8 @@ class Translations extends Component
             search: $this->search,
             group: $this->group,
             onlyMissing: $this->showOnlyMissing,
-            perPage: $this->perPage,
+            // Clamp here so every entry point (URL, wire:model) is bounded.
+            perPage: max(1, min($this->perPage, 100)),
         );
     }
 

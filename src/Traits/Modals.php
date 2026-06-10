@@ -17,9 +17,12 @@ trait Modals
 
     public function closeModal(): void
     {
-        if (! $this->modalName) {
+        if ($this->modalName === '') {
             $this->closeModals();
+
+            return;
         }
+
         Flux::modal($this->modalName)->close();
     }
 
