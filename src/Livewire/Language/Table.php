@@ -21,6 +21,16 @@ final class Table extends Component
     #[Url('search', except: ''), Modelable]
     public string $search = '';
 
+    public function mount(): void
+    {
+        // Bootstrap convenience: import from lang files on first visit when no
+        // language records exist yet. Runs once per component lifecycle (mount)
+        // rather than on every render, keeping the computed a pure read path.
+        if (! Language::query()->exists()) {
+            Translation::syncToDatabase();
+        }
+    }
+
     #[On('refreshLanguages')]
     public function refreshLanguages(): void
     {
@@ -31,12 +41,6 @@ final class Table extends Component
     #[Computed]
     public function languages()
     {
-        // Bootstrap convenience: import from lang files when no language exists
-        // yet. exists() avoids hydrating the whole table just to check emptiness.
-        if (! Language::query()->exists()) {
-            Translation::syncToDatabase();
-        }
-
         $driver = DB::connection()->getDriverName();
 
         $like = match ($driver) {
