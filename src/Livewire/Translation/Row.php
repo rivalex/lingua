@@ -10,6 +10,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Support\HtmlSanitizer;
 use Rivalex\Lingua\Support\TranslationLine;
 
 class Row extends Component
@@ -91,8 +92,11 @@ class Row extends Component
         $line = $this->line;
         $this->value = $line->value($this->currentLocale);
         $rawDefault = $line->value(linguaDefaultLocale());
+        // SECURITY: the html preview is rendered with {!! !!} in the view.
+        // strip_tags() kept attributes (onerror, javascript: URIs) on allowed
+        // tags — a stored XSS vector. HtmlSanitizer whitelists tags AND attributes.
         $this->defaultValue = (! $this->fileMode && $line->type->value === 'html')
-            ? strip_tags($rawDefault, '<p><br><b><i><em><strong><ul><ol><li><a><img><h1><h2><h3><h4><h5><h6><span><div><table><tr><td><th><thead><tbody><hr><blockquote><pre><code>')
+            ? HtmlSanitizer::sanitize($rawDefault)
             : $rawDefault;
         $this->translationType = $this->fileMode ? LinguaType::text->value : $line->type->value;
     }
