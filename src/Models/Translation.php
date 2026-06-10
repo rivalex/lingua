@@ -7,6 +7,7 @@ namespace Rivalex\Lingua\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,6 @@ use Rivalex\Lingua\TranslationManager\CacheKey;
 
 /**
  * Class Translation
- * Package: App\Models\System
  *
  * Translation model for managing language translations in the application.
  *
@@ -42,6 +42,8 @@ use Rivalex\Lingua\TranslationManager\CacheKey;
 #[UseFactory(TranslationFactory::class)]
 class Translation extends Model
 {
+    use HasFactory;
+
     /**
      * The database table used by the model.
      *
@@ -315,9 +317,15 @@ class Translation extends Model
      * Synchronize local translation files to the database.
      *
      * Implements a two-pass strategy:
-     *   Pass 1 — Default locale: all keys are imported unconditionally; the set of
+     *   Pass 1 — Default locale: bundled base translations are merged first, then
+     *             app lang files (app files override bundled values for the same
+     *             key); all keys are imported unconditionally and the set of
      *             group+key combinations becomes the reference for Pass 2.
      *   Pass 2 — Remaining locales:
+     *             • Bundled base translations are merged only for locales that are
+     *               INSTALLED (a Language record exists) — adding a language and
+     *               re-syncing imports its bundled dataset, while never installing
+     *               the other bundled locales implicitly.
      *             • Non-vendor keys are imported only if the same key exists in the
      *               default locale files (orphan keys are silently skipped).
      *             • Vendor keys are imported only if a Language record exists for
@@ -351,7 +359,10 @@ class Translation extends Model
 
         try {
             // ─── Pass 1: Default locale ────────────────────────────────────────────
-            $defaultTranslations = $reader->collect($langPath, $defaultLocale);
+            $defaultTranslations = array_merge(
+                $bundledSource->translationsFor($defaultLocale),
+                $reader->collect($langPath, $defaultLocale)
+            );
             self::ensureLanguageRecord($defaultLocale);
             $installedCodes[$defaultLocale] = true;
 
@@ -361,12 +372,19 @@ class Translation extends Model
                     $composite = $translation['group'].'|'.$translation['key'].'|0|';
                     $defaultKeys[$composite] = true;
                 }
-                self::writeTranslation($translation);
+                self::writeTranslation($translation, $defaultLocale);
             }
 
             // ─── Pass 2: Remaining locales ─────────────────────────────────────────
             foreach ($remainingLocales as $locale) {
-                $translations = $reader->collect($langPath, $locale);
+                // Bundled content only for INSTALLED locales — never auto-install
+                // the whole bundled catalogue. Lang files always participate;
+                // they are appended after bundled entries so app files override
+                // bundled values for the same key.
+                $translations = array_merge(
+                    isset($installedCodes[$locale]) ? $bundledSource->translationsFor($locale) : [],
+                    $reader->collect($langPath, $locale)
+                );
                 $localeEnsured = false;
 
                 // Sub-pass A: Non-vendor keys — must exist in default locale key set.
@@ -395,7 +413,7 @@ class Translation extends Model
                         $localeEnsured = true;
                     }
 
-                    self::writeTranslation($translation);
+                    self::writeTranslation($translation, $defaultLocale);
                 }
 
                 // Sub-pass B: Vendor keys — require Language record to exist.
@@ -417,7 +435,7 @@ class Translation extends Model
                     if (! $translation['is_vendor']) {
                         continue;
                     }
-                    self::writeTranslation($translation);
+                    self::writeTranslation($translation, $defaultLocale);
                 }
             }
         } finally {
@@ -476,9 +494,15 @@ class Translation extends Model
      * Detects LinguaType (text/html/markdown) only for default-locale values;
      * for all other locales the existing type is preserved.
      *
+     * The default locale is passed explicitly: comparing against
+     * linguaDefaultLocale() (the app fallback locale) diverged from the
+     * Language::default() value resolved by syncToDatabase(), silently
+     * disabling type detection whenever the two differed.
+     *
      * @param  array{locale: string, group: string, key: string, value: string, is_vendor: bool, vendor: string|null}  $translation
+     * @param  string  $defaultLocale  The default locale resolved by the caller.
      */
-    private static function writeTranslation(array $translation): void
+    private static function writeTranslation(array $translation, string $defaultLocale): void
     {
         $existing = self::where('group', $translation['group'])
             ->where('key', $translation['key'])
@@ -488,7 +512,7 @@ class Translation extends Model
 
         $stringType = LinguaType::text;
 
-        if ($translation['locale'] === linguaDefaultLocale()) {
+        if ($translation['locale'] === $defaultLocale) {
             $string = Str::of($translation['value'])->trim();
             if (preg_match('#(?<=<)\w+(?=[^<]*?>)#', $string->toString())) {
                 $stringType = LinguaType::html;

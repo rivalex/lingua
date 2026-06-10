@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
@@ -113,7 +114,7 @@ it('imports the bundled dataset after a language is added via the facade', funct
     $row = Translation::where('group', 'passwords')->where('key', 'reset')->first();
     expect($row->text)->not->toHaveKey('fr');
 
-    \Rivalex\Lingua\Facades\Lingua::addLanguage('fr');
+    Lingua::addLanguage('fr');
     Translation::syncToDatabase();
 
     $row = Translation::where('group', 'passwords')->where('key', 'reset')->first();

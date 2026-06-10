@@ -50,8 +50,18 @@ class TestCase extends \Orchestra\Testbench\TestCase
         }
         $app->useLangPath($langPath);
 
-        tap($app->make('config'), function (Repository $config) use ($langPath) {
+        // Isolate tests from the real bundled dataset (resources/translations):
+        // otherwise every seeder run would import the full 26-locale catalogue,
+        // making counts non-deterministic and the suite drastically slower.
+        // Dedicated bundled-sync tests point this config at their own fixtures.
+        $bundledPath = __DIR__.'/tmp/bundled';
+        if (! is_dir($bundledPath)) {
+            mkdir($bundledPath, 0777, true);
+        }
+
+        tap($app->make('config'), function (Repository $config) use ($langPath, $bundledPath) {
             $config->set('lingua.lang_dir', $langPath);
+            $config->set('lingua.base_translations_path', $bundledPath);
             $config->set('app.key', 'base64:6Cu69K6S7N25Lp8YV780m3W5vUv7R3P8w4C5o2A6B7E=');
             $config->set('database.default', 'test');
             $config->set('database.connections.test', [
