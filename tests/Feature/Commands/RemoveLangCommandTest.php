@@ -50,14 +50,36 @@ it('cleans up translations when removing a language', function () {
     expect(Translation::whereNotNull('text->it')->count())->toBe(0);
 });
 
-it('outputs error when sync to database fails on remove', function () {
-    $this->mock(Translation::class, function ($mock) {
-        $mock->shouldReceive('syncToDatabase')
-            ->once()
-            ->andThrow(new Exception('Sync failed during remove.'));
-    });
+it('does not re-import the removed language from lang files (no resurrect)', function () {
+    // Give the locale real lang files: the old implementation ran a full
+    // syncToDatabase() after the removal, which re-imported the locale from
+    // these files and recreated its Language record — undoing the removal.
+    $syncDir = sys_get_temp_dir().'/lingua_remove_'.str_replace('.', '_', uniqid('', true));
+    mkdir($syncDir.'/en', 0777, true);
+    mkdir($syncDir.'/it', 0777, true);
+    file_put_contents($syncDir.'/en/ui.php', '<?php return ["hello" => "Hello"];');
+    file_put_contents($syncDir.'/it/ui.php', '<?php return ["hello" => "Ciao"];');
+    config(['lingua.lang_dir' => $syncDir]);
 
-    $this->artisan('lingua:remove', ['locale' => 'it'])
+    Artisan::call('lingua:sync-to-database');
+    expect(Translation::whereNotNull('text->it')->count())->toBeGreaterThan(0);
+
+    $this->artisan('lingua:remove', ['locale' => 'it'])->assertSuccessful();
+
+    expect(Language::where('code', 'it')->exists())->toBeFalse()
+        ->and(Translation::whereNotNull('text->it')->count())->toBe(0);
+
+    // Cleanup
+    foreach ([$syncDir.'/en/ui.php', $syncDir.'/it/ui.php'] as $file) {
+        unlink($file);
+    }
+    rmdir($syncDir.'/en');
+    rmdir($syncDir.'/it');
+    rmdir($syncDir);
+});
+
+it('rejects a malformed locale argument before touching the database', function () {
+    $this->artisan('lingua:remove', ['locale' => 'it"; DROP TABLE x;--'])
         ->assertSuccessful()
-        ->expectsOutputToContain("Failed to remove language 'it': Sync failed during remove.");
+        ->expectsOutputToContain('Invalid locale format');
 });

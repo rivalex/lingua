@@ -22,7 +22,7 @@ class UpdateLangCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Update the local language files via Laravel Lang and sync translations to database';
+    protected $description = 'Re-sync local language files to the database for all installed languages';
 
     /**
      * Execute the console command.

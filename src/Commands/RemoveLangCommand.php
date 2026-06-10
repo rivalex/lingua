@@ -32,6 +32,13 @@ class RemoveLangCommand extends Command
     {
         $locale = $this->argument('locale');
 
+        // Validate the format BEFORE the locale reaches any JSON path expression.
+        if (! preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $locale)) {
+            $this->error("Invalid locale format: {$locale}");
+
+            return;
+        }
+
         $this->info("Removing language: {$locale}...");
 
         $language = Language::where('code', $locale)->first();
@@ -61,9 +68,9 @@ class RemoveLangCommand extends Command
                 app(Language::class)->reorderLanguages();
             }
 
-            $this->info('Syncing remaining translations to database...');
-            app(Translation::class)->syncToDatabase();
-
+            // NOTE: no syncToDatabase() here. Re-syncing after a removal would
+            // re-import the locale from lang/{locale} files (and recreate its
+            // Language record), silently undoing the removal.
             $this->info("Language '{$locale}' removed successfully.");
         } catch (\Throwable $e) {
             $this->error("Failed to remove language '{$locale}': ".$e->getMessage());

@@ -11,7 +11,6 @@ use Livewire\Component;
 use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\ModalsConfirm;
 
 /**
@@ -52,11 +51,15 @@ class Delete extends Component
      *
      * This method performs the following operations:
      * 1. Validates the confirmation input
-     * 2. Removes language files using Artisan command
-     * 3. Removes translations for the language from database
-     * 4. Deletes the language record
-     * 5. Reorders remaining languages
-     * 6. Closes the modal and dispatches refresh event
+     * 2. Removes the locale's translation values from the repository
+     * 3. Deletes the Language record and unprojects notification keys
+     *    (both via Lingua::removeLanguage)
+     * 4. Reorders remaining languages
+     * 5. Closes the modal and dispatches refresh event
+     *
+     * No syncToDatabase() afterwards: re-syncing would re-import the locale
+     * from lang/{locale} files and recreate the Language record, silently
+     * undoing the removal.
      *
      * On failure, logs the error and dispatches a failure event.
      *
@@ -67,14 +70,14 @@ class Delete extends Component
         $this->validateConfirmControl();
         try {
             $locale = $this->language->code;
-            Lingua::removeLanguage($locale);
             $repo = app(TranslationRepository::class);
             $repo->all()
-                ->filter(fn ($line) => $line->value($locale) !== '')
+                ->filter(fn ($line) => array_key_exists($locale, $line->text))
                 ->each(fn ($line) => $repo->forgetLocale($line, $locale));
-            $this->language->delete();
+            // removeLanguage() unprojects notification keys AND deletes the
+            // Language record — no second delete on the in-memory model.
+            Lingua::removeLanguage($locale);
             app(Language::class)->reorderLanguages();
-            app(Translation::class)->syncToDatabase();
             $this->close();
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {
