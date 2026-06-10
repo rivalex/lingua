@@ -4,6 +4,13 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 7 — Graceful degrade when Lingua tables absent (feat/remove-spatie-translation-loader)
+
+#### Bug Fixes
+- **Runtime crash post-uninstall / pre-install** — After `lingua:uninstall` drops tables (but before `composer remove`), or when the package is loaded before migrations are run, any request that rendered a language selector or called `Lingua::hasLocale()` / `getName()` / `getDirection()` / `isDefaultLocale()` / `getDefaultLocale()` threw `QueryException: Table 'languages' does not exist`. Fixed by wrapping all six runtime read methods in `Lingua` with a centralized `safeRead()` helper (try/catch `QueryException`) that returns documented safe defaults (`false`, `''`, `'ltr'`). Mirrors the existing pattern in `LinguaMiddleware` and `registerTranslator()`.
+- **`ManagesLocale::languages()` crash post-uninstall** — Livewire selector components using the `ManagesLocale` trait now catch `QueryException` in the `languages()` computed property and return an empty collection, so the selector renders with no items instead of throwing.
+- **`LinguaSetting::get()` crash post-uninstall** — `LanguageSelector::mount()` calls `LinguaSetting::get()` which queries `lingua_settings`. Now wrapped in try/catch `QueryException`; returns the provided `$default` when the table is absent.
+
 ### Phase 6 — Install/driver/uninstall overhaul (feat/remove-spatie-translation-loader)
 
 #### Added

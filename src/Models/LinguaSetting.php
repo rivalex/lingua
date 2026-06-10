@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use InvalidArgumentException;
 use Rivalex\Lingua\Enums\SelectorMode;
 
@@ -86,7 +87,11 @@ final class LinguaSetting extends Model
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $row = self::where('key', $key)->first();
+        try {
+            $row = self::where('key', $key)->first();
+        } catch (QueryException) {
+            return $default;
+        }
 
         if ($row === null) {
             return $default;

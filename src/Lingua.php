@@ -13,6 +13,7 @@ namespace Rivalex\Lingua;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
@@ -62,6 +63,25 @@ class Lingua
 
         return Language::query()->where('code', '=', $locale)
             ->orWhere('regional', '=', $locale);
+    }
+
+    /**
+     * Execute a runtime DB read, returning $default when Lingua's tables are absent
+     * (pre-install or post-uninstall). Mirrors the guard in registerTranslator().
+     *
+     * @template T
+     *
+     * @param  callable():T  $read
+     * @param  T  $default
+     * @return T
+     */
+    private static function safeRead(callable $read, mixed $default): mixed
+    {
+        try {
+            return $read();
+        } catch (QueryException) {
+            return $default;
+        }
     }
 
     /**
@@ -233,7 +253,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()?->is_default ?? false;
+        return self::safeRead(fn () => self::language($locale)->first()?->is_default ?? false, false);
     }
 
     /**
@@ -256,7 +276,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()->name ?? '';
+        return self::safeRead(fn () => self::language($locale)->first()->name ?? '', '');
     }
 
     /**
@@ -279,7 +299,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()->native ?? '';
+        return self::safeRead(fn () => self::language($locale)->first()->native ?? '', '');
     }
 
     /**
@@ -302,7 +322,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()->direction ?? 'ltr';
+        return self::safeRead(fn () => self::language($locale)->first()->direction ?? 'ltr', 'ltr');
     }
 
     /**
@@ -691,7 +711,7 @@ class Lingua
      */
     public static function getDefaultLocale(): string
     {
-        return Language::default()?->code ?? config('lingua.default_locale', 'en');
+        return self::safeRead(fn () => Language::default()?->code, null) ?? config('lingua.default_locale', 'en');
     }
 
     /**
@@ -710,7 +730,7 @@ class Lingua
      */
     public static function hasLocale(string $locale): bool
     {
-        return self::language($locale)->exists();
+        return self::safeRead(fn () => self::language($locale)->exists(), false);
     }
 
     /**

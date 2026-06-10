@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Rivalex\Lingua\Traits;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Computed;
@@ -49,7 +50,11 @@ trait ManagesLocale
     #[Computed]
     public function languages(): Collection
     {
-        return Language::query()->active()->get();
+        try {
+            return Language::query()->active()->get();
+        } catch (QueryException) {
+            return collect();
+        }
     }
 
     /**
