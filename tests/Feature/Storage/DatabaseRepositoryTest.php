@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\DatabaseRepository;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Support\TranslationLine;
 
 beforeEach(function (): void {
-    $this->repo = new DatabaseRepository;
+    $this->repo = new DatabaseRepository(app(BaseTranslationSource::class));
 
     Translation::create([
         'group' => 'messages',
