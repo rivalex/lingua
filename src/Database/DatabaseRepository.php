@@ -259,13 +259,16 @@ final class DatabaseRepository implements TranslationRepository
                 ->whereNull('vendor')
                 ->first();
 
-            if ($existing === null) {
-                continue; // key not in default locale — skip (matches syncToDatabase orphan rule)
-            }
-
-            $existing->update([
-                'text' => array_merge($existing->text ?? [], [$locale => $entry['value']]),
-            ]);
+            // Create-if-absent: write the bundled value regardless of whether a default-locale
+            // row already exists. This guarantees the locale is seeded independent of the
+            // syncToDatabase orphan filter or default-locale resolution.
+            Translation::updateOrCreate(
+                ['group' => $entry['group'], 'key' => $entry['key'], 'is_vendor' => false, 'vendor' => null],
+                [
+                    'type' => $existing->type ?? LinguaType::text,
+                    'text' => array_merge($existing->text ?? [], [$locale => $entry['value']]),
+                ],
+            );
         }
     }
 

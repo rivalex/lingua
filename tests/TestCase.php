@@ -33,6 +33,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->artisan('migrate'); // Explicitly run migrations
         $this->seed(LinguaSeeder::class);
+        // Reset fallback locale to avoid leakage from LinguaMiddleware which calls
+        // app()->setFallbackLocale() as a side effect, causing order-dependent failures.
+        app()->setFallbackLocale(config('app.fallback_locale', 'en'));
     }
 
     protected function getPackageAliases($app): array
@@ -45,9 +48,48 @@ class TestCase extends \Orchestra\Testbench\TestCase
     public function defineEnvironment($app): void
     {
         $langPath = __DIR__.'/tmp/lang';
+
+        // Wipe non-default locale entries (e.g. it.json written by file-mode tests)
+        // before each test so the seeder never discovers stale locales and creates
+        // unwanted Language records. Default locale ('en') files are preserved.
+        if (is_dir($langPath)) {
+            foreach (glob($langPath.'/*') ?: [] as $entry) {
+                $base = basename($entry);
+                if ($base === 'en' || $base === 'en.json' || str_starts_with($base, '.')) {
+                    continue;
+                }
+                if (is_file($entry)) {
+                    unlink($entry);
+                } elseif (is_dir($entry)) {
+                    $sub = new \RecursiveIteratorIterator(
+                        new \RecursiveDirectoryIterator($entry, \RecursiveDirectoryIterator::SKIP_DOTS),
+                        \RecursiveIteratorIterator::CHILD_FIRST
+                    );
+                    foreach ($sub as $subEntry) {
+                        $subEntry->isDir() ? rmdir((string) $subEntry) : unlink((string) $subEntry);
+                    }
+                    rmdir($entry);
+                }
+            }
+        }
+
         if (! is_dir($langPath)) {
             mkdir($langPath, 0777, true);
         }
+
+        // Copy bundled 'en' translations into the test lang dir so the seeder
+        // always creates a stable set of Translation rows regardless of prior test state.
+        $bundledEn = realpath(__DIR__.'/../resources/translations/en');
+        if ($bundledEn && is_dir($bundledEn)) {
+            $targetEn = $langPath.'/en';
+            if (! is_dir($targetEn)) {
+                mkdir($targetEn, 0777, true);
+            }
+            foreach (glob($bundledEn.'/*.php') ?: [] as $src) {
+                copy($src, $targetEn.'/'.basename($src));
+            }
+        }
+
         $app->useLangPath($langPath);
 
         // Isolate tests from the real bundled dataset (resources/translations):

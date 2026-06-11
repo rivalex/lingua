@@ -13,6 +13,7 @@
     'invalid'         => false,
     'required'        => false,
     'id'              => null,
+    'modal'           => null,
 ])
 
 @php
@@ -30,6 +31,11 @@
         default => 'h-10',
     };
 
+    // When used inside a Flux modal, teleport the popover into the <dialog>
+    // (identified by data-modal="<name>"). This keeps it in the browser top layer
+    // (above the overlay) while escaping the inner overflow/transform ancestors.
+    $teleportTarget = $modal ? '[data-modal="'.$modal.'"]' : null;
+
     $opts = [
         'multiple'       => $multiple,
         'searchable'     => $searchable,
@@ -42,6 +48,7 @@
         'disabled'       => $disabled,
         'invalid'        => $invalid,
         'placeholder'    => $placeholder ?? '',
+        'teleport'       => $teleportTarget,
     ];
 @endphp
 
@@ -112,8 +119,7 @@
             </div>
         </button>
 
-        {{-- Popover — teleported to <body> so modal overflow/stacking never clips it --}}
-        <template x-teleport="body">
+        {{-- Popover — position:fixed so overflow:hidden on modal ancestors cannot clip it --}}
         <div
             data-lingua-popover
             x-ref="popover"
@@ -126,7 +132,7 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="opacity-100 translate-y-0"
             x-transition:leave-end="opacity-0 translate-y-0.5"
-            class="lingua fixed z-[9999] min-w-32 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-lg"
+            class="z-50 min-w-32 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-lg"
         >
             @if ($searchable)
                 <div class="border-b border-zinc-100 dark:border-white/10 p-1.5">
@@ -184,7 +190,6 @@
                 ></li>
             </ul>
         </div>
-        </template>
 
         {{-- Hidden slot: option data read by Alpine init() --}}
         <div x-ref="optionSlot" class="hidden" aria-hidden="true">{{ $slot }}</div>

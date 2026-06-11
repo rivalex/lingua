@@ -25,6 +25,9 @@ it('can initialize `availableLanguages` properties', function () {
 });
 
 it('can add new language with `addNewLanguage` method', function () {
+    // Point at the real shipped bundle so the seeding path is exercised.
+    config(['lingua.base_translations_path' => dirname(__DIR__, 4).'/resources/translations']);
+
     expect(Language::where('code', 'it')->exists())->toBeFalse()
         ->and(Translation::whereNotNull('text->it')->count())->toBe(0);
 
@@ -39,11 +42,12 @@ it('can add new language with `addNewLanguage` method', function () {
 
     expect(Language::where('code', 'it')->exists())->toBeTrue();
 
-    // Bundled translations must be seeded into language_lines for the new locale.
-    $seeded = Translation::whereNotNull('text->it')
-        ->where('text->it', '!=', '')
-        ->count();
-    expect($seeded)->toBeGreaterThan(0, 'installLocale(it) should seed bundled translations into language_lines.text[it]');
+    // A known bundled value must appear in language_lines.text['it'].
+    $row = Translation::where('group', 'validation')->where('key', 'required')->first();
+    expect($row)->not->toBeNull()
+        ->and($row->text['it'] ?? null)->not->toBeNull()->not->toBe('',
+            'installLocale(it) should seed validation.required[it] from the bundled dataset'
+        );
 
     Language::where('code', 'it')->delete();
 });

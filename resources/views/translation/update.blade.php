@@ -16,6 +16,7 @@
                 <div class="col-span-1">
                     <x-lingua::select wire:model.change.live="translationType"
                                       required :disabled="$locked"
+                                      :modal="$modalName"
                                       :badge="__('lingua::lingua.global.required')"
                                       :label="__('lingua::lingua.translations.fields.type')"
                                       :placeholder="__('lingua::lingua.translations.fields.type_placeholder')">

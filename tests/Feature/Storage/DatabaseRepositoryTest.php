@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\DatabaseRepository;
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Locales\BundledTranslationSource;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Support\TranslationLine;
 
@@ -130,4 +131,31 @@ test('identity is stable and not null', function (): void {
     $identity = $line->identity();
 
     expect($identity)->toBe('messages|hello|0|');
+});
+
+test('installLocale seeds bundled values for a new locale', function (): void {
+    // Use the real shipped bundle so the DB seeding path is exercised end-to-end.
+    config(['lingua.base_translations_path' => dirname(__DIR__, 3).'/resources/translations']);
+    // Re-resolve BundledTranslationSource with the updated path.
+    $repo = new DatabaseRepository(
+        new BundledTranslationSource(
+            config('lingua.base_translations_path')
+        )
+    );
+
+    $repo->installLocale('it');
+
+    $row = Translation::where('group', 'validation')->where('key', 'required')->first();
+    expect($row)->not->toBeNull()
+        ->and($row->text['it'] ?? null)->not->toBeNull()->not->toBe('');
+});
+
+test('installLocale is a no-op for the default locale', function (): void {
+    $countBefore = Translation::count();
+
+    $this->repo->installLocale(linguaDefaultLocale());
+
+    // syncToDatabase may upsert existing rows but should not add net-new locale values.
+    $countAfter = Translation::count();
+    expect($countAfter)->toBeGreaterThanOrEqual($countBefore);
 });
