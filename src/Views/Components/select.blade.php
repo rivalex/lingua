@@ -57,7 +57,6 @@
         data-lingua-select
         x-data="linguaSelect(@entangle($attributes->wire('model')), @js($opts))"
         class="relative w-full"
-        @click.outside="closeSelect(false)"
         {{ $attributes->filter(fn ($v, $k) => str_starts_with($k, 'wire:') && ! str_starts_with($k, 'wire:model')) }}
     >
         {{-- Trigger --}}
@@ -113,7 +112,8 @@
             </div>
         </button>
 
-        {{-- Popover --}}
+        {{-- Popover — teleported to <body> so modal overflow/stacking never clips it --}}
+        <template x-teleport="body">
         <div
             data-lingua-popover
             x-ref="popover"
@@ -126,8 +126,7 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="opacity-100 translate-y-0"
             x-transition:leave-end="opacity-0 translate-y-0.5"
-            class="absolute left-0 z-50 mt-1 w-full min-w-32 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-lg"
-            style="top: 100%;"
+            class="lingua fixed z-[9999] min-w-32 overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-800 shadow-lg"
         >
             @if ($searchable)
                 <div class="border-b border-zinc-100 dark:border-white/10 p-1.5">
@@ -185,6 +184,7 @@
                 ></li>
             </ul>
         </div>
+        </template>
 
         {{-- Hidden slot: option data read by Alpine init() --}}
         <div x-ref="optionSlot" class="hidden" aria-hidden="true">{{ $slot }}</div>

@@ -7,6 +7,7 @@ namespace Rivalex\Lingua\Database;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
+use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Models\Translation;
@@ -21,6 +22,10 @@ use Rivalex\Lingua\Support\TranslationLine;
  */
 final class DatabaseRepository implements TranslationRepository
 {
+    public function __construct(
+        private readonly BaseTranslationSource $bundled,
+    ) {}
+
     /**
      * Create a new key with a value for the default locale.
      *
@@ -228,12 +233,40 @@ final class DatabaseRepository implements TranslationRepository
     /**
      * Seed the storage backend for a newly installed locale (database-mode).
      *
-     * Delegates to Translation::syncToDatabase() which merges bundled and
-     * lang-file translations for all installed locales into language_lines.
+     * 1. Runs syncToDatabase() to import default-locale keys and any lang-file
+     *    translations already present on disk.
+     * 2. For non-default locales, deterministically writes every bundled
+     *    translation for $locale into language_lines.text[$locale], independent
+     *    of the two-pass orphan filter or default-locale resolution.
+     *    Keys absent from the bundle are left untouched (shown as "missing").
      */
     public function installLocale(string $locale): void
     {
         Translation::syncToDatabase();
+
+        if ($locale === linguaDefaultLocale()) {
+            return;
+        }
+
+        foreach ($this->bundled->translationsFor($locale) as $entry) {
+            if ($entry['is_vendor'] || $entry['value'] === '') {
+                continue;
+            }
+
+            $existing = Translation::where('group', $entry['group'])
+                ->where('key', $entry['key'])
+                ->where('is_vendor', false)
+                ->whereNull('vendor')
+                ->first();
+
+            if ($existing === null) {
+                continue; // key not in default locale — skip (matches syncToDatabase orphan rule)
+            }
+
+            $existing->update([
+                'text' => array_merge($existing->text ?? [], [$locale => $entry['value']]),
+            ]);
+        }
     }
 
     /**

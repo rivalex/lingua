@@ -94,7 +94,9 @@ class LinguaServiceProvider extends PackageServiceProvider
                 );
             }
 
-            return new DatabaseRepository;
+            return new DatabaseRepository(
+                bundled: $app->make(BaseTranslationSource::class),
+            );
         });
 
         $this->registerLoader();

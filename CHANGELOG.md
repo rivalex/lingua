@@ -4,6 +4,15 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 8 — Select-in-modal overflow fix + DB installLocale seeding (feat/remove-spatie-translation-loader)
+
+#### Bug Fixes
+- **Custom select clipped inside modals** — The `x-lingua::select` popover was clipped by modal `overflow:hidden` and hidden behind footer buttons. Fixed by teleporting the popover to `<body>` via Alpine `x-teleport="body"` and switching from `position:absolute` to `position:fixed` coordinates derived from the trigger's `getBoundingClientRect()`. The `@click.outside` handler is replaced with a `document:pointerdown` listener (teleported element is no longer a DOM descendant of the trigger wrapper). Scroll/resize listeners reposition the popover while it is open. Affects all three modals: Add Language, Create Translation, Update Translation.
+- **`DatabaseRepository::installLocale` not seeding translations** — Adding a new language via the UI created the `Language` record but wrote no values into `language_lines.text[$locale]`. `DatabaseRepository::installLocale()` relied solely on `Translation::syncToDatabase()`, whose two-pass orphan filter skipped the new locale's bundled translations when the default-locale scan found no lang/ files. Fixed by adding a second pass that iterates `BundledTranslationSource::translationsFor($locale)` and merges each non-empty, non-vendor value into the existing `text` JSON column. Keys absent from the bundle remain "missing" (stats unaffected). `DatabaseRepository` now receives `BaseTranslationSource` via constructor injection (service provider updated).
+
+#### Tests
+- Strengthened `tests/Feature/Livewire/Language/CreateTest.php` "can add new language": asserts `language_lines.text[it]` is non-empty after `addNewLanguage('it')`.
+
 ### Phase 7 — Graceful degrade when Lingua tables absent (feat/remove-spatie-translation-loader)
 
 #### Bug Fixes

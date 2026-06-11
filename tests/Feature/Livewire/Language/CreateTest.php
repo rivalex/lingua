@@ -39,6 +39,12 @@ it('can add new language with `addNewLanguage` method', function () {
 
     expect(Language::where('code', 'it')->exists())->toBeTrue();
 
+    // Bundled translations must be seeded into language_lines for the new locale.
+    $seeded = Translation::whereNotNull('text->it')
+        ->where('text->it', '!=', '')
+        ->count();
+    expect($seeded)->toBeGreaterThan(0, 'installLocale(it) should seed bundled translations into language_lines.text[it]');
+
     Language::where('code', 'it')->delete();
 });
 
