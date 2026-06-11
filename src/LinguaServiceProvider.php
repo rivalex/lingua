@@ -64,8 +64,8 @@ class LinguaServiceProvider extends PackageServiceProvider
 
         $this->app->bind(BaseTranslationSource::class, function ($app) {
             return new BundledTranslationSource(
-                basePath: config('lingua.base_translations_path',
-                    __DIR__.'/../resources/translations'),
+                basePath: config('lingua.base_translations_path')
+                    ?? __DIR__.'/../resources/translations',
             );
         });
 

@@ -4,6 +4,17 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 10 — Select popover via native Popover API (feat/remove-spatie-translation-loader)
+
+#### Bug Fixes
+- **Custom select popover stretches/scrolls Flux modals** — Phase 9's teleport-into-dialog approach failed because the Flux `<dialog>` has `transform: matrix(1,0,0,1,0,0)` (identity but non-`none`), making it the containing block for both `absolute` and `fixed` descendants; combined with `overflow:auto`, any positioned child that overflows the dialog's height inflated its `scrollHeight` and added an internal scrollbar (the "block che allunga la modal"). Root fix: promote the popover to the browser top layer via the native **Popover API** (`popover="manual"` attribute + `showPopover()`/`hidePopover()`). A shown popover's containing block is the viewport, bypassing all ancestor `overflow` and `transform` constraints. Removed: dialog teleport, `modal` prop, `_teleportTarget` plumbing. The popover node stays inside `[data-lingua-select]`; only its painting moves to the top layer. Both modal and non-modal selects now use a single `position:fixed` viewport-coordinate path in `positionPopover()`.
+- **`x-show` inline `display:none` fighting `showPopover()`** — Alpine's `x-show="open"` sets `style="display:none"` when `open=false`. `showPopover()` removes the UA `[popover]:not(:popover-open){display:none!important}` rule but cannot override an inline `display:none`. Fixed by calling `pop.style.removeProperty('display')` immediately before `showPopover()`. Graceful fallback: browsers without Popover API support retain plain `position:fixed` behaviour.
+
+#### Changed
+- `src/Views/Components/select.blade.php` — `popover="manual"` + `m-0` added to popover div; `modal` prop and `$teleportTarget` derivation removed.
+- `resources/js/lingua.js` — `linguaSelect`: `teleport`/`_teleportTarget` state removed; `init()` teleport block removed; `openSelect()` calls `removeProperty('display')` + `showPopover()`; `closeSelect()` calls `hidePopover()`; `destroy()` calls `hidePopover()` on teardown; `positionPopover()` collapsed to single fixed-viewport branch with UA `inset/margin` reset.
+- `resources/views/{language/create,translation/create,translation/update}.blade.php` — `:modal="$modalName"` binding removed (no longer needed).
+
 ### Phase 9 — Select-in-modal popover anchor + DB locale seeding (feat/remove-spatie-translation-loader)
 
 #### Bug Fixes

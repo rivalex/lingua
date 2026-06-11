@@ -196,10 +196,10 @@ return [
 
     /*
      * Base translations path for the bundled translation dataset.
-     * Phase 1: empty placeholder. Phase 2: populated with base locale files.
+     * Set to null to use the package's own bundled translations (default).
      * Override to point to an external satellite package directory.
      */
-    'base_translations_path' => __DIR__.'/../resources/translations',
+    'base_translations_path' => null,
 
     /*
      * Path to the bundled notification translation files.

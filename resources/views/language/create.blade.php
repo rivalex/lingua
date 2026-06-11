@@ -12,7 +12,6 @@
                 <x-lingua::select required wire:model.live="language"
                                   searchable clearable
                                   id="new_language"
-                                  :modal="$modalName"
                                   :placeholder="__('lingua::lingua.languages.create.placeholder')"
                                   :label="__('lingua::lingua.languages.create.select')">
                     @foreach($availableLanguages as $lang)
