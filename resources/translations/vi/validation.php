@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => 'Trường :attribute không được chứa bất kỳ giá trị nào sau đây: :values.',
+    'encoding' => 'Trường :attribute phải được mã hóa bằng :encoding.',
 ];

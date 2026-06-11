@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => 'Medan :attribute tidak boleh mengandungi mana-mana daripada yang berikut: :values.',
+    'encoding' => 'Medan :attribute mesti dikodkan dalam :encoding.',
 ];

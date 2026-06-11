@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => 'ฟิลด์ :attribute ต้องไม่มีค่าใดค่าหนึ่งต่อไปนี้: :values',
+    'encoding' => 'ฟิลด์ :attribute ต้องเข้ารหัสในรูปแบบ :encoding',
 ];

@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => ':attribute 字段不能包含以下任何内容：:values。',
+    'encoding' => ':attribute 字段必须使用 :encoding 编码。',
 ];

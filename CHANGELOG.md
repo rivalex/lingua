@@ -4,6 +4,19 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 11 — Realign bundled translations to Laravel 13 (feat/remove-spatie-translation-loader)
+
+#### Bug Fixes
+- **Missing `doesnt_contain` and `encoding` validation strings in all 25 locales** — the translated locales were generated at Laravel v12.19.3 while the EN reference was regenerated at v13.14.0. Two new validation rules (`doesnt_contain`, `encoding`) introduced in L13 were never propagated to non-EN locales. Fixed by re-running the Haiku generator at `--laravel-tag=v13.14.0` for `validation` group; manifest idempotency skips the 134 already-translated keys, translating only the 2 new ones per locale (50 total API strings, 0 discarded).
+- **Missing `Reset your password` and `Verify your email address` notification subjects in all 25 locales** — notification files carried the stale L12 key `Reset Password Notification` (removed in L13) and lacked the renamed subjects and the now-separate `Verify Email Address` action label. Root cause: `NotificationSource::SEMANTIC_PATTERNS` matched `'Notification'` substring (gone in L13) for `reset_subject` and exact-matched the old `'Verify Email Address'` for `verify_subject`. Fixed patterns: `reset_subject` → exact `'Reset your password'`; `verify_subject` → exact `'Verify your email address'`; added `verify_action` → exact `'Verify Email Address'` to capture the action button label (closes 9/9 key parity between EN and all locales).
+- All 25 locales now have 0 missing / 0 stale validation keys and 0 missing / 0 stale notification strings. `resources/translations/.meta.json` updated to `laravel_tag: v13.14.0`, full group list, `total_strings: 5902`.
+
+#### Changed
+- `build-tools/src/Source/NotificationSource.php` — `SEMANTIC_PATTERNS` updated for L13 subject renames; `verify_action` entry added.
+- `resources/translations/{locale}/validation.php` × 25 locales — `doesnt_contain` and `encoding` keys added.
+- `resources/notifications/{locale}.php` × 25 locales — realigned to 9 strings, stale `Reset Password Notification` key dropped.
+- `resources/translations/.meta.json` — bumped to `v13.14.0`, full group list, `total_strings: 5902`.
+
 ### Phase 10 — Select popover via native Popover API (feat/remove-spatie-translation-loader)
 
 #### Bug Fixes

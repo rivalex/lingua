@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => 'שדה :attribute לא חייב להכיל אף אחד מהבאים: :values.',
+    'encoding' => 'שדה :attribute חייב להיות מקודד ב :encoding.',
 ];

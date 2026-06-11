@@ -1,6 +1,6 @@
 {
-    "laravel_tag": "v12.19.3",
-    "generated_at_utc": "2026-06-08T17:30:46Z",
+    "laravel_tag": "v13.14.0",
+    "generated_at_utc": "2026-06-11T15:06:01Z",
     "model": "claude-haiku-4-5-20251001",
     "locales_generated": [
         "ar",
@@ -39,7 +39,6 @@
         "errors",
         "notifications"
     ],
-    "total_strings": 5600,
-    "discarded_count": 0,
-    "laravel_tag_en": "v13.14.0"
+    "total_strings": 5902,
+    "discarded_count": 0
 }

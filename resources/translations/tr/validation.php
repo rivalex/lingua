@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => ':attribute alanı aşağıdakilerden hiçbirini içermemelidir: :values.',
+    'encoding' => ':attribute alanı :encoding ile kodlanmış olmalıdır.',
 ];

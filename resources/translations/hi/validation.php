@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => ':attribute फ़ील्ड में निम्नलिखित में से कोई भी नहीं होना चाहिए: :values।',
+    'encoding' => ':attribute फ़ील्ड को :encoding में एन्कोड किया जाना चाहिए।',
 ];

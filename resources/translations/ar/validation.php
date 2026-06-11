@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => 'حقل :attribute يجب ألا يحتوي على أي من القيم التالية: :values.',
+    'encoding' => 'حقل :attribute يجب أن يكون مشفراً بصيغة :encoding.',
 ];

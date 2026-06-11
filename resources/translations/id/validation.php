@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => 'Kolom :attribute tidak boleh mengandung salah satu dari berikut: :values.',
+    'encoding' => 'Kolom :attribute harus dikodekan dalam :encoding.',
 ];

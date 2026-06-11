@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => ':attribute フィールドは次のいずれも含んではいけません: :values。',
+    'encoding' => ':attribute フィールドは :encoding でエンコードされている必要があります。',
 ];

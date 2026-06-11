@@ -157,4 +157,6 @@ return [
             'rule-name' => 'custom-message',
         ],
     ],
+    'doesnt_contain' => 'Pole :attribute nie może zawierać żadnego z następujących: :values.',
+    'encoding' => 'Pole :attribute musi być zakodowane w :encoding.',
 ];
