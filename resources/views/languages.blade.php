@@ -2,6 +2,7 @@
     use Rivalex\Lingua\Facades\Lingua;
 @endphp
 <div class="lingua">
+    <x-lingua::branding />
     <section class="flex flex-col gap-4">
         <div class="relative w-full">
             <flux:heading size="xl" level="1">@lang('lingua::lingua.languages.title')</flux:heading>

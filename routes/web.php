@@ -50,6 +50,7 @@ Route::group([
             'css' => 'text/css',
             'js' => 'application/javascript',
             'map' => 'application/json',
+            'svg' => 'image/svg+xml',
             default => null,
         };
 
