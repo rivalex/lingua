@@ -2,6 +2,26 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import laravel from 'laravel-vite-plugin';
 import prefixSelector from 'postcss-prefix-selector';
+import { existsSync, mkdirSync, readdirSync, copyFileSync } from 'node:fs'
+import { resolve, dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+function copyStaticImages() {
+    return {
+        name: 'copy-static-images',
+        closeBundle() {
+            const src  = resolve(__dirname, 'resources/images')
+            const dest = resolve(__dirname, 'src/dist/images')
+            if (!existsSync(src)) return
+            mkdirSync(dest, { recursive: true })
+            for (const file of readdirSync(src)) {
+                copyFileSync(join(src, file), join(dest, file))
+            }
+        },
+    }
+}
 
 
 export default defineConfig({
@@ -14,6 +34,7 @@ export default defineConfig({
             refresh: true,
         }),
         tailwindcss(),
+        copyStaticImages(),
     ],
     css: {
         postcss: {
