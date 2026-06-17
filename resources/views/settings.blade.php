@@ -1,6 +1,6 @@
 <div class="lingua">
     <x-lingua::branding />
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-6">
 
         {{-- Header --}}
         <div class="relative w-full">
@@ -11,20 +11,29 @@
             <flux:separator variant="subtle"/>
         </div>
 
-        {{-- Selector settings --}}
-        @include('lingua::settings.partials._selector')
-
-        <flux:separator variant="subtle"/>
+        {{-- Selector --}}
+        <x-lingua::card
+            :title="__('lingua::lingua.settings.selector.title')"
+            :subtitle="__('lingua::lingua.settings.selector.subtitle')"
+            icon="language">
+            @include('lingua::settings.partials._selector')
+        </x-lingua::card>
 
         {{-- Routing & navigation --}}
-        @include('lingua::settings.partials._routing')
-
-        <flux:separator variant="subtle"/>
+        <x-lingua::card
+            :title="__('lingua::lingua.settings.routing.title')"
+            :subtitle="__('lingua::lingua.settings.routing.subtitle')"
+            icon="map-pin">
+            @include('lingua::settings.partials._routing')
+        </x-lingua::card>
 
         {{-- Editor toolbar --}}
-        @include('lingua::settings.partials._editor')
-
-        <flux:separator variant="subtle"/>
+        <x-lingua::card
+            :title="__('lingua::lingua.settings.editor.title')"
+            :subtitle="__('lingua::lingua.settings.editor.subtitle')"
+            icon="pencil-square">
+            @include('lingua::settings.partials._editor')
+        </x-lingua::card>
 
         {{-- Save / toast --}}
         @include('lingua::settings.partials._save')

@@ -1,29 +1,30 @@
 <div class="lingua">
     <x-lingua::branding />
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-6">
 
         {{-- Header --}}
         <div class="relative w-full">
             <flux:heading size="xl" level="1">{{ __('lingua::lingua.statistics.title') }}</flux:heading>
-            <flux:subheading size="lg" class="mb-4">
-                {{ $this->totalKeys }} {{ __('lingua::lingua.statistics.keys_label') }} &middot;
-                {{ $this->totalGroups }} {{ __('lingua::lingua.statistics.groups_label') }} &middot;
-                {{ $this->languages->count() }} {{ __('lingua::lingua.statistics.languages_label') }}
-            </flux:subheading>
-            <flux:separator variant="subtle"/>
+            <flux:separator variant="subtle" class="mt-4"/>
         </div>
 
-        {{-- Vendor toggle --}}
-        <div class="flex items-center gap-3">
-            <flux:field variant="inline" class="flex items-center gap-2 w-fit">
-                <flux:label>
-                    <p style="white-space: nowrap; font-weight: 400;">{{ __('lingua::lingua.statistics.include_vendor') }}</p>
-                </flux:label>
-                <flux:switch
-                    :checked="$this->includeVendor"
-                    wire:change="toggleVendor"
-                />
-            </flux:field>
+        {{-- KPI tiles --}}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <x-lingua::stat
+                :value="$this->totalKeys"
+                :label="__('lingua::lingua.statistics.keys_label')"
+                icon="key"
+            />
+            <x-lingua::stat
+                :value="$this->totalGroups"
+                :label="__('lingua::lingua.statistics.groups_label')"
+                icon="rectangle-stack"
+            />
+            <x-lingua::stat
+                :value="$this->languages->count()"
+                :label="__('lingua::lingua.statistics.languages_label')"
+                icon="language"
+            />
         </div>
 
         {{-- Coverage per locale --}}

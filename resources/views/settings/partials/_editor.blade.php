@@ -1,15 +1,6 @@
-<div class="flex flex-col gap-6 py-4">
-
-    <div>
-        <h2 class="text-base font-semibold text-zinc-900 dark:text-white">{{ __('lingua::lingua.settings.editor.title') }}</h2>
-        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {{ __('lingua::lingua.settings.editor.subtitle') }}
-        </p>
-    </div>
-
-    {{-- Text Formatting --}}
-    <div class="flex flex-col gap-4">
-        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('lingua::lingua.settings.editor.formatting') }}</p>
+{{-- Text Formatting --}}
+<x-lingua::card.row :title="__('lingua::lingua.settings.editor.formatting')">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <flux:switch wire:model.live="editor.bold"
                      :label="__('lingua::lingua.settings.editor.bold')"
                      :description="__('lingua::lingua.settings.editor.bold_description')"/>
@@ -29,12 +20,11 @@
                      :label="__('lingua::lingua.settings.editor.superscript')"
                      :description="__('lingua::lingua.settings.editor.superscript_description')"/>
     </div>
+</x-lingua::card.row>
 
-    <flux:separator variant="subtle"/>
-
-    {{-- Structure --}}
-    <div class="flex flex-col gap-4">
-        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('lingua::lingua.settings.editor.structure') }}</p>
+{{-- Structure --}}
+<x-lingua::card.row :title="__('lingua::lingua.settings.editor.structure')">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <flux:switch wire:model.live="editor.headings"
                      :label="__('lingua::lingua.settings.editor.headings')"
                      :description="__('lingua::lingua.settings.editor.headings_description')"/>
@@ -48,12 +38,11 @@
                      :label="__('lingua::lingua.settings.editor.ordered')"
                      :description="__('lingua::lingua.settings.editor.ordered_description')"/>
     </div>
+</x-lingua::card.row>
 
-    <flux:separator variant="subtle"/>
-
-    {{-- Advanced --}}
-    <div class="flex flex-col gap-4">
-        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ __('lingua::lingua.settings.editor.advanced') }}</p>
+{{-- Advanced --}}
+<x-lingua::card.row :title="__('lingua::lingua.settings.editor.advanced')">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <flux:switch wire:model.live="editor.code-line"
                      :label="__('lingua::lingua.settings.editor.code-line')"
                      :description="__('lingua::lingua.settings.editor.code-line_description')"/>
@@ -67,5 +56,4 @@
                      :label="__('lingua::lingua.settings.editor.clear')"
                      :description="__('lingua::lingua.settings.editor.clear_description')"/>
     </div>
-
-</div>
+</x-lingua::card.row>
