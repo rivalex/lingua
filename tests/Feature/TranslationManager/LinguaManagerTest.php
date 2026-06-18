@@ -14,8 +14,10 @@ it('returns an array for a default-namespace load', function (): void {
     expect($result)->toBeArray();
 });
 
-it('short-circuits to file-only for a non-wildcard vendor namespace', function (): void {
-    // namespace !== null && !== '*' → early return before DB loaders run
+it('returns an array for a vendor namespace (merges file and DB in database mode)', function (): void {
+    // In database mode: file translations merged with DB vendor rows (empty here = no rows seeded).
+    // In file mode: file translations returned as-is.
+    // Deep coverage (cache, bust, QueryException fallback) lives in VendorLoadPathTest.
     $result = app('translation.loader')->load('en', 'validation', 'some-package');
 
     expect($result)->toBeArray();

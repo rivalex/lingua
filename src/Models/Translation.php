@@ -89,10 +89,10 @@ class Translation extends Model
     private static bool $syncing = false;
 
     /**
-     * Collects (locale, group) pairs touched during syncToDatabase() for
-     * targeted cache invalidation in the finally block.
+     * Collects entries touched during syncToDatabase() for targeted cache invalidation.
+     * Each entry: [locale, group, isVendor (bool), vendor (string|null)]
      *
-     * @var array<int, array{0: string, 1: string}>
+     * @var array<int, array{0: string, 1: string, 2: bool, 3: string|null}>
      */
     private static array $touchedCacheKeys = [];
 
@@ -155,8 +155,37 @@ class Translation extends Model
     }
 
     /**
+     * Retrieve all vendor translations for the given locale, vendor, and group, caching forever.
+     *
+     * Mirrors getTranslationsForGroup() but scoped to is_vendor=true rows for a specific
+     * vendor namespace. Uses a distinct cache key (forVendorGroup) to avoid collisions
+     * with app-string groups of the same name.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getVendorTranslationsForGroup(string $locale, string $vendor, string $group): array
+    {
+        return Cache::store(config('lingua.cache.store'))->rememberForever(
+            CacheKey::forVendorGroup($locale, $vendor, $group),
+            fn () => static::where('is_vendor', true)
+                ->where('vendor', $vendor)
+                ->where('group', $group)
+                ->get()
+                ->reduce(function (array $carry, self $translation) use ($locale): array {
+                    $value = $translation->text[$locale] ?? null;
+                    if ($value !== null) {
+                        data_set($carry, $translation->key, $value);
+                    }
+
+                    return $carry;
+                }, [])
+        );
+    }
+
+    /**
      * Forget all cache keys for every locale present in this model's text column.
      * Unions current and original text to catch locale removals.
+     * Vendor rows bust forVendorGroup(); app rows bust forGroup().
      */
     protected function forgetCacheForLocales(): void
     {
@@ -168,7 +197,11 @@ class Translation extends Model
         $store = Cache::store(config('lingua.cache.store'));
 
         foreach ($locales as $locale) {
-            $store->forget(CacheKey::forGroup($locale, $this->group));
+            if ($this->is_vendor && $this->vendor) {
+                $store->forget(CacheKey::forVendorGroup($locale, $this->vendor, $this->group));
+            } else {
+                $store->forget(CacheKey::forGroup($locale, $this->group));
+            }
         }
     }
 
@@ -441,8 +474,12 @@ class Translation extends Model
         } finally {
             self::$syncing = false;
             $store = Cache::store(config('lingua.cache.store'));
-            foreach (self::$touchedCacheKeys as [$locale, $group]) {
-                $store->forget(CacheKey::forGroup($locale, $group));
+            foreach (self::$touchedCacheKeys as [$locale, $group, $isVendor, $vendor]) {
+                if ($isVendor && $vendor) {
+                    $store->forget(CacheKey::forVendorGroup($locale, $vendor, $group));
+                } else {
+                    $store->forget(CacheKey::forGroup($locale, $group));
+                }
             }
             self::$touchedCacheKeys = [];
         }
@@ -540,7 +577,12 @@ class Translation extends Model
             ]
         );
 
-        self::$touchedCacheKeys[] = [$translation['locale'], $translation['group']];
+        self::$touchedCacheKeys[] = [
+            $translation['locale'],
+            $translation['group'],
+            (bool) $translation['is_vendor'],
+            $translation['vendor'] ?? null,
+        ];
     }
 
     /**

@@ -8,6 +8,9 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Translation\FileLoader;
 use Rivalex\Lingua\Contracts\TranslationLoader;
+use Rivalex\Lingua\Contracts\TranslationRepository;
+use Rivalex\Lingua\Database\DatabaseRepository;
+use Rivalex\Lingua\Database\Db;
 
 /**
  * Extends FileLoader to merge file-based translations with database-backed ones.
@@ -20,8 +23,9 @@ final class LinguaManager extends FileLoader
     /**
      * Load the messages for the given locale.
      *
-     * Namespaced groups (vendor packages) are served from files only — DB
-     * translations are intentionally excluded to avoid collisions.
+     * In database mode, vendor namespaces are served from the DB (cached, merged
+     * over files). In file mode the file result is returned unchanged, exactly
+     * as before this change.
      */
     public function load($locale, $group, $namespace = null): array
     {
@@ -29,6 +33,13 @@ final class LinguaManager extends FileLoader
             $fileTranslations = parent::load($locale, $group, $namespace);
 
             if (! is_null($namespace) && $namespace !== '*') {
+                if (app(TranslationRepository::class) instanceof DatabaseRepository) {
+                    return array_replace_recursive(
+                        $fileTranslations,
+                        app(Db::class)->loadTranslations($locale, $group, $namespace)
+                    );
+                }
+
                 return $fileTranslations;
             }
 

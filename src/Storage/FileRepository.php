@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Support\AtomicFileWriter;
 use Rivalex\Lingua\Support\PathGuard;
 use Rivalex\Lingua\Support\PhpArrayExporter;
@@ -111,12 +112,14 @@ final class FileRepository implements TranslationRepository
     }
 
     /**
-     * Remove the value for one locale from its file. No-op on vendor lines.
+     * Remove the value for one locale from its file.
+     *
+     * @throws VendorTranslationProtectedException if the line belongs to a vendor namespace
      */
     public function forgetLocale(TranslationLine $line, string $locale): void
     {
         if ($line->isVendor) {
-            return;
+            throw new VendorTranslationProtectedException;
         }
 
         PathGuard::assertSafeSegment($locale, 'locale');
@@ -125,9 +128,15 @@ final class FileRepository implements TranslationRepository
 
     /**
      * Delete the key from ALL locale files.
+     *
+     * @throws VendorTranslationProtectedException if the line belongs to a vendor namespace
      */
     public function deleteKey(TranslationLine $line): void
     {
+        if ($line->isVendor) {
+            throw new VendorTranslationProtectedException;
+        }
+
         $locales = $this->reader->discoverLocales($this->langPath);
 
         foreach ($locales as $locale) {

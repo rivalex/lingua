@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Locales\BundledTranslationSource;
 use Rivalex\Lingua\Storage\FileRepository;
 use Rivalex\Lingua\Support\AtomicFileWriter;
 use Rivalex\Lingua\Support\TranslationFileReader;
+use Rivalex\Lingua\Support\TranslationLine;
 
 function fr_tempDir(): string
 {
@@ -219,6 +221,85 @@ test('updateMeta different group throws RuntimeException', function (): void {
 
     expect(fn () => $repo->updateMeta($line, 'other_group', 'hi', LinguaType::text))
         ->toThrow(RuntimeException::class);
+
+    fr_cleanDir($dir);
+});
+
+// ── Vendor guard (Phase 6a) ───────────────────────────────────────────────────
+
+test('FileRepository deleteKey throws VendorTranslationProtectedException for a vendor line', function (): void {
+    $dir = fr_tempDir();
+    $repo = makeFileRepo($dir);
+
+    $vendorLine = new TranslationLine(
+        group: 'buttons',
+        key: 'save',
+        groupKey: 'flux::buttons.save',
+        type: LinguaType::text,
+        text: ['en' => 'Save'],
+        isVendor: true,
+        vendor: 'flux',
+        id: null,
+    );
+
+    expect(fn () => $repo->deleteKey($vendorLine))
+        ->toThrow(VendorTranslationProtectedException::class);
+
+    fr_cleanDir($dir);
+});
+
+test('FileRepository forgetLocale throws VendorTranslationProtectedException for a vendor line', function (): void {
+    $dir = fr_tempDir();
+    $repo = makeFileRepo($dir);
+
+    $vendorLine = new TranslationLine(
+        group: 'buttons',
+        key: 'save',
+        groupKey: 'flux::buttons.save',
+        type: LinguaType::text,
+        text: ['en' => 'Save'],
+        isVendor: true,
+        vendor: 'flux',
+        id: null,
+    );
+
+    expect(fn () => $repo->forgetLocale($vendorLine, 'en'))
+        ->toThrow(VendorTranslationProtectedException::class);
+
+    fr_cleanDir($dir);
+});
+
+test('FileRepository setValue succeeds on a vendor line (edits allowed)', function (): void {
+    $dir = fr_tempDir();
+    $repo = makeFileRepo($dir);
+
+    $vendorLine = new TranslationLine(
+        group: 'buttons',
+        key: 'save',
+        groupKey: 'flux::buttons.save',
+        type: LinguaType::text,
+        text: ['en' => 'Save'],
+        isVendor: true,
+        vendor: 'flux',
+        id: null,
+    );
+
+    $updated = $repo->setValue($vendorLine, 'en', 'Save (updated)');
+
+    expect($updated->value('en'))->toBe('Save (updated)');
+
+    fr_cleanDir($dir);
+});
+
+test('FileRepository create with isVendor=true succeeds', function (): void {
+    $dir = fr_tempDir();
+    $repo = makeFileRepo($dir);
+
+    $line = $repo->create('prompts', 'confirm', LinguaType::text, 'en', 'Confirm', true, 'ui-kit');
+
+    expect($line->isVendor)->toBeTrue()
+        ->and($line->vendor)->toBe('ui-kit')
+        ->and($line->value('en'))->toBe('Confirm');
 
     fr_cleanDir($dir);
 });

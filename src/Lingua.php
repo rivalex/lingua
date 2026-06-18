@@ -658,9 +658,6 @@ class Lingua
         if (! $line) {
             return;
         }
-        if ($line->isVendor) {
-            throw new VendorTranslationProtectedException;
-        }
         if (self::isDefaultLocale($locale)) {
             $repo->deleteKey($line);
         } else {

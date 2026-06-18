@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Support\TranslationLine;
 
@@ -85,17 +86,29 @@ final class DatabaseRepository implements TranslationRepository
 
     /**
      * Remove the value for one locale (does not delete the key).
+     *
+     * @throws VendorTranslationProtectedException if the line belongs to a vendor namespace
      */
     public function forgetLocale(TranslationLine $line, string $locale): void
     {
+        if ($line->isVendor) {
+            throw new VendorTranslationProtectedException;
+        }
+
         $this->requireModel($line)->forgetTranslation($locale);
     }
 
     /**
      * Delete the entire key (all locales).
+     *
+     * @throws VendorTranslationProtectedException if the line belongs to a vendor namespace
      */
     public function deleteKey(TranslationLine $line): void
     {
+        if ($line->isVendor) {
+            throw new VendorTranslationProtectedException;
+        }
+
         $this->requireModel($line)->delete();
     }
 

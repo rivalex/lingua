@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\DatabaseRepository;
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Locales\BundledTranslationSource;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Support\TranslationLine;
@@ -158,4 +159,60 @@ test('installLocale is a no-op for the default locale', function (): void {
     // syncToDatabase may upsert existing rows but should not add net-new locale values.
     $countAfter = Translation::count();
     expect($countAfter)->toBeGreaterThanOrEqual($countBefore);
+});
+
+// ── Vendor guard (Phase 6a) ───────────────────────────────────────────────────
+
+test('deleteKey throws VendorTranslationProtectedException for a vendor line', function (): void {
+    $model = Translation::create([
+        'group' => 'buttons',
+        'key' => 'save',
+        'type' => LinguaType::text,
+        'text' => ['en' => 'Save'],
+        'is_vendor' => true,
+        'vendor' => 'flux',
+    ]);
+    $line = $this->repo->toLine($model);
+
+    expect(fn () => $this->repo->deleteKey($line))
+        ->toThrow(VendorTranslationProtectedException::class);
+});
+
+test('forgetLocale throws VendorTranslationProtectedException for a vendor line', function (): void {
+    $model = Translation::create([
+        'group' => 'buttons',
+        'key' => 'cancel',
+        'type' => LinguaType::text,
+        'text' => ['en' => 'Cancel'],
+        'is_vendor' => true,
+        'vendor' => 'flux',
+    ]);
+    $line = $this->repo->toLine($model);
+
+    expect(fn () => $this->repo->forgetLocale($line, 'en'))
+        ->toThrow(VendorTranslationProtectedException::class);
+});
+
+test('setValue succeeds on a vendor line (edits allowed)', function (): void {
+    $model = Translation::create([
+        'group' => 'messages',
+        'key' => 'greet',
+        'type' => LinguaType::text,
+        'text' => ['en' => 'Hello'],
+        'is_vendor' => true,
+        'vendor' => 'acme',
+    ]);
+    $line = $this->repo->toLine($model);
+
+    $updated = $this->repo->setValue($line, 'en', 'Hi');
+
+    expect($updated->value('en'))->toBe('Hi');
+});
+
+test('create with isVendor=true succeeds', function (): void {
+    $line = $this->repo->create('prompts', 'confirm', LinguaType::text, 'en', 'Confirm', true, 'ui-kit');
+
+    expect($line->isVendor)->toBeTrue()
+        ->and($line->vendor)->toBe('ui-kit')
+        ->and($line->value('en'))->toBe('Confirm');
 });

@@ -17,11 +17,19 @@ final class Db implements TranslationLoader
      */
     public function loadTranslations(string $locale, string $group, ?string $namespace = null): array
     {
-        if ($namespace !== null && $namespace !== '*') {
-            return [];
-        }
-
         $modelClass = config('lingua.model');
+
+        if ($namespace !== null && $namespace !== '*') {
+            if (
+                ! is_string($modelClass) ||
+                ! is_subclass_of($modelClass, Model::class) ||
+                ! method_exists($modelClass, 'getVendorTranslationsForGroup')
+            ) {
+                throw InvalidConfiguration::invalidModel((string) $modelClass);
+            }
+
+            return $modelClass::getVendorTranslationsForGroup($locale, $namespace, $group);
+        }
 
         if (
             ! is_string($modelClass) ||
