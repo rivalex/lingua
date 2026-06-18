@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Rivalex\Lingua\Http\Controllers\TransferExportController;
 
 $middleware = array_unique(array_merge(['web'], (array) config('lingua.middleware', ['web', 'auth'])));
 
@@ -22,6 +23,12 @@ Route::group([
 
     Route::livewire('settings'.$suffix, 'lingua::settings')
         ->name('lingua.settings');
+
+    Route::livewire('transfer'.$suffix, 'lingua::transfer')
+        ->name('lingua.transfer');
+
+    Route::get('transfer/export', [TransferExportController::class, 'download'])
+        ->name('lingua.transfer.export');
 });
 
 // Assets are served OUTSIDE the auth-protected group: the language selector

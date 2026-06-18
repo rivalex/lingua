@@ -4,6 +4,61 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### Phase 6b — Translation Import / Export (feat/remove-spatie-translation-loader)
+
+#### Added
+- **`feat(transfer): translation export`** — `ExportService` produces bilingual, multi-locale, and JSON-native exports via `FormatRegistry` writers (CSV, JSON built-in; XLSX/ODS via optional `openspout/openspout`).
+- **`feat(transfer): translation import dry-run`** — `ImportDiffService` parses CSV/JSON/XLSX/ODS files and returns an `ImportDiff` with create/update/skip/error counts and capped row lists. No writes performed.
+- **`feat(transfer): translation import commit`** — `ImportCommitService` re-parses the file and applies changes in a DB transaction (database mode) or sequential writes (file mode). Enforces type-precedence rules (plan §8) and vendor guard (never creates/deletes vendor rows).
+- **`feat(ui): Transfer page`** — `lingua.transfer` route hosts `Transfer`, `Export`, `Import` Livewire components. Export redirects to `lingua.transfer.export` (HTTP download route via `TransferExportController`). Import uses `WithFileUploads` for preview→confirm flow.
+- **`feat(schema): transfer column layout`** — `TransferSchema` is single source of truth for header names; `RowMapper` handles `TranslationLine↔row` conversion and identity reconstruction (existence-match first, then first-dot split for new keys).
+- **`feat(formats): CSV formula injection guard`** — cells starting with `= + - @ \t \r` are prefixed with `'` in CSV and XLSX/ODS writers.
+- **`feat(formats): OpenSpout optional`** — `SpreadsheetSupport::available()` gates XLSX/ODS. `FormatRegistry::availableFormats()` filters them when absent; `SpreadsheetUnavailableException` thrown on unavailable format request.
+- **`feat(i18n): transfer lang keys`** — `transfer.*` keys added to `resources/lang/en/lingua.php`.
+- **`feat(nav): transfer link`** — nav button to `lingua.transfer` added to languages, translations, and settings views.
+- **`suggest: openspout/openspout`** added to `composer.json`.
+
+#### Files Created
+- `src/Transfer/Enums/TransferScope.php`, `TransferFilter.php`
+- `src/Transfer/TransferSchema.php`, `RowMapper.php`, `ParsedRow.php`, `ImportDiff.php`
+- `src/Transfer/SpreadsheetSupport.php`, `ExportService.php`, `ImportDiffService.php`, `ImportCommitService.php`
+- `src/Transfer/Format/FormatWriter.php`, `FormatReader.php`, `FormatRegistry.php`
+- `src/Transfer/Format/CsvWriter.php`, `CsvReader.php`, `JsonWriter.php`, `JsonReader.php`
+- `src/Transfer/Format/XlsxWriter.php`, `XlsxReader.php`, `OdsWriter.php`, `OdsReader.php`
+- `src/Transfer/Format/SpreadsheetUnavailableException.php`
+- `src/Livewire/Transfer.php`, `Export.php`, `Import.php`
+- `src/Http/Controllers/TransferExportController.php`
+- `resources/views/transfer.blade.php`, `export.blade.php`, `import.blade.php`
+- `tests/Feature/Transfer/RowMapperTest.php`, `CsvRoundTripTest.php`, `JsonRoundTripTest.php`
+- `tests/Feature/Transfer/ExportServiceTest.php`, `SpreadsheetRoundTripTest.php`
+- `tests/Feature/Transfer/ImportDiffServiceTest.php`, `ImportCommitServiceTest.php`, `TransferUiTest.php`
+
+#### Tests
+- 79 new tests (737 total, baseline was 658).
+
+---
+
+### Phase 6a — Driver-Aware Vendor Load Path (feat/remove-spatie-translation-loader)
+
+#### Bug Fixes
+- **`fix(loader): vendor namespaces now served from DB in database mode`** — `LinguaManager::load()` previously unconditionally returned `parent::load()` (file) for any namespaced group, creating a hybrid source of truth. Vendor edits in the DB had no runtime effect. Fixed: namespace branch is now driver-aware — database mode resolves via `Translation::getVendorTranslationsForGroup()` (cached `rememberForever`), merged over file translations; file mode returns `parent::load()` unchanged.
+- **`fix(cache): vendor cache key collision`** — `CacheKey::forGroup()` was vendor-blind. New `CacheKey::forVendorGroup($locale, $vendor, $group)` uses `{prefix}.{locale}.{vendor}::{group}`. Cache bust paths in `forgetCacheForLocales()` and `syncToDatabase()` are now vendor-aware.
+- **`fix(guard): VendorTranslationProtectedException relocated to repository layer`** — guard was facade-only. Now lives in `DatabaseRepository::deleteKey/forgetLocale` and `FileRepository::deleteKey/forgetLocale` (both drivers). Facade throw removed. `setValue`/`create` on vendor rows remain allowed.
+
+#### Changed
+- `src/TranslationManager/CacheKey.php` — added `forVendorGroup()`.
+- `src/Models/Translation.php` — added `getVendorTranslationsForGroup()`; bust paths vendor-aware.
+- `src/Database/Db.php` — namespace lookups call `getVendorTranslationsForGroup()`.
+- `src/TranslationManager/LinguaManager.php` — vendor branch driver-aware via `instanceof DatabaseRepository`.
+- `src/Database/DatabaseRepository.php` — `deleteKey`/`forgetLocale` throw for vendor rows.
+- `src/Storage/FileRepository.php` — `deleteKey`/`forgetLocale` throw for vendor rows (previously silent no-op).
+- `src/Lingua.php` — removed redundant vendor guard from `forgetTranslation()`.
+
+#### Tests
+- 13 new tests (658 total, baseline was 645).
+
+---
+
 ### Phase 11 — Realign bundled translations to Laravel 13 (feat/remove-spatie-translation-loader)
 
 #### Bug Fixes

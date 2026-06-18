@@ -40,6 +40,7 @@
         "laravel/pint": "^v1.24.0",
         "nunomaduro/collision": "^v8.8.0",
         "nunomaduro/pao": "^1.0",
+        "openspout/openspout": "^5.7",
         "orchestra/testbench": "^9.0 || ^10.9 || ^11.0",
         "pestphp/pest": "^v4.4.0",
         "pestphp/pest-plugin-arch": "^v4.0.0",
@@ -99,7 +100,8 @@
         }
     },
     "suggest": {
-        "rivalex/lingua-pro": "Adds AI translation (DeepL, Anthropic, Google), translation memory, glossary, usage analytics, and license-gated features. Requires a Lingua Pro license."
+        "rivalex/lingua-pro": "Adds AI translation (DeepL, Anthropic, Google), translation memory, glossary, usage analytics, and license-gated features. Requires a Lingua Pro license.",
+        "openspout/openspout": "Enables XLSX/ODS translation import & export (CSV and JSON work without it)."
     },
     "minimum-stability": "dev",
     "prefer-stable": true

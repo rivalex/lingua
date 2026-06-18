@@ -1,5 +1,10 @@
 <div class="lingua">
     <x-lingua::branding />
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+        <flux:button href="{{ route('lingua.transfer') }}" variant="ghost" size="sm" icon="arrows-right-left">
+            {{ __('lingua::lingua.transfer.nav_link') }}
+        </flux:button>
+    </div>
     <section class="flex flex-col gap-4">
         <div class="relative w-full">
             <flux:heading size="xl" level="1">

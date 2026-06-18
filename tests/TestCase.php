@@ -12,6 +12,7 @@ use Livewire\LivewireServiceProvider;
 use OutheBox\BladeFlags\BladeFlagsServiceProvider;
 use Rivalex\Lingua\Database\Seeders\LinguaSeeder;
 use Rivalex\Lingua\Facades\Lingua;
+use Rivalex\Lingua\Http\Controllers\TransferExportController;
 use Rivalex\Lingua\LinguaServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
@@ -127,6 +128,12 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
         Route::livewire('settings', 'lingua::settings')
             ->name('lingua.settings');
+
+        Route::livewire('transfer', 'lingua::transfer')
+            ->name('lingua.transfer');
+
+        Route::get('transfer/export', [TransferExportController::class, 'download'])
+            ->name('lingua.transfer.export');
 
         Route::get('assets/{path}', function (string $path) {
             // Serve built assets directly from the package when they are not published
