@@ -1,10 +1,13 @@
 <div class="flex flex-col gap-6">
 
     @if($errorMessage)
-        <flux:callout variant="danger" icon="exclamation-triangle">
-            <flux:callout.heading>{{ __('lingua::lingua.transfer.export.error') }}</flux:callout.heading>
-            <flux:callout.text>{{ $errorMessage }}</flux:callout.text>
-        </flux:callout>
+        <div class="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+            <flux:icon.exclamation-triangle class="mt-0.5 size-5 shrink-0" />
+            <div>
+                <p class="text-sm font-medium">{{ __('lingua::lingua.transfer.export.error') }}</p>
+                <p class="mt-1 text-sm">{{ $errorMessage }}</p>
+            </div>
+        </div>
     @endif
 
     {{-- Scope --}}
@@ -41,7 +44,7 @@
             icon="language">
             <flux:select wire:model="targetLocale" :placeholder="__('lingua::lingua.transfer.export.locale.placeholder')">
                 @foreach($this->languages as $language)
-                    <flux:option value="{{ $language->code }}">{{ $language->native }} ({{ $language->code }})</flux:option>
+                    <option value="{{ $language->code }}">{{ $language->native }} ({{ $language->code }})</option>
                 @endforeach
             </flux:select>
         </x-lingua::card>
@@ -76,7 +79,7 @@
         <div class="flex flex-col gap-3">
             <flux:select wire:model="format">
                 @foreach($this->availableFormats as $key => $label)
-                    <flux:option value="{{ $key }}">{{ $label }}</flux:option>
+                    <option value="{{ $key }}">{{ $label }}</option>
                 @endforeach
             </flux:select>
             @unless($this->spreadsheetAvailable)

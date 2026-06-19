@@ -33,7 +33,7 @@ it('can show the `Language DROPDOWN` selector component', function () {
         ->set('mode', 'dropdown')
         ->assertSet('mode', 'dropdown')
         ->assertStatus(200)
-        ->assertSeeHtml('data-flux-dropdown');
+        ->assertSeeHtml('x-data="{ open: false }"');
 });
 
 it('can switch the `CURRENT Language`', function () {

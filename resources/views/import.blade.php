@@ -2,18 +2,24 @@
 
     {{-- Success message --}}
     @if($successMessage)
-        <flux:callout variant="success" icon="check-circle">
-            <flux:callout.heading>{{ __('lingua::lingua.transfer.import.success') }}</flux:callout.heading>
-            <flux:callout.text>{{ $successMessage }}</flux:callout.text>
-        </flux:callout>
+        <div class="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+            <flux:icon.check-circle class="mt-0.5 size-5 shrink-0" />
+            <div>
+                <p class="text-sm font-medium">{{ __('lingua::lingua.transfer.import.success') }}</p>
+                <p class="mt-1 text-sm">{{ $successMessage }}</p>
+            </div>
+        </div>
     @endif
 
     {{-- Error message --}}
     @if($errorMessage)
-        <flux:callout variant="danger" icon="exclamation-triangle">
-            <flux:callout.heading>{{ __('lingua::lingua.transfer.import.error') }}</flux:callout.heading>
-            <flux:callout.text>{{ $errorMessage }}</flux:callout.text>
-        </flux:callout>
+        <div class="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+            <flux:icon.exclamation-triangle class="mt-0.5 size-5 shrink-0" />
+            <div>
+                <p class="text-sm font-medium">{{ __('lingua::lingua.transfer.import.error') }}</p>
+                <p class="mt-1 text-sm">{{ $errorMessage }}</p>
+            </div>
+        </div>
     @endif
 
     @unless($previewed)
@@ -24,7 +30,7 @@
             icon="language">
             <flux:select wire:model="targetLocale" :placeholder="__('lingua::lingua.transfer.import.locale.placeholder')">
                 @foreach($this->languages as $language)
-                    <flux:option value="{{ $language->code }}">{{ $language->native }} ({{ $language->code }})</flux:option>
+                    <option value="{{ $language->code }}">{{ $language->native }} ({{ $language->code }})</option>
                 @endforeach
             </flux:select>
         </x-lingua::card>
