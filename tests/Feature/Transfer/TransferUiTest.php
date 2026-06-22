@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\View\View;
+use Livewire\Livewire;
 use Rivalex\Lingua\Livewire\Export;
 use Rivalex\Lingua\Livewire\Import;
 use Rivalex\Lingua\Livewire\Transfer;
@@ -10,23 +10,32 @@ use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Transfer\Format\FormatRegistry;
 use Rivalex\Lingua\Transfer\SpreadsheetSupport;
 
-// ── Component render() returns a View ────────────────────────────────────────
-// Matches the pattern used by tests/Feature/Livewire/LayoutOverrideTest.php.
-// Full Blade compilation is not tested here (Flux components require a browser).
+// ── Navigation smoke tests (Livewire::test renders real Blade) ────────────────
+//
+// These tests compile the full Blade output, so property-name collisions
+// (e.g. $errors shadowing ViewErrorBag) and missing component registrations
+// are caught here rather than at runtime in the browser.
 
-test('Transfer render() returns a View instance', function (): void {
-    $result = app()->make(Transfer::class)->render();
-    expect($result)->toBeInstanceOf(View::class);
+test('Transfer page renders without errors', function (): void {
+    Livewire::test(Transfer::class)->assertOk();
 });
 
-test('Export render() returns a View instance', function (): void {
-    $result = app()->make(Export::class)->render();
-    expect($result)->toBeInstanceOf(View::class);
+test('Export component renders without errors', function (): void {
+    Livewire::test(Export::class)->assertOk();
 });
 
-test('Import render() returns a View instance', function (): void {
-    $result = app()->make(Import::class)->render();
-    expect($result)->toBeInstanceOf(View::class);
+test('Import component renders without errors', function (): void {
+    // Covers the @error('file') directive that previously crashed due to
+    // public array $errors shadowing the ViewErrorBag.
+    Livewire::test(Import::class)->assertOk();
+});
+
+test('Import component initial form is visible', function (): void {
+    // previewed=false by default → upload form section is rendered.
+    Livewire::test(Import::class)
+        ->assertSet('previewed', false)
+        ->assertSet('targetLocale', '')
+        ->assertOk();
 });
 
 // ── Export download route ─────────────────────────────────────────────────────

@@ -56,7 +56,7 @@ final class Import extends Component
     public array $skipped = [];
 
     /** @var list<array{key: string, reason: string}> */
-    public array $errors = [];
+    public array $rowErrors = [];
 
     /** Error message shown when validation or processing fails. */
     public ?string $errorMessage = null;
@@ -126,7 +126,7 @@ final class Import extends Component
             $this->errorCount = $diff->errorCount;
             $this->changes = $diff->changes;
             $this->skipped = $diff->skipped;
-            $this->errors = $diff->errors;
+            $this->rowErrors = $diff->errors;
             $this->previewed = true;
         } catch (\Throwable $e) {
             $this->errorMessage = 'Failed to preview file: '.$e->getMessage();
@@ -239,6 +239,6 @@ final class Import extends Component
         $this->errorCount = 0;
         $this->changes = [];
         $this->skipped = [];
-        $this->errors = [];
+        $this->rowErrors = [];
     }
 }
