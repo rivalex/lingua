@@ -4,6 +4,23 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### UI — Transfer page redesign (feat/remove-spatie-translation-loader)
+
+#### Changed
+- **`style(ui): Transfer Export/Import layout`** — collapsed 5-card Export sprawl and 3-card Import sprawl into single `x-lingua::card` containers using `x-lingua::card.row` rows (label/desc left col, control right col, `divide-y`). Matches the Settings page pattern. Footer action buttons pinned to card bottom with `border-t`. Alert messages extracted to shared `resources/views/transfer/partials/_alerts.blade.php` (safe `isset()` guards for components without `$successMessage`).
+
+---
+
+### Fix — Import `$errors` property collision (feat/remove-spatie-translation-loader)
+
+#### Fixed
+- **`fix(livewire): Import $errors shadows ViewErrorBag`** — `public array $errors` in `Import.php` was injected into the view scope by Livewire, clobbering the `ViewErrorBag` instance. `@error('file')` called `getBag()` on an array → fatal on `/lingua/transfer`. Renamed to `$rowErrors` (3 occurrences; property never rendered in Blade).
+
+#### Tests
+- **`feat(tests): Livewire::test smoke tests for Transfer/Export/Import`** — replaced `render()→instanceof View` assertions (which do not compile Blade) with `Livewire::test(...)->assertOk()`. Catches property-collision, missing component registration, and `@error`/`@foreach` runtime crashes that the previous pattern missed.
+
+---
+
 ### Phase 6b — Translation Import / Export (feat/remove-spatie-translation-loader)
 
 #### Added

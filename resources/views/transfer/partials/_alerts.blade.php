@@ -4,7 +4,7 @@
     Include at the top of export.blade.php and import.blade.php.
 --}}
 
-@if(!empty($successMessage))
+@if(isset($successMessage) && !empty($successMessage))
     <div class="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
         <flux:icon.check-circle class="mt-0.5 size-5 shrink-0" />
         <div>
@@ -14,7 +14,7 @@
     </div>
 @endif
 
-@if(!empty($errorMessage))
+@if(isset($errorMessage) && !empty($errorMessage))
     <div class="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
         <flux:icon.exclamation-triangle class="mt-0.5 size-5 shrink-0" />
         <div>

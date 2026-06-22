@@ -1,157 +1,155 @@
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
 
-    {{-- Success message --}}
-    @if($successMessage)
-        <div class="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-            <flux:icon.check-circle class="mt-0.5 size-5 shrink-0" />
-            <div>
-                <p class="text-sm font-medium">{{ __('lingua::lingua.transfer.import.success') }}</p>
-                <p class="mt-1 text-sm">{{ $successMessage }}</p>
-            </div>
-        </div>
-    @endif
-
-    {{-- Error message --}}
-    @if($errorMessage)
-        <div class="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
-            <flux:icon.exclamation-triangle class="mt-0.5 size-5 shrink-0" />
-            <div>
-                <p class="text-sm font-medium">{{ __('lingua::lingua.transfer.import.error') }}</p>
-                <p class="mt-1 text-sm">{{ $errorMessage }}</p>
-            </div>
-        </div>
-    @endif
+    @include('lingua::transfer.partials._alerts')
 
     @unless($previewed)
-        {{-- Target locale --}}
-        <x-lingua::card
-            :title="__('lingua::lingua.transfer.import.locale.title')"
-            :subtitle="__('lingua::lingua.transfer.import.locale.subtitle')"
-            icon="language">
-            <flux:select wire:model="targetLocale" :placeholder="__('lingua::lingua.transfer.import.locale.placeholder')">
-                @foreach($this->languages as $language)
-                    <option value="{{ $language->code }}">{{ $language->native }} ({{ $language->code }})</option>
-                @endforeach
-            </flux:select>
-        </x-lingua::card>
 
-        {{-- File upload --}}
+        {{-- Import configuration card --}}
         <x-lingua::card
-            :title="__('lingua::lingua.transfer.import.file.title')"
-            :subtitle="__('lingua::lingua.transfer.import.file.subtitle')"
-            icon="document-arrow-up">
-            <flux:input type="file" wire:model="file" accept=".csv,.txt,.json,.xlsx,.ods" />
-            @error('file')
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-            @enderror
-        </x-lingua::card>
+            :title="__('lingua::lingua.transfer.tabs.import')"
+            :subtitle="__('lingua::lingua.transfer.subtitle')"
+            icon="arrow-up-tray">
 
-        {{-- Vendor update toggle --}}
-        <x-lingua::card
-            :title="__('lingua::lingua.transfer.import.vendor.title')"
-            :subtitle="__('lingua::lingua.transfer.import.vendor.subtitle')"
-            icon="puzzle-piece">
-            <flux:switch
-                wire:model="vendorUpdateEnabled"
-                :label="__('lingua::lingua.transfer.import.vendor.toggle')"
-            />
-            <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                {{ __('lingua::lingua.transfer.import.vendor.hint') }}
-            </p>
-        </x-lingua::card>
+            {{-- Target locale --}}
+            <x-lingua::card.row
+                :title="__('lingua::lingua.transfer.import.locale.title')"
+                :description="__('lingua::lingua.transfer.import.locale.subtitle')">
+                <flux:select wire:model="targetLocale" :placeholder="__('lingua::lingua.transfer.import.locale.placeholder')" class="max-w-xs">
+                    @foreach($this->languages as $language)
+                        <option value="{{ $language->code }}">{{ $language->native }} ({{ $language->code }})</option>
+                    @endforeach
+                </flux:select>
+            </x-lingua::card.row>
 
-        {{-- Preview button --}}
-        <div class="flex justify-end">
-            <flux:button wire:click="preview" variant="primary" icon="eye">
-                {{ __('lingua::lingua.transfer.import.preview_button') }}
-            </flux:button>
-        </div>
+            {{-- File upload --}}
+            <x-lingua::card.row
+                :title="__('lingua::lingua.transfer.import.file.title')"
+                :description="__('lingua::lingua.transfer.import.file.subtitle')">
+                <div class="flex flex-col gap-1">
+                    <flux:input type="file" wire:model="file" accept=".csv,.txt,.json,.xlsx,.ods" class="max-w-xs" />
+                    @error('file')
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            </x-lingua::card.row>
+
+            {{-- Vendor update --}}
+            <x-lingua::card.row
+                :title="__('lingua::lingua.transfer.import.vendor.title')"
+                :description="__('lingua::lingua.transfer.import.vendor.hint')">
+                <flux:switch
+                    wire:model="vendorUpdateEnabled"
+                    :label="__('lingua::lingua.transfer.import.vendor.toggle')"
+                />
+            </x-lingua::card.row>
+
+            {{-- Footer action --}}
+            <div class="flex justify-end border-t border-zinc-100 px-6 py-4 dark:border-zinc-800">
+                <flux:button wire:click="preview" variant="primary" icon="eye">
+                    {{ __('lingua::lingua.transfer.import.preview_button') }}
+                </flux:button>
+            </div>
+
+        </x-lingua::card>
 
     @else
-        {{-- Preview results --}}
+
+        {{-- Summary KPI tiles --}}
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <x-lingua::stat
+                :value="$createCount"
+                :label="__('lingua::lingua.transfer.import.preview.creates')"
+                icon="plus-circle"
+            />
+            <x-lingua::stat
+                :value="$updateCount"
+                :label="__('lingua::lingua.transfer.import.preview.updates')"
+                icon="pencil-square"
+            />
+            <x-lingua::stat
+                :value="$skipCount"
+                :label="__('lingua::lingua.transfer.import.preview.skips')"
+                icon="minus-circle"
+            />
+            <x-lingua::stat
+                :value="$errorCount"
+                :label="__('lingua::lingua.transfer.import.preview.errors')"
+                icon="exclamation-circle"
+            />
+        </div>
+
+        {{-- Preview detail card --}}
         <x-lingua::card
             :title="__('lingua::lingua.transfer.import.preview.title')"
             :subtitle="__('lingua::lingua.transfer.import.preview.subtitle')"
             icon="clipboard-document-list">
 
-            {{-- Summary counts --}}
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-6">
-                <x-lingua::stat
-                    :value="$createCount"
-                    :label="__('lingua::lingua.transfer.import.preview.creates')"
-                    icon="plus-circle"
-                />
-                <x-lingua::stat
-                    :value="$updateCount"
-                    :label="__('lingua::lingua.transfer.import.preview.updates')"
-                    icon="pencil-square"
-                />
-                <x-lingua::stat
-                    :value="$skipCount"
-                    :label="__('lingua::lingua.transfer.import.preview.skips')"
-                    icon="minus-circle"
-                />
-                <x-lingua::stat
-                    :value="$errorCount"
-                    :label="__('lingua::lingua.transfer.import.preview.errors')"
-                    icon="exclamation-circle"
-                />
-            </div>
-
-            {{-- Changes list (capped at 200) --}}
+            {{-- Changes table --}}
             @if(count($changes) > 0)
-                <div class="mb-4">
-                    <h4 class="mb-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                <div class="px-6 py-4">
+                    <h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                         {{ __('lingua::lingua.transfer.import.preview.changes_heading') }}
                     </h4>
-                    <div class="max-h-48 overflow-y-auto rounded border border-zinc-200 dark:border-zinc-700">
+                    <div class="max-h-56 overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
                         <table class="w-full text-sm">
-                            @foreach($changes as $change)
-                                <tr wire:key="change-{{ $loop->index }}" class="border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                    <td class="px-3 py-1 font-mono text-zinc-700 dark:text-zinc-300">{{ $change['key'] }}</td>
-                                    <td class="px-3 py-1 text-right">
-                                        <flux:badge
-                                            color="{{ str_contains($change['action'], 'create') ? 'green' : 'sky' }}"
-                                            size="sm">
-                                            {{ $change['action'] }}
-                                        </flux:badge>
-                                    </td>
+                            <thead class="sticky top-0 bg-zinc-50 dark:bg-zinc-800">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Key</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Action</th>
                                 </tr>
-                            @endforeach
+                            </thead>
+                            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                @foreach($changes as $change)
+                                    <tr wire:key="change-{{ $loop->index }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                                        <td class="px-3 py-1.5 font-mono text-zinc-700 dark:text-zinc-300">{{ $change['key'] }}</td>
+                                        <td class="px-3 py-1.5 text-right">
+                                            <flux:badge
+                                                color="{{ str_contains($change['action'], 'create') ? 'green' : 'sky' }}"
+                                                size="sm">
+                                                {{ $change['action'] }}
+                                            </flux:badge>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                     </div>
                 </div>
             @endif
 
-            {{-- Skipped list --}}
+            {{-- Skipped rows table --}}
             @if(count($skipped) > 0)
-                <div class="mb-4">
-                    <h4 class="mb-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                <div class="border-t border-zinc-100 px-6 py-4 dark:border-zinc-800">
+                    <h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                         {{ __('lingua::lingua.transfer.import.preview.skipped_heading') }}
                     </h4>
-                    <div class="max-h-32 overflow-y-auto rounded border border-zinc-200 dark:border-zinc-700">
+                    <div class="max-h-40 overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
                         <table class="w-full text-sm">
-                            @foreach($skipped as $skip)
-                                <tr wire:key="skip-{{ $loop->index }}" class="border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                                    <td class="px-3 py-1 font-mono text-zinc-500 dark:text-zinc-400">{{ $skip['key'] ?: '(empty)' }}</td>
-                                    <td class="px-3 py-1 text-right text-xs text-zinc-400">{{ $skip['reason'] }}</td>
-                                </tr>
-                            @endforeach
+                            <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                                @foreach($skipped as $skip)
+                                    <tr wire:key="skip-{{ $loop->index }}" class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                                        <td class="px-3 py-1.5 font-mono text-zinc-500 dark:text-zinc-400">{{ $skip['key'] ?: '(empty)' }}</td>
+                                        <td class="px-3 py-1.5 text-right text-xs text-zinc-400 dark:text-zinc-500">{{ $skip['reason'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
                         </table>
                     </div>
                 </div>
             @endif
+
+            {{-- Footer actions --}}
+            <div class="flex items-center justify-end gap-3 border-t border-zinc-100 px-6 py-4 dark:border-zinc-800">
+                <flux:button wire:click="resetImport" variant="ghost" icon="x-mark">
+                    {{ __('lingua::lingua.transfer.import.cancel_button') }}
+                </flux:button>
+                <flux:button wire:click="confirm" variant="primary" icon="check">
+                    {{ __('lingua::lingua.transfer.import.confirm_button') }}
+                </flux:button>
+            </div>
+
         </x-lingua::card>
 
-        {{-- Confirm / Cancel buttons --}}
-        <div class="flex items-center justify-end gap-3">
-            <flux:button wire:click="resetImport" variant="ghost" icon="x-mark">
-                {{ __('lingua::lingua.transfer.import.cancel_button') }}
-            </flux:button>
-            <flux:button wire:click="confirm" variant="primary" icon="check">
-                {{ __('lingua::lingua.transfer.import.confirm_button') }}
-            </flux:button>
-        </div>
-    @endif
+    @endunless
 
 </div>
