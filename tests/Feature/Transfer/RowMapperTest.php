@@ -189,3 +189,31 @@ test('parseRow + resolveIdentity: vendor row with _vendor column resolves as ven
         ->and($resolved->group)->toBe('pagination')
         ->and($resolved->key)->toBe('next');
 });
+
+// ── Regression: source==target locale collision ───────────────────────────────
+
+test('parseRow bilingual source==target: reads target column, not source column', function (): void {
+    // Reproduces the bug where a bilingual export with source locale == target locale
+    // (e.g. en→en) caused findLocaleValue() to match the source column first because
+    // "en - English (source)" starts_with "en - " just like "en - English".
+    $mapper = new RowMapper;
+
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::sourceHeader('en'),   // "en - English (source)"
+        TransferSchema::targetHeader('en'),   // "en - English"
+        TransferSchema::VENDOR,
+    ];
+    $row = array_combine($headers, [
+        'http-statuses.4',
+        'text',
+        'OK',      // source column — must NOT be returned
+        'OKOKOK',  // target column — MUST be returned
+        '',
+    ]);
+
+    $parsed = $mapper->parseRow($row, $headers, 'en');
+
+    expect($parsed->targetValue)->toBe('OKOKOK');
+});

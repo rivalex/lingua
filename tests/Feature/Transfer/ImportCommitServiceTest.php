@@ -260,3 +260,35 @@ test('commit writes only the declared target locale, leaving other locales untou
         ->and($line->value('fr'))->toBe('Connexion') // untouched
         ->and($line->value('en'))->toBe('Login');    // untouched
 });
+
+// ── Regression: bilingual source==target locale ───────────────────────────────
+
+test('commit bilingual en→en: writes target column value, not source column value', function (): void {
+    // Reproduces the bug: bilingual export with source==target locale caused
+    // findLocaleValue() to match the source column "en - English (source)" first,
+    // writing the unchanged source value instead of the edited target value.
+    // http-statuses.4 ('OK') is already seeded by the test LinguaSeeder — no create needed.
+
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::sourceHeader('en'),
+        TransferSchema::targetHeader('en'),
+        TransferSchema::VENDOR,
+    ];
+    $path = writeTempCsvForCommit($headers, [
+        [
+            TransferSchema::KEY => 'http-statuses.4',
+            TransferSchema::TYPE => 'text',
+            TransferSchema::sourceHeader('en') => 'OK',
+            TransferSchema::targetHeader('en') => 'OKOKOK',
+            TransferSchema::VENDOR => '',
+        ],
+    ]);
+
+    $this->commitService->commit($path, 'csv', 'en', false);
+    @unlink($path);
+
+    $line = $this->repo->find('http-statuses', '4', false, null);
+    expect($line->value('en'))->toBe('OKOKOK');
+});

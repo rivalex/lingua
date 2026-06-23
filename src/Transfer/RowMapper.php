@@ -197,6 +197,11 @@ final class RowMapper
      * Find the value for a given locale in a row, checking both
      * the full header label ("it - Italian") and the bare locale code.
      *
+     * Handles the source==target locale edge case (bilingual en→en export):
+     * the source column header is "{locale} - {Name} (source)" and must never
+     * be used as the target value. We prefer the exact target header first,
+     * then fall back to a prefix scan that skips any header ending with " (source)".
+     *
      * @param  array<string, string>  $row
      * @param  list<string>  $headers
      */
@@ -207,9 +212,20 @@ final class RowMapper
             return $row[$targetLocale];
         }
 
-        // Match header that starts with "{locale} - " or equals the locale
+        // Exact target header wins — avoids source-column collision when
+        // source locale == target locale (e.g. "en - English" vs "en - English (source)")
+        $exactTarget = TransferSchema::targetHeader($targetLocale);
+        if (array_key_exists($exactTarget, $row)) {
+            return $row[$exactTarget];
+        }
+
+        // Prefix scan fallback (headers from non-standard sources or older exports).
+        // Skip the source column — it always ends with " (source)".
         foreach ($headers as $header) {
             if (TransferSchema::isMeta($header)) {
+                continue;
+            }
+            if (str_ends_with($header, ' (source)')) {
                 continue;
             }
             if (str_starts_with($header, $targetLocale.' - ') || $header === $targetLocale) {
