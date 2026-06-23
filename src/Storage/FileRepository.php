@@ -243,6 +243,7 @@ final class FileRepository implements TranslationRepository
             $lower = strtolower($search);
             $items = array_filter($items, function (TranslationLine $l) use ($lower, $defaultLocale, $locale) {
                 return str_contains(strtolower($l->groupKey), $lower)
+                    || str_contains(strtolower($l->vendor ?? ''), $lower)
                     || str_contains(strtolower($l->value($defaultLocale)), $lower)
                     || str_contains(strtolower($l->value($locale)), $lower);
             });

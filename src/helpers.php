@@ -40,6 +40,22 @@ if (! function_exists('linguaIsFileMode')) {
     }
 }
 
+if (! function_exists('linguaAssetUrl')) {
+    /**
+     * Returns a cache-busted URL for a compiled package asset.
+     *
+     * Appends ?v=<filemtime> so browsers invalidate their cache whenever
+     * the file changes, while the route still carries max-age=31536000.
+     */
+    function linguaAssetUrl(string $path): string
+    {
+        $file = dirname(__DIR__).'/src/dist/'.$path;
+        $version = is_file($file) ? (string) filemtime($file) : (string) config('lingua.version', '1');
+
+        return route('lingua.assets', $path).'?v='.$version;
+    }
+}
+
 if (! function_exists('linguaLanguageCode')) {
     /**
      * Converts the given locale string to a standardized format by converting it to lowercase

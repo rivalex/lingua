@@ -41,6 +41,6 @@
 </div>
 @assets
 @once
-    <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
+    <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">
 @endonce
 @endassets

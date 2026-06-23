@@ -52,7 +52,7 @@
 </div>
 @assets
 @once
-    <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
-    <script type="module" src="{{ route('lingua.assets', 'js/lingua.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">
+    <script type="module" src="{{ linguaAssetUrl('js/lingua.min.js') }}"></script>
 @endonce
 @endassets

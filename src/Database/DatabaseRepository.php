@@ -6,6 +6,8 @@ namespace Rivalex\Lingua\Database;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Pagination\LengthAwarePaginator as ConcretePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Contracts\TranslationRepository;
@@ -18,8 +20,8 @@ use Rivalex\Lingua\Support\TranslationLine;
  * Database-backed TranslationRepository implementation.
  *
  * Wraps the Translation Eloquent model 1:1. No behaviour change from the
- * direct Model call-sites it replaces. SQL JSON path expressions are
- * intentionally used here (DB-mode only — see plan §3.3).
+ * direct Model call-sites it replaces. Search filtering is done in PHP to
+ * comply with the multi-DB constraint (no JSON SQL functions).
  */
 final class DatabaseRepository implements TranslationRepository
 {
@@ -154,13 +156,40 @@ final class DatabaseRepository implements TranslationRepository
 
         $defaultLocale = linguaDefaultLocale();
 
+        // When searching, load matching rows and filter values in PHP (multi-DB safe —
+        // JSON-SQL functions are forbidden by the multi-DB constraint in CLAUDE.md).
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+
+            $rows = Translation::query()
+                // "Missing" = key absent, null, or empty string — same definition
+                // used by FileRepository and the Statistics component. whereNull
+                // alone missed empty-string values, so the two drivers disagreed.
+                ->when($onlyMissing, fn ($q) => $q->where(
+                    fn ($inner) => $inner
+                        ->whereNull('text->'.$safeLocale)
+                        ->orWhere('text->'.$safeLocale, '=', '')
+                ))
+                ->when($group, fn ($q) => $q->where('group', '=', $group))
+                ->get()
+                ->map(fn ($model) => $this->toLine($model))
+                ->filter(fn (TranslationLine $l) => str_contains(mb_strtolower($l->groupKey), $needle)
+                    || str_contains(mb_strtolower((string) $l->vendor), $needle)
+                    || str_contains(mb_strtolower($l->value($defaultLocale)), $needle)
+                    || str_contains(mb_strtolower($l->value($safeLocale)), $needle)
+                )
+                ->values();
+
+            $total = $rows->count();
+            $page = (int) (Paginator::resolveCurrentPage() ?: 1);
+            $slice = $rows->slice(($page - 1) * $perPage, $perPage)->values();
+
+            return new ConcretePaginator($slice->all(), $total, $perPage, $page, [
+                'path' => Paginator::resolveCurrentPath(),
+            ]);
+        }
+
         return Translation::query()
-            ->when(! empty($search), fn ($q) => $q->where(
-                fn ($inner) => $inner
-                    ->whereLike('group_key', "%{$search}%")
-                    ->orWhereLike('text->'.$defaultLocale, "%{$search}%")
-                    ->orWhereLike('text->'.$safeLocale, "%{$search}%")
-            ))
             // "Missing" = key absent, null, or empty string — same definition
             // used by FileRepository and the Statistics component. whereNull
             // alone missed empty-string values, so the two drivers disagreed.

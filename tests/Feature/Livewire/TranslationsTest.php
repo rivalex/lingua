@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Livewire;
+use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Livewire\Translations;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
@@ -108,4 +109,61 @@ it('`translations` computed property returns only filtered results', function ()
         ->set('search', '');
 
     expect($component2->instance()->translations()->total())->toBe($total);
+});
+
+it('clearing group filter (set then empty string) returns to all groups without error', function () {
+    $group = Translation::first()->group;
+
+    Livewire::test(Translations::class)
+        ->set('group', $group)
+        ->assertStatus(200)
+        ->assertSet('group', $group)
+        ->set('group', '')
+        ->assertStatus(200)
+        ->assertSet('group', '');
+});
+
+it('search by translation VALUE finds the row in DB mode', function () {
+    config(['lingua.storage.driver' => 'database']);
+
+    $key = 'value_search_'.uniqid();
+    Translation::create([
+        'group' => 'test_values',
+        'key' => $key,
+        'type' => LinguaType::text,
+        'text' => ['en' => 'UNIQUEVALXYZ'],
+        'is_vendor' => false,
+        'vendor' => null,
+    ]);
+
+    $component = Livewire::test(Translations::class)
+        ->set('search', 'UNIQUEVALXYZ');
+
+    expect($component->instance()->translations()->total())->toBeGreaterThanOrEqual(1);
+
+    // Also verify case-insensitive match
+    $component2 = Livewire::test(Translations::class)
+        ->set('search', 'uniquevalxyz');
+
+    expect($component2->instance()->translations()->total())->toBeGreaterThanOrEqual(1);
+
+    Translation::where('key', $key)->delete();
+});
+
+it('search by vendor name returns vendor rows', function () {
+    Translation::create([
+        'group' => 'pagination',
+        'key' => 'next',
+        'type' => LinguaType::text,
+        'text' => ['en' => 'Next'],
+        'is_vendor' => true,
+        'vendor' => 'uniquevendorxyz',
+    ]);
+
+    $component = Livewire::test(Translations::class)
+        ->set('search', 'uniquevendorxyz');
+
+    expect($component->instance()->translations()->total())->toBe(1);
+
+    Translation::where('vendor', 'uniquevendorxyz')->delete();
 });

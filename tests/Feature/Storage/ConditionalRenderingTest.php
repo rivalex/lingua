@@ -91,14 +91,14 @@ it('Row in file-mode does not render type badge icon', function (): void {
     ]);
     $identity = $translation->group.'|'.$translation->key.'|0|';
 
-    // iconColor(6) wraps SVG in h-6 w-6 div — absent in file-mode
+    // iconColor(4) wraps SVG in h-4 w-4 div — absent in file-mode
     Livewire::test(Row::class, ['translationIdentity' => $identity, 'currentLocale' => 'en'])
-        ->assertDontSeeHtml('h-6 w-6');
+        ->assertDontSeeHtml('h-4 w-4');
 
     $translation->delete();
 });
 
-it('Row in DB-mode renders type badge with h-6 w-6 icon', function (): void {
+it('Row in DB-mode renders type badge with h-4 w-4 icon', function (): void {
     config(['lingua.storage.driver' => 'database']);
 
     $translation = Translation::create([
@@ -109,7 +109,7 @@ it('Row in DB-mode renders type badge with h-6 w-6 icon', function (): void {
     $identity = $translation->group.'|'.$translation->key.'|0|';
 
     Livewire::test(Row::class, ['translationIdentity' => $identity, 'currentLocale' => 'en'])
-        ->assertSeeHtml('h-6 w-6');
+        ->assertSeeHtml('h-4 w-4');
 
     $translation->delete();
 });
