@@ -249,6 +249,8 @@ return [
         'routing' => [
             'title' => 'Routing & Navigation',
             'subtitle' => 'Control how Lingua navigates between pages and how links to the translation editor behave.',
+            'nav_menu' => 'عرض قائمة التنقل',
+            'nav_menu_description' => 'يعرض شريط تنقل على جميع صفحات إدارة Lingua للتنقل بين الأقسام.',
             'navigate' => 'Use wire:navigate',
             'navigate_description' => 'Enable SPA-style navigation on internal Lingua redirects (locale switch, tab change). Only enable this when your host application uses Livewire\'s navigate feature — otherwise page transitions may break.',
             'links_enabled' => 'Enable translation links',

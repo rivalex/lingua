@@ -147,6 +147,16 @@ return [
     ],
 
     /*
+     * Show the internal navigation menu on all Lingua admin pages (Languages, Translations,
+     * Statistics, Transfer, Settings). When enabled, a row of buttons with active-page
+     * highlighting renders below the Lingua logo on every page. Users can toggle this
+     * in the Settings UI (Routing & Navigation → Show navigation menu).
+     */
+    'nav' => [
+        'enabled' => true,
+    ],
+
+    /*
      * UI presentation tweaks.
      *
      * sticky_top — CSS top offset for the sticky filter bar in the Translations page.

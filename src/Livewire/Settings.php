@@ -54,6 +54,9 @@ final class Settings extends Component
     #[Validate('required|string|max:100')]
     public string $uiStickyTop = '0';
 
+    /** Whether the shared navigation menu is shown on all Lingua admin pages. */
+    public bool $navEnabled = true;
+
     // -------------------------------------------------------------------------
     // Editor toolbar
     // -------------------------------------------------------------------------
@@ -106,6 +109,11 @@ final class Settings extends Component
         );
         $this->uiStickyTop = (string) $rawStickyTop;
 
+        $this->navEnabled = (bool) LinguaSetting::get(
+            LinguaSetting::KEY_NAV_ENABLED,
+            config('lingua.nav.enabled', true),
+        );
+
         $this->editor = (array) LinguaSetting::get(
             LinguaSetting::KEY_EDITOR,
             config('lingua.editor', []),
@@ -157,6 +165,7 @@ final class Settings extends Component
             ? (int) $this->uiStickyTop
             : $this->uiStickyTop;
         LinguaSetting::set(LinguaSetting::KEY_UI_STICKY_TOP, $stickyValue);
+        LinguaSetting::set(LinguaSetting::KEY_NAV_ENABLED, $this->navEnabled);
 
         if (! empty($this->editor)) {
             LinguaSetting::set(LinguaSetting::KEY_EDITOR, $this->editor);

@@ -9,8 +9,9 @@
             <flux:subheading size="lg" class="mb-4">
                 {{ __('lingua::lingua.settings.subtitle') }}
             </flux:subheading>
-            <flux:separator variant="subtle"/>
         </div>
+
+        <x-lingua::nav />
 
         {{-- Selector --}}
         <x-lingua::card

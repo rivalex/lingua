@@ -70,6 +70,9 @@ final class LinguaSetting extends Model
     /** Editor toolbar feature toggles, stored as a JSON array. */
     public const string KEY_EDITOR = 'editor';
 
+    /** Whether the shared navigation menu is shown on all Lingua admin pages. */
+    public const string KEY_NAV_ENABLED = 'nav.enabled';
+
     // -------------------------------------------------------------------------
     // Public API
     // -------------------------------------------------------------------------

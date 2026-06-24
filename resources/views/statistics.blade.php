@@ -5,8 +5,9 @@
         {{-- Header --}}
         <div class="relative w-full">
             <flux:heading size="xl" level="1">{{ __('lingua::lingua.statistics.title') }}</flux:heading>
-            <flux:separator variant="subtle" class="mt-4"/>
         </div>
+
+        <x-lingua::nav />
 
         {{-- KPI tiles --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">

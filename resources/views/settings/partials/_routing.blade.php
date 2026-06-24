@@ -1,3 +1,10 @@
+{{-- Navigation menu --}}
+<x-lingua::card.row
+    :title="__('lingua::lingua.settings.routing.nav_menu')"
+    :description="__('lingua::lingua.settings.routing.nav_menu_description')">
+    <flux:switch wire:model.live="navEnabled"/>
+</x-lingua::card.row>
+
 {{-- Navigate --}}
 <x-lingua::card.row
     :title="__('lingua::lingua.settings.routing.navigate')"

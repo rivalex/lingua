@@ -118,7 +118,7 @@ it('statistics missing panel shows plain label when translations_link is disable
 
     Livewire::test(Statistics::class)
         ->call('toggleMissingKeys', 'it')
-        ->assertDontSeeHtml('<a')
+        ->assertDontSeeHtml('lingua/translations/it')
         ->assertSeeHtml('<span');
 
     Language::where('code', 'it')->delete();

@@ -11,8 +11,9 @@
             </flux:heading>
             <flux:subheading size="lg"
                              class="mb-4">@lang('lingua::lingua.translations.subheader', ['locale' => $language->native])</flux:subheading>
-            <flux:separator variant="subtle"/>
         </div>
+
+        <x-lingua::nav />
 
         {{-- lingua extension hook: translation.tabs --}}
         @foreach ($linguaExtensions->allTranslationTabComponents() as $cls)
