@@ -4,6 +4,13 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### fix(file-mode): AtomicFileWriter opcache invalidation after PHP file write (feat/remove-spatie-translation-loader)
+
+#### Fixed
+- **`fix(file-mode): stale row after translation edit`** — `AtomicFileWriter::putPhp()` now calls `opcache_invalidate($path, true)` after each atomic rename. Without this, PHP opcache served the previously compiled bytecode of the lang PHP file on the next `include` within the same request, causing `FileRepository::find()` to return the old value. The row appeared updated only on the *following* edit (when opcache had naturally expired). `function_exists('opcache_invalidate')` guard ensures correctness when opcache is absent (CLI, test env).
+
+---
+
 ### fix(file-mode): Language stat accessors bypass TranslationRepository (feat/remove-spatie-translation-loader)
 
 #### Fixed

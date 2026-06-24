@@ -41,11 +41,18 @@ final class AtomicFileWriter
     /**
      * Write a PHP source file atomically to $path.
      *
+     * Invalidates the opcache entry so the next `include` reads the new file
+     * rather than the stale compiled bytecode cached within the same request.
+     *
      * @throws RuntimeException when the write cannot be completed.
      */
     public function putPhp(string $path, string $content): void
     {
         $this->put($path, $content);
+
+        if (function_exists('opcache_invalidate')) {
+            opcache_invalidate($path, true);
+        }
     }
 
     /**
