@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Database\Factories\LanguageFactory;
 
 /**
@@ -188,7 +189,7 @@ class Language extends Model
      */
     public function getTotalStringsAttribute(): int
     {
-        return Translation::translationCounts()['total'];
+        return app(TranslationRepository::class)->counts()['total'];
     }
 
     /**
@@ -197,7 +198,7 @@ class Language extends Model
      */
     public function getTranslatedStringsAttribute(): int
     {
-        return Translation::translationCounts()['byLocale'][$this->code] ?? 0;
+        return app(TranslationRepository::class)->counts()['byLocale'][$this->code] ?? 0;
     }
 
     /**

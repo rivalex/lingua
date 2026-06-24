@@ -4,6 +4,16 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### fix(file-mode): Language stat accessors bypass TranslationRepository (feat/remove-spatie-translation-loader)
+
+#### Fixed
+- **`fix(models): Language::getTotalStringsAttribute / getTranslatedStringsAttribute`** — both accessors called `Translation::translationCounts()` directly, querying `language_lines`. In file-mode the table is intentionally absent → `SQLSTATE[42S02]` on the Languages page. Replaced with `app(TranslationRepository::class)->counts()` which resolves to `FileRepository` (file scan) in file-mode and `DatabaseRepository` (unchanged behaviour) in DB-mode.
+
+#### Tests
+- **`feat(tests): Language Row file-mode coverage`** — added two tests to `tests/Feature/Livewire/ComponentsFileModeTest.php`: `Language Row renders in file-mode without querying language_lines` (asserts `assertOk()`) and `Language Row total_strings reflects file data in file-mode` (asserts count from `lang/` files). Closes the gap — the file previously covered Statistics + Translations but not the Languages row component.
+
+---
+
 ### feat(ui): Shared navigation menu + Settings toggle (feat/remove-spatie-translation-loader)
 
 #### Added

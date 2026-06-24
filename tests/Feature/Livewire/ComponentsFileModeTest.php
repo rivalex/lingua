@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Livewire\Livewire;
+use Rivalex\Lingua\Livewire\Language\Row;
 use Rivalex\Lingua\Livewire\Statistics;
 use Rivalex\Lingua\Livewire\Translations;
+use Rivalex\Lingua\Models\Language;
 
 // §8.9 — Statistics and Translations render from file in file-mode
 
@@ -48,4 +50,26 @@ it('Translations renders in file-mode without querying language_lines', function
 
     Livewire::test(Translations::class)
         ->assertOk();
+})->after(fn () => compFileModeClean());
+
+// §8.10 — Language Row renders in file-mode (no language_lines query)
+
+it('Language Row renders in file-mode without querying language_lines', function (): void {
+    $dir = compFileModeDir();
+    config(['lingua.storage.driver' => 'file', 'lingua.lang_dir' => $dir]);
+
+    $language = Language::first();
+
+    Livewire::test(Row::class, ['languageId' => $language->id])
+        ->assertOk();
+})->after(fn () => compFileModeClean());
+
+it('Language Row total_strings reflects file data in file-mode', function (): void {
+    $dir = compFileModeDir(); // 2 keys in en/messages.php
+    config(['lingua.storage.driver' => 'file', 'lingua.lang_dir' => $dir]);
+
+    $language = Language::first();
+
+    // Accessing the attribute must not throw (no language_lines query)
+    expect($language->total_strings)->toBe(2);
 })->after(fn () => compFileModeClean());
