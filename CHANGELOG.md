@@ -4,6 +4,23 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### feat(ui): Shared navigation menu + Settings toggle (feat/remove-spatie-translation-loader)
+
+#### Added
+- **`feat(ui): x-lingua::nav component`** — new anonymous Blade component (`src/Views/Components/nav.blade.php`) rendering a row of `flux:button` links to all 5 Lingua admin pages (Languages, Translations, Statistics, Transfer, Settings). Active page gets `variant="filled"` + `aria-current="page"`; others use `variant="ghost"`. Self-gates on `LinguaSetting::KEY_NAV_ENABLED` (DB → `lingua.nav.enabled` config, default `true`). Separator below nav for uniform layout.
+- **`feat(config): lingua.nav.enabled`** — new config key under UI / PRESENTATION section; defaults `true`.
+- **`feat(settings): Show navigation menu toggle`** — `navEnabled` property + mount/save wired in `src/Livewire/Settings.php`; toggle rendered in `_routing.blade.php` (first row in Routing & Navigation card); persisted via `LinguaSetting::KEY_NAV_ENABLED`.
+
+#### Changed
+- **`feat(ui): Nav injected into all Lingua pages`** — `<x-lingua::nav />` added inside `<section>` after the heading block on Languages, Translations, Statistics, Transfer, Settings views. Separators normalised: removed redundant `flux:separator` from heading divs (Statistics, Settings, Translations) and removed duplicate separator from Languages toolbar row; nav component owns the single separator.
+- **`feat(i18n): transfer.nav.transfer key`** — added `'transfer' => 'Transfer'` to the `transfer.nav` array in `resources/lang/en/lingua.php` (5th nav item).
+- **`feat(i18n): settings.routing.nav_menu keys`** — added `nav_menu` + `nav_menu_description` to the `routing` section in all 9 locale files (en, it, fr, es, ru, pt, zh, ar, hi).
+
+#### Tests
+- **`fix(tests): TranslationsLinkConfigTest assertion scope`** — replaced `->assertDontSeeHtml('<a')` (too broad; nav now always renders anchor elements) with `->assertDontSeeHtml('lingua/translations/it')` which targets only the locale-specific missing-panel link.
+
+---
+
 ### UI — Transfer page redesign (feat/remove-spatie-translation-loader)
 
 #### Changed
