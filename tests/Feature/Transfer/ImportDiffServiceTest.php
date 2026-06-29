@@ -6,6 +6,9 @@ use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\DatabaseRepository;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Storage\FileRepository;
+use Rivalex\Lingua\Support\AtomicFileWriter;
+use Rivalex\Lingua\Support\TranslationFileReader;
 use Rivalex\Lingua\Transfer\Format\CsvWriter;
 use Rivalex\Lingua\Transfer\Format\FormatRegistry;
 use Rivalex\Lingua\Transfer\ImportDiffService;
@@ -154,4 +157,89 @@ test('diff vendorUpdateEnabled flag is stored in diff', function (): void {
     @unlink($path);
 
     expect($diff->vendorUpdateEnabled)->toBeTrue();
+});
+
+// ── Regression: bilingual import skips all rows when locale code mismatches header ──
+
+test('diff counts create-or-update (not skip) when target locale is regional variant of the column header locale', function (): void {
+    // Reproduces: user selects "it_IT" as target locale but the bilingual CSV header
+    // is "it - Italian". findLocaleValue() used to return '' for every row, causing
+    // all rows to be classified "empty target value" and the whole import was a no-op.
+    // The key may or may not pre-exist in the DB — we only care that it is NOT skipped.
+
+    // Build a CSV with "it - Italian" as target header (as exported for locale "it")
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::sourceHeader('en'),
+        TransferSchema::targetHeader('it'),   // "it - Italian"
+        TransferSchema::VENDOR,
+    ];
+    $path = writeTempCsv($headers, [
+        [
+            TransferSchema::KEY => 'regression.bilingual_fallback',
+            TransferSchema::TYPE => 'text',
+            TransferSchema::sourceHeader('en') => 'Fallback',
+            TransferSchema::targetHeader('it') => 'Fallback IT',
+            TransferSchema::VENDOR => '',
+        ],
+    ]);
+
+    // Import with "it_IT" — none of the three string-match paths hit "it - Italian"
+    // so before the fix every row was skipped; after the fix it resolves via fallback.
+    $diff = $this->diffService->diff($path, 'csv', 'it_IT', false);
+    @unlink($path);
+
+    expect($diff->skipCount)->toBe(0)
+        ->and($diff->updateCount + $diff->createCount)->toBe(1);
+});
+
+test('diff file-mode: regional locale mismatch does not skip rows (it_IT vs it - Italian column)', function (): void {
+    // Identical repro to the test above, but with FileRepository (LINGUA_STORAGE_DRIVER=file).
+    // Creates a temp lang dir with it/http-statuses.php so buildExistenceIndex() finds the key.
+    $dir = sys_get_temp_dir().'/lingua_diff_filemode_'.uniqid();
+    mkdir($dir.'/it', 0755, true);
+    file_put_contents(
+        $dir.'/it/http-statuses.php',
+        "<?php\nreturn [\n    4 => 'OK',\n];\n"
+    );
+
+    config(['lingua.storage.driver' => 'file', 'lingua.lang_dir' => $dir]);
+
+    $fileRepo = new FileRepository(
+        new AtomicFileWriter,
+        new TranslationFileReader,
+        $dir,
+        app(BaseTranslationSource::class),
+    );
+
+    $svc = new ImportDiffService($fileRepo, new FormatRegistry, new RowMapper);
+
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::sourceHeader('en'),
+        TransferSchema::targetHeader('it'),
+        TransferSchema::VENDOR,
+    ];
+    $path = writeTempCsv($headers, [
+        [
+            TransferSchema::KEY => 'http-statuses.4',
+            TransferSchema::TYPE => 'text',
+            TransferSchema::sourceHeader('en') => 'OK',
+            TransferSchema::targetHeader('it') => 'OKXXX',
+            TransferSchema::VENDOR => '',
+        ],
+    ]);
+
+    $diff = $svc->diff($path, 'csv', 'it_IT', false);
+    @unlink($path);
+
+    // Cleanup temp lang dir
+    @unlink($dir.'/it/http-statuses.php');
+    @rmdir($dir.'/it');
+    @rmdir($dir);
+
+    expect($diff->skipCount)->toBe(0)
+        ->and($diff->updateCount + $diff->createCount)->toBe(1);
 });

@@ -138,6 +138,23 @@ final class RowMapper
             $key = $rawKey;
         }
 
+        // Reject wildcard or null-byte segments: data_set() treats '*' as a
+        // wildcard that fans a single write out across every existing sub-key.
+        // Empty rawKey makes ImportCommitService skip the row.
+        if (str_contains($key, '*') || str_contains($key, "\0")
+            || str_contains($group, '*') || str_contains($group, "\0")) {
+            return new ParsedRow(
+                rawKey: '',
+                vendor: $parsed->vendor,
+                typeRaw: $parsed->typeRaw,
+                targetValue: $parsed->targetValue,
+                group: null,
+                key: null,
+                isVendor: false,
+                vendorName: null,
+            );
+        }
+
         return new ParsedRow(
             rawKey: $parsed->rawKey,
             vendor: $parsed->vendor,
@@ -231,6 +248,25 @@ final class RowMapper
             if (str_starts_with($header, $targetLocale.' - ') || $header === $targetLocale) {
                 return $row[$header] ?? '';
             }
+        }
+
+        // Bilingual single-candidate fallback: a bilingual file has exactly one
+        // non-meta, non-source column — the target data column. When the selected
+        // target-locale string does not string-match its header (e.g. regional
+        // variant "it_IT" for a column labelled "it - Italian"), use it anyway.
+        // Multi-locale files with ≥2 candidates stay ambiguous and return '' (correct).
+        $candidates = [];
+        foreach ($headers as $header) {
+            if (TransferSchema::isMeta($header)) {
+                continue;
+            }
+            if (str_ends_with($header, ' (source)')) {
+                continue;
+            }
+            $candidates[] = $header;
+        }
+        if (count($candidates) === 1) {
+            return $row[$candidates[0]] ?? '';
         }
 
         return '';

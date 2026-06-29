@@ -56,7 +56,9 @@ final class RemoveLangCommand extends Command
         try {
             if ($language) {
                 $this->info('Removing translations from database...');
-                $translations = Translation::whereNotNull('text->'.$locale)->get();
+                $translations = Translation::all()->filter(
+                    fn ($t) => isset($t->text[$locale]) && ! $t->is_vendor
+                );
                 foreach ($translations as $translation) {
                     $translation->forgetTranslation($locale);
                 }

@@ -1,9 +1,10 @@
 <div class="lingua">
     <x-lingua::branding />
+
     <section class="flex flex-col gap-4">
-        <div>
+        <div class="relative w-full">
             <flux:heading size="xl" level="1">{{ __('lingua::lingua.transfer.title') }}</flux:heading>
-            <flux:subheading size="lg">{{ __('lingua::lingua.transfer.subtitle') }}</flux:subheading>
+            <flux:subheading size="lg" class="mb-6">{{ __('lingua::lingua.transfer.subtitle') }}</flux:subheading>
         </div>
 
         <x-lingua::nav />
@@ -44,3 +45,9 @@
         </div>
     </section>
 </div>
+@assets
+@once
+    <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">
+    <script type="module" src="{{ linguaAssetUrl('js/lingua.min.js') }}"></script>
+@endonce
+@endassets

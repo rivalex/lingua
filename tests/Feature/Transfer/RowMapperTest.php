@@ -6,6 +6,7 @@ use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Support\TranslationLine;
 use Rivalex\Lingua\Transfer\Enums\TransferFilter;
 use Rivalex\Lingua\Transfer\Enums\TransferScope;
+use Rivalex\Lingua\Transfer\ParsedRow;
 use Rivalex\Lingua\Transfer\RowMapper;
 use Rivalex\Lingua\Transfer\TransferSchema;
 
@@ -190,6 +191,74 @@ test('parseRow + resolveIdentity: vendor row with _vendor column resolves as ven
         ->and($resolved->key)->toBe('next');
 });
 
+// ── Security: reject wildcard / null-byte import keys (F6) ─────────────────────
+
+test('resolveIdentity rejects wildcard key — returns empty rawKey so the row is skipped', function (): void {
+    $mapper = new RowMapper;
+
+    $parsed = new ParsedRow(
+        rawKey: 'auth.*.password',
+        vendor: '',
+        typeRaw: 'text',
+        targetValue: 'pwned',
+    );
+
+    $resolved = $mapper->resolveIdentity($parsed, []);
+
+    expect($resolved->rawKey)->toBe('')
+        ->and($resolved->key)->toBeNull()
+        ->and($resolved->group)->toBeNull();
+});
+
+test('resolveIdentity rejects null-byte key — returns empty rawKey so the row is skipped', function (): void {
+    $mapper = new RowMapper;
+
+    $parsed = new ParsedRow(
+        rawKey: "auth.\0evil",
+        vendor: '',
+        typeRaw: 'text',
+        targetValue: 'pwned',
+    );
+
+    $resolved = $mapper->resolveIdentity($parsed, []);
+
+    expect($resolved->rawKey)->toBe('')
+        ->and($resolved->key)->toBeNull()
+        ->and($resolved->group)->toBeNull();
+});
+
+test('resolveIdentity rejects wildcard group — returns empty rawKey so the row is skipped', function (): void {
+    $mapper = new RowMapper;
+
+    $parsed = new ParsedRow(
+        rawKey: '*.password',
+        vendor: '',
+        typeRaw: 'text',
+        targetValue: 'pwned',
+    );
+
+    $resolved = $mapper->resolveIdentity($parsed, []);
+
+    expect($resolved->rawKey)->toBe('');
+});
+
+test('resolveIdentity accepts a normal new key unchanged', function (): void {
+    $mapper = new RowMapper;
+
+    $parsed = new ParsedRow(
+        rawKey: 'auth.valid_key',
+        vendor: '',
+        typeRaw: 'text',
+        targetValue: 'ok',
+    );
+
+    $resolved = $mapper->resolveIdentity($parsed, []);
+
+    expect($resolved->rawKey)->toBe('auth.valid_key')
+        ->and($resolved->group)->toBe('auth')
+        ->and($resolved->key)->toBe('valid_key');
+});
+
 // ── Regression: source==target locale collision ───────────────────────────────
 
 test('parseRow bilingual source==target: reads target column, not source column', function (): void {
@@ -216,4 +285,100 @@ test('parseRow bilingual source==target: reads target column, not source column'
     $parsed = $mapper->parseRow($row, $headers, 'en');
 
     expect($parsed->targetValue)->toBe('OKOKOK');
+});
+
+// ── Regression: bilingual single-candidate fallback (regional locale mismatch) ──
+
+test('parseRow bilingual: regional locale mismatch still reads the single target column', function (): void {
+    // Reproduces the bug: user selects "it_IT" at import time but the header is "it - Italian".
+    // None of the three exact/prefix lookups match "it_IT", so the old code returned '' and
+    // every row was skipped with reason "empty target value".
+    // The single-candidate fallback must recover and return the column value.
+    $mapper = new RowMapper;
+
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::sourceHeader('en'),  // "en - English (source)"
+        TransferSchema::targetHeader('it'),  // "it - Italian"
+        TransferSchema::VENDOR,
+    ];
+    $row = array_combine($headers, ['http-statuses.4', 'text', 'OK', 'OKXXX', '']);
+
+    $parsed = $mapper->parseRow($row, $headers, 'it_IT');
+
+    expect($parsed->targetValue)->toBe('OKXXX');
+});
+
+test('parseRow multiLocale: ambiguous locale columns return empty string', function (): void {
+    // Two non-meta, non-source columns: the fallback must NOT guess — returns ''.
+    $mapper = new RowMapper;
+
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::targetHeader('it'),  // "it - Italian"
+        TransferSchema::targetHeader('fr'),  // "fr - French"
+        TransferSchema::VENDOR,
+    ];
+    $row = array_combine($headers, ['auth.login', 'text', 'Accedi', 'Connexion', '']);
+
+    $parsed = $mapper->parseRow($row, $headers, 'de');
+
+    expect($parsed->targetValue)->toBe('');
+});
+
+test('parseRow bilingual: single-candidate fallback resolves when target locale code does not match column header', function (): void {
+    // Reproduces the bug where importing a bilingual file with target locale "it" but the
+    // Language row in the DB stores "it_IT" (or the user selects "it_IT") caused every row
+    // to be classified as "empty target value" because none of the three string-match paths
+    // matched "it_IT" against the header "it - Italian".
+    $mapper = new RowMapper;
+
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::sourceHeader('en'),   // "en - English (source)"
+        TransferSchema::targetHeader('it'),   // "it - Italian"
+        TransferSchema::VENDOR,
+    ];
+    $row = array_combine($headers, [
+        'http-statuses.4',
+        'text',
+        'OK',     // source column — must NOT be returned
+        'OKXXX',  // target column — MUST be returned via fallback
+        '',
+    ]);
+
+    // Simulate a target locale that doesn't string-match "it - Italian"
+    $parsed = $mapper->parseRow($row, $headers, 'it_IT');
+
+    expect($parsed->targetValue)->toBe('OKXXX');
+});
+
+test('parseRow multiLocale: two data columns + mismatched locale stays ambiguous and returns empty string', function (): void {
+    // Safety check: when a multiLocale file has ≥2 data columns and none match the
+    // selected locale, the fallback must NOT guess — it must return '' so the row is
+    // skipped (correct behaviour; ambiguous which column is intended).
+    $mapper = new RowMapper;
+
+    $headers = [
+        TransferSchema::KEY,
+        TransferSchema::TYPE,
+        TransferSchema::targetHeader('it'),   // "it - Italian"
+        TransferSchema::targetHeader('fr'),   // "fr - French"
+        TransferSchema::VENDOR,
+    ];
+    $row = array_combine($headers, [
+        'auth.login',
+        'text',
+        'Accedi',
+        'Connexion',
+        '',
+    ]);
+
+    // "de" matches neither column — two candidates, fallback must not guess
+    $parsed = $mapper->parseRow($row, $headers, 'de');
+
+    expect($parsed->targetValue)->toBe('');
 });

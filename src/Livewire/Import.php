@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Livewire;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
@@ -105,6 +106,12 @@ final class Import extends Component
             return;
         }
 
+        abort_unless(
+            $this->languages()->pluck('code')->contains($this->targetLocale),
+            422,
+            'Unknown target locale.'
+        );
+
         $format = $this->detectFormat();
         if ($format === null) {
             $this->errorMessage = 'Unsupported file format. Please upload a CSV, JSON, XLSX, or ODS file.';
@@ -129,7 +136,8 @@ final class Import extends Component
             $this->rowErrors = $diff->errors;
             $this->previewed = true;
         } catch (\Throwable $e) {
-            $this->errorMessage = 'Failed to preview file: '.$e->getMessage();
+            Log::error('[Lingua] Import preview failed', ['exception' => $e]);
+            $this->errorMessage = __('lingua::lingua.transfer.import_preview_error');
         }
     }
 
@@ -157,6 +165,12 @@ final class Import extends Component
             return;
         }
 
+        abort_unless(
+            $this->languages()->pluck('code')->contains($this->targetLocale),
+            422,
+            'Unknown target locale.'
+        );
+
         $format = $this->detectFormat();
         if ($format === null) {
             $this->errorMessage = 'Unsupported file format.';
@@ -178,7 +192,8 @@ final class Import extends Component
 
             $this->resetPreview();
         } catch (\Throwable $e) {
-            $this->errorMessage = 'Import failed: '.$e->getMessage();
+            Log::error('[Lingua] Import commit failed', ['exception' => $e]);
+            $this->errorMessage = __('lingua::lingua.transfer.import_commit_error');
         }
     }
 

@@ -5,6 +5,12 @@ use Rivalex\Lingua\Http\Controllers\TransferExportController;
 
 $middleware = array_unique(array_merge(['web'], (array) config('lingua.middleware', ['web', 'auth'])));
 
+// Opt-in authorization gate: add `can:{gate}` when configured.
+$linguaGate = config('lingua.gate');
+if ($linguaGate !== null && $linguaGate !== '') {
+    $middleware[] = 'can:'.(string) $linguaGate;
+}
+
 $extraParams = config('lingua.routes_extra_parameters');
 $suffix = $extraParams ? '/'.ltrim((string) $extraParams, '/') : '';
 

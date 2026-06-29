@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Locales;
 
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
+use Rivalex\Lingua\Support\PathGuard;
 
 /**
  * Default implementation of BaseTranslationSource.
@@ -52,6 +53,8 @@ final class BundledTranslationSource implements BaseTranslationSource
      */
     public function translationsFor(string $locale): array
     {
+        PathGuard::assertSafeSegment($locale, 'locale');
+
         $result = [];
         $localeDir = $this->basePath.'/'.$locale;
 

@@ -4,6 +4,52 @@ All notable changes to `lingua` will be documented in this file.
 
 ## [Unreleased]
 
+### security: comprehensive hardening pass (F1–F9)
+
+#### Fixed
+- **F1 (MEDIUM — cache DoS)** — `Translation::getTranslationsForGroup()` / `getVendorTranslationsForGroup()`: skip `rememberForever` for locales that fail the canonical format regex; unbounded growth attack vector closed.
+- **F2 (MEDIUM — multi-DB ban)** — `DatabaseRepository::paginate()` (onlyMissing), `byGroup()`, `vendor()`, and `RemoveLangCommand` all used `whereNotNull('text->'.$locale)` / `whereNull('text->'.$locale)` JSON-SQL arrow operators, violating CLAUDE.md multi-DB constraint and causing 500s on PostgreSQL. Replaced with PHP-side aggregation matching the pattern already used elsewhere in the file.
+- **F3 (LOW — LFI/RCE sink)** — `BundledTranslationSource::translationsFor()` and `DatabaseRepository::installLocale()` now call `PathGuard::assertSafeSegment()` as first statement, mirroring `FileRepository::installLocale()`. DB-mode install sink no longer relies solely on upstream caller validation.
+- **F4 (LOW — locale pollution + filename injection)** — `Import::preview()`/`confirm()` abort 422 when `targetLocale` is not an installed `Language` code; `TransferExportController::download()` validates same; `ExportService` sanitizes the filename component with `preg_replace` and builds `Content-Disposition` via `HeaderUtils::makeDisposition()`.
+- **F5 (LOW — vendor guard bypass)** — `Translation::forgetTranslation()` now throws `VendorTranslationProtectedException` for vendor rows, making the guard a true model invariant rather than repository-only. `RemoveLangCommand` skips `is_vendor` rows.
+- **F6 (LOW — wildcard import key)** — `RowMapper::resolveIdentity()` rejects new-key segments containing `*` or `\0`; returning an empty `rawKey` causes `ImportCommitService` to skip the row, preventing `data_set()` wildcard fan-out.
+- **F7 (LOW — ReDoS)** — Type-detection regex in `Translation::writeTranslation()`: replaced greedy `\[.+\]` with `\[[^\]]+\]`; added length guard (skip detection for values >10 000 chars, default to `text`).
+- **F8 (LOW — exception info disclosure)** — `Import` catch blocks now `Log::error()` the full exception and display a generic localized string (`transfer.import_preview_error` / `transfer.import_commit_error`); `$e->getMessage()` no longer reaches the Livewire UI.
+- **F9 (LOW — broken access control)** — `config/lingua.php` gains `'gate' => env('LINGUA_GATE', null)`. When non-null, `routes/web.php` appends `can:{gate}` to the admin middleware stack. Default is `null` — no breaking change for existing installs.
+
+#### Added
+- `resources/lang/{ar,es,fr,hi,it,pt,ru,zh}/lingua.php` — `transfer.import_preview_error` and `transfer.import_commit_error` i18n keys (English fallback text).
+
+#### Tests
+- `tests/Feature/Security/TranslationModelSecurityTest.php` — F1 cache bypass, F5 vendor guard, F7 ReDoS timing.
+- `tests/Feature/Security/DbLayerSecurityTest.php` — F2 PHP-filter byGroup/onlyMissing, F3 PathGuard on both installLocale sinks.
+- `tests/Feature/Security/TransferSecurityTest.php` — F4 filename sanitization + 422 on unknown locale, F8 generic error message.
+- `tests/Feature/Security/GateMiddlewareTest.php` — F9 gate enabled/disabled/asset-unaffected.
+- `tests/Feature/Transfer/RowMapperTest.php` — F6 wildcard/null-byte key rejection.
+
+---
+
+### fix(i18n): nav menu + transfer page show raw keys in non-English locales (feat/remove-spatie-translation-loader)
+
+#### Fixed
+- **`fix(i18n): backfill transfer block in all bundled locales`** — the `transfer` block (page titles, `nav` menu labels, export/import UI strings) existed only in `resources/lang/en/lingua.php`. All other bundled locales (`ar, es, fr, hi, it, pt, ru, zh`) were missing it entirely. Because the Lingua translator's fallback is the configured default language (`Language::default()?->code`) — not `en` — a fresh install running in a non-English locale resolved `lingua::lingua.transfer.*` to neither the active locale nor a working fallback, rendering raw keys such as `lingua::lingua.transfer.nav.languages` in the shared nav menu and across the whole `/lingua/transfer` page. Added the fully translated `transfer` block to all 8 non-English locale files.
+
+#### Tests
+- **`LangFileKeyParityTest`** — new parity test asserts every bundled non-English `lingua.php` contains all keys present in `en/lingua.php`. Guards against future drift; existing `assertOk()` smoke tests do not detect raw keys.
+
+---
+
+### fix(import): bilingual CSV import skips all rows when target locale code mismatches column header (feat/remove-spatie-translation-loader)
+
+#### Fixed
+- **`fix(import): findLocaleValue single-candidate fallback`** — `RowMapper::findLocaleValue()` now adds a final fallback: when a bilingual file has exactly one non-meta, non-source column and none of the three string-match paths resolved the target locale (exact code, exact header, `{code} - ` prefix scan), it uses that single column unconditionally. This fixes the case where the import target locale is a regional variant (`it_IT`) while the CSV column header was written using the base code (`it - Italian`). Multi-locale files with ≥2 data columns remain ambiguous and still return `''`.
+
+#### Tests
+- **`RowMapperTest`** — two new tests: `parseRow bilingual: single-candidate fallback resolves when target locale code does not match column header` (fails before fix; asserts `targetValue = 'OKXXX'` with locale `it_IT` against header `it - Italian`); `parseRow multiLocale: two data columns + mismatched locale stays ambiguous and returns empty string` (safety check, ≥2 candidates → `''`).
+- **`ImportDiffServiceTest`** — end-to-end regression test: bilingual CSV with `it - Italian` column imported with target `it_IT` → `skipCount = 0`, create/update count = 1.
+
+---
+
 ### fix(file-mode): AtomicFileWriter opcache invalidation after PHP file write (feat/remove-spatie-translation-loader)
 
 #### Fixed

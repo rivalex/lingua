@@ -56,6 +56,21 @@ return [
     'middleware' => ['web', 'auth'],
 
     /*
+     * Optional authorization gate for Lingua admin pages.
+     *
+     * When set to a gate/ability name (e.g. 'manage-translations'), Lingua will
+     * apply the `can:{gate}` middleware to all admin routes in addition to the
+     * 'middleware' list above. This lets you restrict access to specific roles
+     * or users without modifying the package.
+     *
+     * Example setup in your AuthServiceProvider or AppServiceProvider:
+     *   Gate::define('manage-translations', fn (User $user) => $user->hasRole('admin'));
+     *
+     * Default: null — no additional authorization check (authentication-only, as before).
+     */
+    'gate' => env('LINGUA_GATE', null),
+
+    /*
      * Specifies the prefix for the lingua routes.
      * By default, the routes will be prefixed with 'lingua'.
      * You can change this value to customize the route prefix for lingua.

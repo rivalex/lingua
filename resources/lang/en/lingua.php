@@ -315,6 +315,8 @@ return [
             'export' => 'Export',
             'import' => 'Import',
         ],
+        'import_preview_error' => 'Failed to preview import file. Please check the file and try again.',
+        'import_commit_error' => 'Import failed. Please check the file and try again.',
         'export' => [
             'error' => 'Export error',
             'button' => 'Download export',

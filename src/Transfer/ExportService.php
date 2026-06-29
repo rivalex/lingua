@@ -10,6 +10,7 @@ use Rivalex\Lingua\Support\TranslationLine;
 use Rivalex\Lingua\Transfer\Enums\TransferFilter;
 use Rivalex\Lingua\Transfer\Enums\TransferScope;
 use Rivalex\Lingua\Transfer\Format\FormatRegistry;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -44,7 +45,7 @@ final class ExportService
         $headers = TransferSchema::buildHeaders($defaultLocale, $targetLocale, $allLocaleCodes, $scope);
 
         $date = date('Ymd');
-        $localePart = $targetLocale ?? 'all';
+        $localePart = preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($targetLocale ?? 'all')) ?: 'all';
         $filename = "translations_{$scope->value}_{$localePart}_{$date}.{$writer->extension()}";
 
         // Write to a temp file then stream it (works for CSV, JSON, and OpenSpout formats)
@@ -70,7 +71,10 @@ final class ExportService
             @unlink($tempPath);
         }, 200, [
             'Content-Type' => $writer->mimeType(),
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Content-Disposition' => HeaderUtils::makeDisposition(
+                HeaderUtils::DISPOSITION_ATTACHMENT,
+                $filename
+            ),
             'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
     }

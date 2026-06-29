@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\Factories\TranslationFactory;
 use Rivalex\Lingua\Enums\LinguaType;
+use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Support\AtomicFileWriter;
 use Rivalex\Lingua\Support\PathGuard;
@@ -139,18 +140,26 @@ class Translation extends Model
      */
     public static function getTranslationsForGroup(string $locale, string $group): array
     {
+        $resolve = fn (): array => static::where('group', $group)
+            ->get()
+            ->reduce(function (array $carry, self $translation) use ($locale): array {
+                $value = $translation->text[$locale] ?? null;
+                if ($value !== null) {
+                    data_set($carry, $translation->key, $value);
+                }
+
+                return $carry;
+            }, []);
+
+        // Never forever-cache an attacker-controlled, malformed locale: that
+        // would let a request-driven locale grow the cache without bound.
+        if (! self::isWellFormedLocale($locale)) {
+            return $resolve();
+        }
+
         return Cache::store(config('lingua.cache.store'))->rememberForever(
             CacheKey::forGroup($locale, $group),
-            fn () => static::where('group', $group)
-                ->get()
-                ->reduce(function (array $carry, self $translation) use ($locale): array {
-                    $value = $translation->text[$locale] ?? null;
-                    if ($value !== null) {
-                        data_set($carry, $translation->key, $value);
-                    }
-
-                    return $carry;
-                }, [])
+            $resolve
         );
     }
 
@@ -165,21 +174,40 @@ class Translation extends Model
      */
     public static function getVendorTranslationsForGroup(string $locale, string $vendor, string $group): array
     {
+        $resolve = fn (): array => static::where('is_vendor', true)
+            ->where('vendor', $vendor)
+            ->where('group', $group)
+            ->get()
+            ->reduce(function (array $carry, self $translation) use ($locale): array {
+                $value = $translation->text[$locale] ?? null;
+                if ($value !== null) {
+                    data_set($carry, $translation->key, $value);
+                }
+
+                return $carry;
+            }, []);
+
+        // Never forever-cache an attacker-controlled, malformed locale.
+        if (! self::isWellFormedLocale($locale)) {
+            return $resolve();
+        }
+
         return Cache::store(config('lingua.cache.store'))->rememberForever(
             CacheKey::forVendorGroup($locale, $vendor, $group),
-            fn () => static::where('is_vendor', true)
-                ->where('vendor', $vendor)
-                ->where('group', $group)
-                ->get()
-                ->reduce(function (array $carry, self $translation) use ($locale): array {
-                    $value = $translation->text[$locale] ?? null;
-                    if ($value !== null) {
-                        data_set($carry, $translation->key, $value);
-                    }
-
-                    return $carry;
-                }, [])
+            $resolve
         );
+    }
+
+    /**
+     * Whether a locale code matches the canonical, safe-to-cache shape.
+     *
+     * Gates rememberForever() so that request-derived locales cannot create
+     * unbounded forever-cached entries (DoS). Garbage locales still resolve
+     * correctly — they are simply never written to the cache.
+     */
+    private static function isWellFormedLocale(string $locale): bool
+    {
+        return (bool) preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $locale);
     }
 
     /**
@@ -251,6 +279,12 @@ class Translation extends Model
      */
     public function forgetTranslation(string $locale): void
     {
+        // Mirror the repository-layer guard so the integrity invariant holds
+        // even when this method is called directly (e.g. RemoveLangCommand).
+        if ($this->is_vendor) {
+            throw new VendorTranslationProtectedException;
+        }
+
         $data = $this->text;
         unset($data[$locale]);
         $this->text = $data;
@@ -549,14 +583,17 @@ class Translation extends Model
 
         $stringType = LinguaType::text;
 
-        if ($translation['locale'] === $defaultLocale) {
+        // Skip type detection on oversized values: it is not worth the
+        // regex cost and bounds the work an attacker can trigger.
+        if ($translation['locale'] === $defaultLocale && mb_strlen((string) $translation['value']) <= 10000) {
             $string = Str::of($translation['value'])->trim();
             if (preg_match('#(?<=<)\w+(?=[^<]*?>)#', $string->toString())) {
                 $stringType = LinguaType::html;
             }
             // Detect markdown only when no HTML was found — look for common markdown markers.
+            // The link branch uses a negated class ([^\]]+) to avoid ReDoS backtracking.
             if ($stringType === LinguaType::text &&
-                preg_match('/^#{1,6}\s|\n#{1,6}\s|^\s*[-*+]\s|\[.+\]\(https?:/im', $string->toString())) {
+                preg_match('/^#{1,6}\s|\n#{1,6}\s|^\s*[-*+]\s|\[[^\]]+\]\(https?:/im', $string->toString())) {
                 $stringType = LinguaType::markdown;
             }
         }

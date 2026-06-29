@@ -48,6 +48,9 @@ final class TransferExportController
         // Target locale required for bilingual scope
         if ($scope === TransferScope::bilingual) {
             abort_if($targetLocale === '', 422, 'Target locale is required for bilingual export.');
+
+            $installed = Language::pluck('code');
+            abort_unless($installed->contains($targetLocale), 422, 'Unknown target locale.');
         }
 
         $allLocaleCodes = Language::orderBy('sort')

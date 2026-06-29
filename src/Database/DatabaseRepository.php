@@ -14,6 +14,7 @@ use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Support\PathGuard;
 use Rivalex\Lingua\Support\TranslationLine;
 
 /**
@@ -156,51 +157,37 @@ final class DatabaseRepository implements TranslationRepository
 
         $defaultLocale = linguaDefaultLocale();
 
-        // When searching, load matching rows and filter values in PHP (multi-DB safe —
-        // JSON-SQL functions are forbidden by the multi-DB constraint in CLAUDE.md).
-        if ($search !== '') {
-            $needle = mb_strtolower($search);
+        // Load rows (group-scoped in SQL) and apply the locale/search filters in PHP.
+        // JSON-SQL functions are forbidden by the multi-DB constraint in CLAUDE.md, so
+        // value-level matching never touches a JSON path expression.
+        $rows = Translation::query()
+            ->when($group, fn ($q) => $q->where('group', '=', $group))
+            ->get()
+            ->map(fn ($model) => $this->toLine($model));
 
-            $rows = Translation::query()
-                // "Missing" = key absent, null, or empty string — same definition
-                // used by FileRepository and the Statistics component. whereNull
-                // alone missed empty-string values, so the two drivers disagreed.
-                ->when($onlyMissing, fn ($q) => $q->where(
-                    fn ($inner) => $inner
-                        ->whereNull('text->'.$safeLocale)
-                        ->orWhere('text->'.$safeLocale, '=', '')
-                ))
-                ->when($group, fn ($q) => $q->where('group', '=', $group))
-                ->get()
-                ->map(fn ($model) => $this->toLine($model))
-                ->filter(fn (TranslationLine $l) => str_contains(mb_strtolower($l->groupKey), $needle)
-                    || str_contains(mb_strtolower((string) $l->vendor), $needle)
-                    || str_contains(mb_strtolower($l->value($defaultLocale)), $needle)
-                    || str_contains(mb_strtolower($l->value($safeLocale)), $needle)
-                )
-                ->values();
-
-            $total = $rows->count();
-            $page = (int) (Paginator::resolveCurrentPage() ?: 1);
-            $slice = $rows->slice(($page - 1) * $perPage, $perPage)->values();
-
-            return new ConcretePaginator($slice->all(), $total, $perPage, $page, [
-                'path' => Paginator::resolveCurrentPath(),
-            ]);
+        if ($onlyMissing) {
+            // "Missing" = key absent, null, or empty string — same definition used by
+            // FileRepository and the Statistics component.
+            $rows = $rows->filter(fn (TranslationLine $l) => trim($l->value($safeLocale)) === '');
         }
 
-        return Translation::query()
-            // "Missing" = key absent, null, or empty string — same definition
-            // used by FileRepository and the Statistics component. whereNull
-            // alone missed empty-string values, so the two drivers disagreed.
-            ->when($onlyMissing, fn ($q) => $q->where(
-                fn ($inner) => $inner
-                    ->whereNull('text->'.$safeLocale)
-                    ->orWhere('text->'.$safeLocale, '=', '')
-            ))
-            ->when($group, fn ($q) => $q->where('group', '=', $group))
-            ->paginate($perPage)
-            ->through(fn ($model) => $this->toLine($model));
+        if ($search !== '') {
+            $needle = mb_strtolower($search);
+            $rows = $rows->filter(fn (TranslationLine $l) => str_contains(mb_strtolower($l->groupKey), $needle)
+                || str_contains(mb_strtolower((string) $l->vendor), $needle)
+                || str_contains(mb_strtolower($l->value($defaultLocale)), $needle)
+                || str_contains(mb_strtolower($l->value($safeLocale)), $needle)
+            );
+        }
+
+        $rows = $rows->values();
+        $total = $rows->count();
+        $page = (int) (Paginator::resolveCurrentPage() ?: 1);
+        $slice = $rows->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return new ConcretePaginator($slice->all(), $total, $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+        ]);
     }
 
     /**
@@ -253,13 +240,16 @@ final class DatabaseRepository implements TranslationRepository
     public function byGroup(string $group, ?string $locale = null): Collection
     {
         return Translation::where('group', $group)
-            ->when($locale, fn ($q) => $q->whereNotNull('text->'.$locale))
             ->get()
-            ->map(fn ($model) => $this->toLine($model));
+            ->map(fn ($model) => $this->toLine($model))
+            ->when($locale !== null, fn ($c) => $c->filter(
+                fn (TranslationLine $l) => isset($l->text[$locale]) && trim((string) $l->text[$locale]) !== ''
+            ))
+            ->values();
     }
 
     /**
-     * All vendor rows for $vendor, optionally filtered by locale presence (SQL JSON).
+     * All vendor rows for $vendor, optionally filtered by locale presence (PHP filter).
      *
      * @return Collection<int, TranslationLine>
      */
@@ -267,9 +257,12 @@ final class DatabaseRepository implements TranslationRepository
     {
         return Translation::where('is_vendor', true)
             ->where('vendor', $vendor)
-            ->when($locale, fn ($q) => $q->whereNotNull('text->'.$locale))
             ->get()
-            ->map(fn ($model) => $this->toLine($model));
+            ->map(fn ($model) => $this->toLine($model))
+            ->when($locale !== null, fn ($c) => $c->filter(
+                fn (TranslationLine $l) => isset($l->text[$locale]) && trim((string) $l->text[$locale]) !== ''
+            ))
+            ->values();
     }
 
     /**
@@ -284,6 +277,8 @@ final class DatabaseRepository implements TranslationRepository
      */
     public function installLocale(string $locale): void
     {
+        PathGuard::assertSafeSegment($locale, 'locale');
+
         Translation::syncToDatabase();
 
         if ($locale === linguaDefaultLocale()) {

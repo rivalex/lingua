@@ -95,6 +95,11 @@ final class ImportCommitService
 
             $parsed = $this->mapper->resolveIdentity($parsed, $existenceIndex);
 
+            // Second-layer guard: never let a wildcard segment reach data_set().
+            if (str_contains($parsed->key ?? '', '*') || str_contains($parsed->group ?? '', '*')) {
+                continue;
+            }
+
             if ($parsed->isVendor) {
                 if (! $vendorUpdateEnabled) {
                     continue;
