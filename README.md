@@ -2,7 +2,7 @@
 
 <a href="https://rivalex.github.io/lingua-docs/" target="_blank" style="margin: 30px 0 50px !important;">
 <figure>
-<img src="resources/images/logoLinguaHorizzontal.svg" alt="Lingua Logo" width="500">
+<img src="src/dist/images/logoLinguaHorizzontal.svg" alt="Lingua Logo" width="500">
 </figure>
 </a>
 
@@ -16,6 +16,12 @@
 [![License](https://img.shields.io/github/license/rivalex/lingua)](LICENSE.md)
 [![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
 [![Tests](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml/badge.svg)](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml)
+
+<br>
+
+<img src="src/dist/images/lingua-workflow.gif" alt="Lingua in action — add a language, edit a translation, reorder languages, and track coverage from the Livewire admin UI" width="800">
+
+<br>
 
 **Lingua** is a self-hosted translation management package for Laravel — a native, database-driven alternative to
 tools like Weblate, Locize, Lokalise, Crowdin, and SimpleLocalize, and a drop-in replacement for
@@ -269,6 +275,10 @@ return [
 ---
 
 ## 💾 Storage Drivers
+
+<p align="center">
+  <img src="src/dist/images/languages-page.png" alt="Lingua Languages page — manage installed locales with per-language translation coverage bars" width="850">
+</p>
 
 Lingua supports two storage backends, selectable at install time or switched later.
 
@@ -568,6 +578,10 @@ translation effort. Sync buttons are hidden in file mode.
 
 ### Translations page — `/lingua/translations/{locale?}`
 
+<p align="center">
+  <img src="src/dist/images/translations-page.png" alt="Lingua Translations page — edit translation strings inline in a filterable, paginated table" width="850">
+</p>
+
 Manage individual translation strings with a filterable, paginated table.
 
 **Available actions:**
@@ -583,6 +597,10 @@ Manage individual translation strings with a filterable, paginated table.
 The filter bar is sticky with a configurable top offset (`ui.sticky_top`) for apps with a fixed header.
 
 ### Statistics page — `/lingua/statistics`
+
+<p align="center">
+  <img src="src/dist/images/statistics-coverage.png" alt="Lingua Statistics page — per-language translation coverage with progress bars and missing-key counts" width="850">
+</p>
 
 The statistics page gives you a bird's-eye view of your translation coverage.
 
@@ -720,6 +738,10 @@ prevent formula execution.
 
 ### Import
 
+<p align="center">
+  <img src="src/dist/images/transfer-import-diff.png" alt="Lingua import dry-run preview — create, update, skip and error counts with a row-by-row diff before committing" width="850">
+</p>
+
 The import flow is a two-step process:
 
 1. **Upload** — select your file; Lingua runs a dry-run analysis and shows a preview: create / update / skip / error
@@ -736,6 +758,10 @@ Import behavior:
 ---
 
 ## 🌐 Language Selector
+
+<p align="center">
+  <img src="src/dist/images/selector-modal.png" alt="Lingua language selector — modal language switcher with flags for your application's end users" width="550">
+</p>
 
 Embed a language switcher anywhere in your Blade layouts:
 
