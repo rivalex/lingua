@@ -1,7 +1,7 @@
 <div class="lingua">
     <x-lingua::branding />
 
-    <section class="flex flex-col gap-4">
+    <section class="flex flex-col gap-6">
         <div class="relative w-full">
             <flux:heading size="xl" level="1">
                 <div class="flex flex-row gap-2 items-center">
@@ -60,15 +60,15 @@
         <div
             class="-mx-4 px-4 sm:px-6 lg:px-8 sticky z-30 backdrop-blur-md bg-white/70 dark:bg-zinc-900/70 border-b border-zinc-200/50 dark:border-white/10 py-4"
             style="top: {{ $stickyTop }};">
-            <div class="grid grid-cols-12 w-full gap-4 items-center">
-                <div class="col-span-12 lg:col-span-3">
+            <div class="flex flex-wrap items-center gap-2 w-full">
+                <div class="flex-1 min-w-48">
                     <flux:input type="search" wire:model.blur.live="search" class="w-full"
                                 :placeholder="__('lingua::lingua.global.search')"
                                 icon="magnifying-glass"
                                 wire:island="translationTable"
                                 name="searchTranslations" id="searchTranslations"/>
                 </div>
-                <div class="col-span-12 lg:col-span-2">
+                <div class="w-40 shrink-0">
                     <x-lingua::select wire:model.change.live="currentLocale"
                                       searchable
                                       wire:island="translationTable">
@@ -77,7 +77,7 @@
                         @endforeach
                     </x-lingua::select>
                 </div>
-                <div class="col-span-12 lg:col-span-2">
+                <div class="w-40 shrink-0">
                     <x-lingua::select wire:model.change.live="group"
                                       searchable clearable
                                       :placeholder="__('lingua::lingua.translations.group.placeholder')"
@@ -87,18 +87,18 @@
                         @endforeach
                     </x-lingua::select>
                 </div>
-                <div class="col-span-12 lg:col-span-2">
-                    @if($currentLocale !== linguaDefaultLocale())
-                        <flux:field variant="inline" class="flex items-center gap-2 w-fit">
-                            <flux:label><p
-                                    style="white-space: nowrap; font-weight: 400;">@lang('lingua::lingua.translations.table.show_only_missing')</p>
-                            </flux:label>
-                            <flux:switch wire:model.change.live="showOnlyMissing" wire:island="translationTable"/>
-                            <flux:error name="showOnlyMissing"/>
-                        </flux:field>
-                    @endif
+                @if($currentLocale !== linguaDefaultLocale())
+                <div class="shrink-0">
+                    <flux:field variant="inline" class="flex items-center gap-2">
+                        <flux:label><p
+                                style="white-space: nowrap; font-weight: 400;">@lang('lingua::lingua.translations.table.show_only_missing')</p>
+                        </flux:label>
+                        <flux:switch wire:model.change.live="showOnlyMissing" wire:island="translationTable"/>
+                        <flux:error name="showOnlyMissing"/>
+                    </flux:field>
                 </div>
-                <div class="col-span-12 lg:col-span-3">
+                @endif
+                <div class="ml-auto shrink-0">
                     <livewire:lingua::translation.create :key="'newTranslation'" :$group/>
                     {{-- lingua extension hook: translation.actions --}}
                     @foreach ($linguaExtensions->allTranslationActionComponents() as $cls)

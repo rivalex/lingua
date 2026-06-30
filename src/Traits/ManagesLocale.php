@@ -34,12 +34,17 @@ trait ManagesLocale
     /**
      * Initialise locale state from the current request context.
      *
+     * Captures a relative request URI (path + query string, no host) so the
+     * open-redirect guard in changeLocale() never trips on a host mismatch
+     * between config('app.url') and the real browsing host (local dev, staging,
+     * custom domains).  Relative URIs are same-origin by construction.
+     *
      * Call this inside the host component's mount() method.
      */
     protected function initLocaleState(): void
     {
         $this->currentLocale = app()->currentLocale();
-        $this->currentUrl = url()->current();
+        $this->currentUrl = request()->getRequestUri();
     }
 
     /**
@@ -71,18 +76,22 @@ trait ManagesLocale
             return;
         }
 
-        // Guard against open redirect — block non-http/https schemes and cross-origin hosts.
-        $parsed = parse_url($this->currentUrl);
-        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
-        $isRelative = ! isset($parsed['host']) && ! isset($parsed['scheme']);
-        $isSameOrigin = isset($parsed['host']) && $parsed['host'] === $appHost;
-        $isSafeScheme = ! isset($parsed['scheme']) || in_array($parsed['scheme'], ['http', 'https'], true);
-        if (! (($isRelative || $isSameOrigin) && $isSafeScheme)) {
-            $this->currentUrl = '/';
+        // Guard against open redirect.
+        // currentUrl is a relative request URI captured at mount time; it always
+        // starts with '/' and carries no host.  A component could theoretically
+        // have $currentUrl mutated externally, so we enforce the invariant here:
+        //   - Must start with exactly one '/' (not '//' = protocol-relative,
+        //     not '/\' = backslash-relative, both used for open-redirect tricks).
+        //   - Must not contain a scheme (any 'word:' prefix signals an absolute URL).
+        $url = $this->currentUrl;
+        $isSafePath = preg_match('#^/(?![/\\\])#', $url) === 1
+            && ! preg_match('#^\w+:#', $url);
+        if (! $isSafePath) {
+            $url = '/';
         }
 
         Session::put(config('lingua.session_variable'), $locale);
         app()->setLocale($locale);
-        $this->redirect(url: $this->currentUrl, navigate: (bool) config('lingua.navigate', false));
+        $this->redirect(url: $url, navigate: (bool) config('lingua.navigate', false));
     }
 }
