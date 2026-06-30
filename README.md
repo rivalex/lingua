@@ -17,8 +17,11 @@
 [![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
 [![Tests](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml/badge.svg)](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml)
 
-Lingua brings **database-driven translations** to Laravel with a beautiful Livewire + Flux UI — install languages,
-manage translations, import and export, and sync everything with a single command.
+Lingua is a self-hosted translation management package for Laravel applications built on the TALL stack (Tailwind,
+Alpine, Livewire). It gives you a clean admin UI to edit, organize, and synchronize your app's translation strings —
+backed by either a database or your native lang/ files. Import and export translations in CSV, JSON, XLSX, and ODS,
+manage published vendor translations safely, and optionally machine-translate missing strings. No bloated dependencies,
+no third-party translation services required for core features. Built for Laravel 13, Livewire 4, and PHP 8.3+.
 
 [Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Storage Drivers](#-storage-drivers) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Import / Export](#-import--export) · [Language Selector](#-language-selector) · [Facade](#-lingua-facade) · [Architecture](#-architecture) · [Lingua Pro](#-lingua-pro)
 
@@ -36,30 +39,30 @@ manage translations, import and export, and sync everything with a single comman
 
 ## ✨ Features
 
-| Feature | Description |
-|---------|-------------|
-| **Database-backed translations** | All translations stored in the database, editable instantly without deployments |
-| **File-mode driver** | Optional file-mode stores translations directly in lang/ PHP/JSON files — no database required |
-| **Livewire UI** | Reactive, real-time language and translation management interface |
-| **Flux UI components** | Modern, accessible UI built with Livewire Flux |
-| **Bi-directional sync** | Push translations to the database or pull them back to local PHP/JSON files |
-| **Import / Export** | Export and import translations as CSV, JSON, XLSX, or ODS; bilingual and multi-locale scopes |
-| **Bundled translation dataset** | 26 locales × 7 groups (5 902 strings) aligned to Laravel 13 — provisioned at locale install-time |
-| **Rich text support** | Translations can be plain text, HTML, or Markdown |
-| **Language selector** | Configurable sidebar, dropdown, modal, or headless language switcher |
-| **Translation statistics** | Per-language coverage with progress bars, group breakdown, and missing-key drill-down |
-| **Shared navigation menu** | Built-in nav bar on all admin pages; active-page highlighting; toggleable |
-| **DB-persisted settings** | Selector mode, flags, nav, editor toolbar managed from the UI |
-| **Headless language selector** | Zero-CSS semantic HTML component for full styling freedom |
-| **RTL support** | First-class right-to-left language handling |
-| **Vendor translations** | Manage package translations alongside your own |
-| **Authorization gate** | Role-based access control via `LINGUA_GATE` env and Laravel Gates |
-| **Database-agnostic** | Full support for SQLite, MySQL, PostgreSQL, and SQL Server |
-| **Safe uninstall** | `lingua:uninstall` exports translations before removing tables and published files |
-| **Lingua Facade** | Fluent programmatic API for reading, writing, and managing languages and translations |
-| **Flexible routing** | Route prefix/suffix config, optional gate, layout override, `wire:navigate` toggle |
-| **Lingua Pro** | Optional add-on: AI translation, translation memory, glossary, usage analytics |
-| **Fully tested** | 780+ tests with Pest, covering commands, Livewire components, Blade, helpers, and facade |
+| Feature                          | Description                                                                                      |
+|----------------------------------|--------------------------------------------------------------------------------------------------|
+| **Database-backed translations** | All translations stored in the database, editable instantly without deployments                  |
+| **File-mode driver**             | Optional file-mode stores translations directly in lang/ PHP/JSON files — no database required   |
+| **Livewire UI**                  | Reactive, real-time language and translation management interface                                |
+| **Flux UI components**           | Modern, accessible UI built with Livewire Flux                                                   |
+| **Bi-directional sync**          | Push translations to the database or pull them back to local PHP/JSON files                      |
+| **Import / Export**              | Export and import translations as CSV, JSON, XLSX, or ODS; bilingual and multi-locale scopes     |
+| **Bundled translation dataset**  | 26 locales × 7 groups (5 902 strings) aligned to Laravel 13 — provisioned at locale install-time |
+| **Rich text support**            | Translations can be plain text, HTML, or Markdown                                                |
+| **Language selector**            | Configurable sidebar, dropdown, modal, or headless language switcher                             |
+| **Translation statistics**       | Per-language coverage with progress bars, group breakdown, and missing-key drill-down            |
+| **Shared navigation menu**       | Built-in nav bar on all admin pages; active-page highlighting; toggleable                        |
+| **DB-persisted settings**        | Selector mode, flags, nav, editor toolbar managed from the UI                                    |
+| **Headless language selector**   | Zero-CSS semantic HTML component for full styling freedom                                        |
+| **RTL support**                  | First-class right-to-left language handling                                                      |
+| **Vendor translations**          | Manage package translations alongside your own                                                   |
+| **Authorization gate**           | Role-based access control via `LINGUA_GATE` env and Laravel Gates                                |
+| **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                       |
+| **Safe uninstall**               | `lingua:uninstall` exports translations before removing tables and published files               |
+| **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations            |
+| **Flexible routing**             | Route prefix/suffix config, optional gate, layout override, `wire:navigate` toggle               |
+| **Lingua Pro**                   | Optional add-on: AI translation, translation memory, glossary, usage analytics                   |
+| **Fully tested**                 | 780+ tests with Pest, covering commands, Livewire components, Blade, helpers, and facade         |
 
 ---
 
@@ -71,6 +74,7 @@ manage translations, import and export, and sync everything with a single comman
 - Livewire Flux **2.12+**
 
 **Optional:**
+
 - `openspout/openspout` — required for XLSX and ODS import/export
 - `rivalex/lingua-pro` — AI translation, translation memory, glossary, and analytics
 
@@ -102,13 +106,13 @@ After installation, set `LINGUA_STORAGE_DRIVER=database` (or `file`) in your `.e
 
 ### 3. Access the UI
 
-| Page | URL | Route name |
-|------|-----|------------|
-| Languages | `your-app.test/lingua/languages` | `lingua.languages` |
+| Page         | URL                                           | Route name            |
+|--------------|-----------------------------------------------|-----------------------|
+| Languages    | `your-app.test/lingua/languages`              | `lingua.languages`    |
 | Translations | `your-app.test/lingua/translations/{locale?}` | `lingua.translations` |
-| Statistics | `your-app.test/lingua/statistics` | `lingua.statistics` |
-| Settings | `your-app.test/lingua/settings` | `lingua.settings` |
-| Transfer | `your-app.test/lingua/transfer` | `lingua.transfer` |
+| Statistics   | `your-app.test/lingua/statistics`             | `lingua.statistics`   |
+| Settings     | `your-app.test/lingua/settings`               | `lingua.settings`     |
+| Transfer     | `your-app.test/lingua/transfer`               | `lingua.transfer`     |
 
 ---
 
@@ -245,15 +249,15 @@ return [
 
 ### Environment variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LINGUA_STORAGE_DRIVER` | `database` | Storage driver: `database` or `file` |
-| `LINGUA_GATE` | `null` | Laravel Gate name for admin authorization |
-| `LINGUA_CACHE_STORE` | `null` | Cache store (null = app default) |
-| `LINGUA_CACHE_PREFIX` | `lingua.trans` | Cache key prefix |
-| `LINGUA_SUPPRESS_PRO_NUDGE` | `false` | Hide the Lingua Pro upgrade prompt |
-| `LINGUA_PRO_UPGRADE_URL` | `https://lingua.rivalex.dev` | Pro upgrade link shown in admin UI |
-| `LINGUA_EXTENSIONS_ENABLED` | `true` | Enable/disable the extension system |
+| Variable                    | Default                      | Description                               |
+|-----------------------------|------------------------------|-------------------------------------------|
+| `LINGUA_STORAGE_DRIVER`     | `database`                   | Storage driver: `database` or `file`      |
+| `LINGUA_GATE`               | `null`                       | Laravel Gate name for admin authorization |
+| `LINGUA_CACHE_STORE`        | `null`                       | Cache store (null = app default)          |
+| `LINGUA_CACHE_PREFIX`       | `lingua.trans`               | Cache key prefix                          |
+| `LINGUA_SUPPRESS_PRO_NUDGE` | `false`                      | Hide the Lingua Pro upgrade prompt        |
+| `LINGUA_PRO_UPGRADE_URL`    | `https://lingua.rivalex.dev` | Pro upgrade link shown in admin UI        |
+| `LINGUA_EXTENSIONS_ENABLED` | `true`                       | Enable/disable the extension system       |
 
 ---
 
@@ -298,13 +302,16 @@ Then run `php artisan config:clear`.
 
 **Options for `lingua:storage`:**
 
-| Option | Description |
-|--------|-------------|
-| `--force` | Skip confirmation prompts |
-| `--write-env` | Automatically update `LINGUA_STORAGE_DRIVER` in your `.env` file |
-| `--no-migrate` | Skip running migrations when switching to database driver |
+| Option         | Description                                                      |
+|----------------|------------------------------------------------------------------|
+| `--force`      | Skip confirmation prompts                                        |
+| `--write-env`  | Automatically update `LINGUA_STORAGE_DRIVER` in your `.env` file |
+| `--no-migrate` | Skip running migrations when switching to database driver        |
 
-> **File-mode deploy caveat:** In CI/CD pipelines, lang/ files are typically checked in to version control. Any translation edited in the Lingua UI will modify those files. Ensure your deployment pipeline does not overwrite them with stale copies. HTML and Markdown translation types will be lost when switching from database to file mode, as file-based drivers store only plain text.
+> **File-mode deploy caveat:** In CI/CD pipelines, lang/ files are typically checked in to version control. Any
+> translation edited in the Lingua UI will modify those files. Ensure your deployment pipeline does not overwrite them
+> with stale copies. HTML and Markdown translation types will be lost when switching from database to file mode, as
+> file-based drivers store only plain text.
 
 ---
 
@@ -314,11 +321,11 @@ Lingua ships with a complete command suite for terminal-driven language and tran
 
 ### Language management
 
-| Command | Description |
-|---------|-------------|
-| `lingua:add {locale}` | Install a new language: creates DB/file record, seeds bundled translations |
-| `lingua:remove {locale}` | Remove a language: deletes record and cleans up storage |
-| `lingua:update-lang` | Re-sync translations for all installed locales |
+| Command                  | Description                                                                |
+|--------------------------|----------------------------------------------------------------------------|
+| `lingua:add {locale}`    | Install a new language: creates DB/file record, seeds bundled translations |
+| `lingua:remove {locale}` | Remove a language: deletes record and cleans up storage                    |
+| `lingua:update-lang`     | Re-sync translations for all installed locales                             |
 
 ```bash
 # Add Italian
@@ -334,13 +341,14 @@ php artisan lingua:remove fr
 php artisan lingua:update-lang
 ```
 
-> **Note:** `lingua:add` and `lingua:remove` are **DB-native** — they do not use `laravel-lang`. The bundled dataset provides translations for 26 locales automatically. Lingua does not require or download any external language packages.
+> **Note:** `lingua:add` and `lingua:remove` are **DB-native** — they do not use `laravel-lang`. The bundled dataset
+> provides translations for 26 locales automatically. Lingua does not require or download any external language packages.
 
 ### Translation sync
 
-| Command | Description |
-|---------|-------------|
-| `lingua:sync-to-database` | Import all local lang/ PHP/JSON files into the database |
+| Command                          | Description                                                                             |
+|----------------------------------|-----------------------------------------------------------------------------------------|
+| `lingua:sync-to-database`        | Import all local lang/ PHP/JSON files into the database                                 |
 | `lingua:sync-to-local [--force]` | Export database translations to lang/ files (`--force` overrides file-mode no-op guard) |
 
 ```bash
@@ -356,15 +364,16 @@ php artisan lingua:sync-to-local --force
 
 ### Setup & maintenance
 
-| Command | Description |
-|---------|-------------|
-| `lingua:install` | Interactive first-time setup wizard |
+| Command                             | Description                                         |
+|-------------------------------------|-----------------------------------------------------|
+| `lingua:install`                    | Interactive first-time setup wizard                 |
 | `lingua:storage {driver} [options]` | Switch storage driver between `database` and `file` |
-| `lingua:uninstall [options]` | Safely remove Lingua (exports translations first) |
+| `lingua:uninstall [options]`        | Safely remove Lingua (exports translations first)   |
 
 #### `lingua:install`
 
-Interactive setup wizard. Prompts for driver selection (arrow-key), publishes config, publishes driver-aware migrations, optionally runs them, and seeds default language data.
+Interactive setup wizard. Prompts for driver selection (arrow-key), publishes config, publishes driver-aware migrations,
+optionally runs them, and seeds default language data.
 
 ```bash
 php artisan lingua:install
@@ -372,31 +381,33 @@ php artisan lingua:install
 
 #### `lingua:storage {driver}`
 
-Switch between `database` and `file` storage without data loss. Syncs translations before switching and warns on HTML/Markdown type-loss when moving to file mode.
+Switch between `database` and `file` storage without data loss. Syncs translations before switching and warns on
+HTML/Markdown type-loss when moving to file mode.
 
 ```bash
 php artisan lingua:storage database --write-env
 php artisan lingua:storage file --force
 ```
 
-| Option | Description |
-|--------|-------------|
-| `--force` | Skip confirmation prompts |
-| `--write-env` | Update `LINGUA_STORAGE_DRIVER` in `.env` automatically |
-| `--no-migrate` | Skip running migrations (database driver switch only) |
+| Option         | Description                                            |
+|----------------|--------------------------------------------------------|
+| `--force`      | Skip confirmation prompts                              |
+| `--write-env`  | Update `LINGUA_STORAGE_DRIVER` in `.env` automatically |
+| `--no-migrate` | Skip running migrations (database driver switch only)  |
 
 #### `lingua:uninstall`
 
-Exports all translations to lang/ files first, then drops the three Lingua database tables and removes published files. Your lang/ directory is always preserved.
+Exports all translations to lang/ files first, then drops the three Lingua database tables and removes published files.
+Your lang/ directory is always preserved.
 
 ```bash
 php artisan lingua:uninstall
 ```
 
-| Option | Description |
-|--------|-------------|
-| `--force` | Skip confirmation prompts |
-| `--keep-config` | Do not delete `config/lingua.php` |
+| Option             | Description                                    |
+|--------------------|------------------------------------------------|
+| `--force`          | Skip confirmation prompts                      |
+| `--keep-config`    | Do not delete `config/lingua.php`              |
 | `--keep-published` | Do not delete published views and translations |
 
 ---
@@ -421,7 +432,8 @@ Publishes the configuration file to `config/lingua.php`.
 php artisan vendor:publish --tag="lingua-config"
 ```
 
-Use this when you want to customise routes, middleware, the language selector mode, the rich-text editor toolbar, or any other package option. The file is well-commented and safe to edit — Lingua reads it on every request.
+Use this when you want to customise routes, middleware, the language selector mode, the rich-text editor toolbar, or any
+other package option. The file is well-commented and safe to edit — Lingua reads it on every request.
 
 ---
 
@@ -433,9 +445,12 @@ Publishes the database migrations to `database/migrations/`.
 php artisan vendor:publish --tag="lingua-migrations"
 ```
 
-Driver-aware: file mode only publishes the `languages` and `lingua_settings` table migrations (skips `language_lines`). Use this when you need to modify the schema — for example to add indexes or change column types. After publishing, run `php artisan migrate` as normal.
+Driver-aware: file mode only publishes the `languages` and `lingua_settings` table migrations (skips `language_lines`).
+Use this when you need to modify the schema — for example to add indexes or change column types. After publishing, run
+`php artisan migrate` as normal.
 
-> **Note:** The `lingua:install` wizard publishes and runs the migrations automatically. Only publish manually if you need to customise the schema before running them.
+> **Note:** The `lingua:install` wizard publishes and runs the migrations automatically. Only publish manually if you
+> need to customise the schema before running them.
 
 ---
 
@@ -447,7 +462,9 @@ Publishes the package's own UI translation strings to `lang/vendor/lingua/`.
 php artisan vendor:publish --tag="lingua-translations"
 ```
 
-This exposes all the labels, headings, buttons, and messages used in the Lingua admin UI. The admin interface is localised in **9 languages**: Arabic, English, Spanish, French, Hindi, Italian, Portuguese, Russian, and Chinese (Simplified). Override any string to adapt the wording to your project's style.
+This exposes all the labels, headings, buttons, and messages used in the Lingua admin UI. The admin interface is
+localised in **9 languages**: Arabic, English, Spanish, French, Hindi, Italian, Portuguese, Russian, and Chinese (
+Simplified). Override any string to adapt the wording to your project's style.
 
 ---
 
@@ -501,7 +518,8 @@ resources/views/vendor/lingua/
         └── update.blade.php
 ```
 
-> **Tip:** Only publish views you intend to change. Unpublished views are served directly from the package and will receive upstream updates automatically.
+> **Tip:** Only publish views you intend to change. Unpublished views are served directly from the package and will
+> receive upstream updates automatically.
 
 ---
 
@@ -516,7 +534,8 @@ php artisan vendor:publish --tag="lingua-translations" --force
 
 The `--force` flag overwrites existing files. Omit it for views and config so your local customisations are not lost.
 
-> **Note:** Compiled CSS and JavaScript assets are served directly from the package via Lingua's own asset route (`lingua.assets`). Publishing assets to `public/` is not required.
+> **Note:** Compiled CSS and JavaScript assets are served directly from the package via Lingua's own asset route (
+`lingua.assets`). Publishing assets to `public/` is not required.
 
 ---
 
@@ -528,7 +547,8 @@ The languages page is your control center for installed locales.
 
 **Available actions:**
 
-- **Add a language** — choose from 26 bundled locales; the record is created and bundled translations are seeded automatically
+- **Add a language** — choose from 26 bundled locales; the record is created and bundled translations are seeded
+  automatically
 - **Remove a language** — confirmation modal prevents accidental deletion; the default language is protected
 - **Set the default language** — one click sets the new application default
 - **Reorder languages** — drag-and-drop to control display order across the UI
@@ -536,7 +556,8 @@ The languages page is your control center for installed locales.
 - **Sync to local** — export database translations back to lang/ files *(database mode only)*
 - **Update translations** — re-sync strings for all installed locales
 
-Each language row shows the **completion percentage** and a count of **missing translations** so you can prioritise your translation effort. Sync buttons are hidden in file mode.
+Each language row shows the **completion percentage** and a count of **missing translations** so you can prioritise your
+translation effort. Sync buttons are hidden in file mode.
 
 ### Translations page — `/lingua/translations/{locale?}`
 
@@ -560,9 +581,11 @@ The statistics page gives you a bird's-eye view of your translation coverage.
 
 **What it shows:**
 
-- **Per-language coverage** — progress bar for each installed locale with the percentage of translated keys and a count of missing ones
+- **Per-language coverage** — progress bar for each installed locale with the percentage of translated keys and a count
+  of missing ones
 - **Group breakdown** — table showing how many keys are translated per locale across each translation group
-- **Missing-key drill-down** — click the missing count for any language to expand a list of untranslated keys with direct links to the translation editor
+- **Missing-key drill-down** — click the missing count for any language to expand a list of untranslated keys with
+  direct links to the translation editor
 - **Vendor toggle** — include or exclude vendor translations from all statistics with a single switch
 
 ```blade
@@ -579,9 +602,11 @@ The settings page lets you configure Lingua's UI behaviour without touching conf
 - **Flag icons** — toggle country flag icons next to language names
 - **Navigation menu** — enable or disable the shared nav bar shown on all Lingua pages
 - **Routing** — toggle `wire:navigate`, set sticky bar top offset (`ui.sticky_top`), configure extra route parameters
-- **Editor toolbar** — enable or disable individual toolbar buttons (bold, italic, headings, code-block, …) across 3 groups (13 toggles total)
+- **Editor toolbar** — enable or disable individual toolbar buttons (bold, italic, headings, code-block, …) across 3
+  groups (13 toggles total)
 
-Settings are stored in the `lingua_settings` database table and take effect immediately. Values from `config/lingua.php` serve as fallback when no database setting has been saved.
+Settings are stored in the `lingua_settings` database table and take effect immediately. Values from `config/lingua.php`
+serve as fallback when no database setting has been saved.
 
 ```blade
 <a href="{{ route('lingua.settings') }}">Lingua Settings</a>
@@ -600,7 +625,9 @@ See [Import / Export](#-import--export) for full details.
 
 ### RTL / LTR text direction
 
-Some languages (Arabic, Hebrew, Persian, Urdu, …) are written right-to-left. Lingua stores the text direction for every installed language and exposes it via `Lingua::getDirection()`. Add `dir` and `lang` attributes to your main Blade layout:
+Some languages (Arabic, Hebrew, Persian, Urdu, …) are written right-to-left. Lingua stores the text direction for every
+installed language and exposes it via `Lingua::getDirection()`. Add `dir` and `lang` attributes to your main Blade
+layout:
 
 ```blade
 {{-- resources/views/layouts/app.blade.php --}}
@@ -608,7 +635,8 @@ Some languages (Arabic, Hebrew, Persian, Urdu, …) are written right-to-left. L
 <html lang="{{ app()->getLocale() }}" dir="{{ Lingua::getDirection() }}">
 ```
 
-`Lingua::getDirection()` returns `'rtl'` for right-to-left languages and `'ltr'` for all others. Pass an explicit locale when needed:
+`Lingua::getDirection()` returns `'rtl'` for right-to-left languages and `'ltr'` for all others. Pass an explicit locale
+when needed:
 
 ```blade
 <html lang="ar" dir="{{ Lingua::getDirection('ar') }}">
@@ -619,6 +647,7 @@ Some languages (Arabic, Hebrew, Persian, Urdu, …) are written right-to-left. L
 The `dir` attribute on `<html>` activates Tailwind's built-in `rtl:` variant automatically:
 
 ```html
+
 <div class="text-left rtl:text-right">…</div>
 <div class="pl-4 rtl:pr-4 rtl:pl-0">…</div>
 ```
@@ -631,7 +660,8 @@ The `dir` attribute on `<html>` activates Tailwind's built-in `rtl:` variant aut
 @endif
 ```
 
-> **Note:** `Lingua::getDirection()` defaults to `'ltr'` if the locale is not found, so it is always safe to call even before any language is installed.
+> **Note:** `Lingua::getDirection()` defaults to `'ltr'` if the locale is not found, so it is always safe to call even
+> before any language is installed.
 
 ### Flux UI Assets
 
@@ -644,8 +674,8 @@ Lingua uses [Flux UI](https://fluxui.dev) for its interface. Include Flux assets
     @fluxAppearance
 </head>
 <body>
-    ...
-    @fluxScripts
+...
+@fluxScripts
 </body>
 ```
 
@@ -659,39 +689,42 @@ The Transfer page (`/lingua/transfer`) provides Livewire-powered export and impo
 
 Three export scopes:
 
-| Scope | Description |
-|-------|-------------|
-| **Bilingual** | Source strings + one target locale (two columns) |
+| Scope            | Description                                            |
+|------------------|--------------------------------------------------------|
+| **Bilingual**    | Source strings + one target locale (two columns)       |
 | **Multi-locale** | Source + all installed locales (one column per locale) |
-| **JSON-native** | Raw key/value JSON without a source column |
+| **JSON-native**  | Raw key/value JSON without a source column             |
 
 Four export formats:
 
-| Format | Dependencies |
-|--------|-------------|
-| **CSV** | Built-in — no extra packages |
-| **JSON** | Built-in — no extra packages |
+| Format   | Dependencies                   |
+|----------|--------------------------------|
+| **CSV**  | Built-in — no extra packages   |
+| **JSON** | Built-in — no extra packages   |
 | **XLSX** | Requires `openspout/openspout` |
-| **ODS** | Requires `openspout/openspout` |
+| **ODS**  | Requires `openspout/openspout` |
 
 ```bash
 composer require openspout/openspout
 ```
 
-Formula-injection guard: cells starting with `= + - @` are automatically prefixed with `'` in all spreadsheet formats to prevent formula execution.
+Formula-injection guard: cells starting with `= + - @` are automatically prefixed with `'` in all spreadsheet formats to
+prevent formula execution.
 
 ### Import
 
 The import flow is a two-step process:
 
-1. **Upload** — select your file; Lingua runs a dry-run analysis and shows a preview: create / update / skip / error counts and a capped row-by-row diff
+1. **Upload** — select your file; Lingua runs a dry-run analysis and shows a preview: create / update / skip / error
+   counts and a capped row-by-row diff
 2. **Review & confirm** — inspect the diff, then commit when ready
 
 Import behavior:
 
 - Commit is **transactional** in database mode (all-or-nothing) and sequential in file mode
 - Vendor translations are **protected** — import cannot create or delete vendor-namespaced keys
-- **Bilingual single-column fallback**: when a bilingual file has exactly one data column and the locale code doesn't exactly match the header (e.g. `it_IT` vs `it - Italian`), Lingua uses that column automatically
+- **Bilingual single-column fallback**: when a bilingual file has exactly one data column and the locale code doesn't
+  exactly match the header (e.g. `it_IT` vs `it - Italian`), Lingua uses that column automatically
 
 ---
 
@@ -710,11 +743,13 @@ Control the display mode via config or inline props:
 <livewire:lingua::language-selector mode="dropdown" :show-flags="false" />
 ```
 
-The selector reads the active mode and flag preference from the database (configurable in the Settings page). The `:mode` and `:show-flags` props override the database setting for a specific instance.
+The selector reads the active mode and flag preference from the database (configurable in the Settings page). The
+`:mode` and `:show-flags` props override the database setting for a specific instance.
 
 ### Headless mode
 
-The headless selector renders zero CSS and no framework-specific markup — just semantic HTML that you style entirely with your own CSS or utility classes.
+The headless selector renders zero CSS and no framework-specific markup — just semantic HTML that you style entirely
+with your own CSS or utility classes.
 
 ```blade
 <livewire:lingua::headless-language-selector />
@@ -747,23 +782,32 @@ Override the **currently selected** language with the `$current` slot (falls thr
 
 **CSS targeting API (`data-lingua-*` attributes):**
 
-| Attribute | Element |
-|-----------|---------|
-| `data-lingua-selector` | Root `<nav>` element |
-| `data-lingua-list` | The `<ul>` language list |
-| `data-lingua-item` | Each `<li>` language entry |
-| `data-lingua-active` | The `<li>` of the active language |
-| `data-lingua-button` | The `<button>` inside each `<li>` |
-| `data-lingua-name` | Language English display name `<span>` |
-| `data-lingua-native` | Language native name `<span>` |
-| `data-lingua-code` | Language ISO code `<span>` |
+| Attribute              | Element                                |
+|------------------------|----------------------------------------|
+| `data-lingua-selector` | Root `<nav>` element                   |
+| `data-lingua-list`     | The `<ul>` language list               |
+| `data-lingua-item`     | Each `<li>` language entry             |
+| `data-lingua-active`   | The `<li>` of the active language      |
+| `data-lingua-button`   | The `<button>` inside each `<li>`      |
+| `data-lingua-name`     | Language English display name `<span>` |
+| `data-lingua-native`   | Language native name `<span>`          |
+| `data-lingua-code`     | Language ISO code `<span>`             |
 
 **Plain CSS example:**
 
 ```css
-[data-lingua-selector] { display: flex; gap: 0.5rem; }
-[data-lingua-item] { cursor: pointer; }
-[data-lingua-active] { font-weight: bold; }
+[data-lingua-selector] {
+    display: flex;
+    gap: 0.5rem;
+}
+
+[data-lingua-item] {
+    cursor: pointer;
+}
+
+[data-lingua-active] {
+    font-weight: bold;
+}
 ```
 
 **Tailwind CSS example:**
@@ -782,7 +826,8 @@ Override the **currently selected** language with the `$current` slot (falls thr
 
 ## 💎 Lingua Facade
 
-Lingua ships a static `Lingua` facade that gives you programmatic access to language and translation data from anywhere in your application.
+Lingua ships a static `Lingua` facade that gives you programmatic access to language and translation data from anywhere
+in your application.
 
 ```php
 use Rivalex\Lingua\Facades\Lingua;
@@ -925,7 +970,8 @@ Lingua::removeLanguage('fr');
 Lingua::installDefaultLanguage();
 ```
 
-> **Note:** `addLanguage()` and `removeLanguage()` manage the Language record and storage. Use the Artisan commands `lingua:add` / `lingua:remove` for the fully orchestrated operation (record + storage + cache invalidation).
+> **Note:** `addLanguage()` and `removeLanguage()` manage the Language record and storage. Use the Artisan commands
+`lingua:add` / `lingua:remove` for the fully orchestrated operation (record + storage + cache invalidation).
 
 ### Sync
 
@@ -940,7 +986,8 @@ Lingua::syncToLocal();
 Lingua::updateLanguages();
 ```
 
-> **Note:** `Lingua::optimize()` is deprecated — surgical cache invalidation per `(locale, group)` pair makes it unnecessary.
+> **Note:** `Lingua::optimize()` is deprecated — surgical cache invalidation per `(locale, group)` pair makes it
+> unnecessary.
 
 ---
 
@@ -948,7 +995,8 @@ Lingua::updateLanguages();
 
 ### How translations are stored
 
-In **database mode**, Lingua stores translations in the `language_lines` table. Each row holds all locales in a single JSON `text` column, eliminating the need for per-locale rows:
+In **database mode**, Lingua stores translations in the `language_lines` table. Each row holds all locales in a single
+JSON `text` column, eliminating the need for per-locale rows:
 
 ```
 group       | key          | text
@@ -963,39 +1011,48 @@ This design allows instant locale switching at runtime without additional querie
 
 Lingua defines a `TranslationRepository` contract with two implementations:
 
-| Implementation | Driver | Description |
-|----------------|--------|-------------|
+| Implementation       | Driver     | Description                                                                           |
+|----------------------|------------|---------------------------------------------------------------------------------------|
 | `DatabaseRepository` | `database` | Reads/writes `language_lines`; supports HTML/Markdown types, vendor guard, statistics |
-| `FileRepository` | `file` | Reads/writes lang/ PHP/JSON files; types flattened to plain text |
+| `FileRepository`     | `file`     | Reads/writes lang/ PHP/JSON files; types flattened to plain text                      |
 
 ### Bundled translation dataset
 
-Lingua ships a bundled dataset of **5 902 strings** across **26 locales** and **7 translation groups** (auth, pagination, passwords, validation, http-statuses, errors, notifications), aligned to **Laravel v13.14.0**. The dataset is read by `BundledTranslationSource` at locale install-time and merged into the database or lang/ files during `syncToDatabase()` and `installLocale()`. Notification strings are projected into `lang/{locale}.json` by `NotificationProjector`.
+Lingua ships a bundled dataset of **5 902 strings** across **26 locales** and **7 translation groups** (auth,
+pagination, passwords, validation, http-statuses, errors, notifications), aligned to **Laravel v13.14.0**. The dataset
+is read by `BundledTranslationSource` at locale install-time and merged into the database or lang/ files during
+`syncToDatabase()` and `installLocale()`. Notification strings are projected into `lang/{locale}.json` by
+`NotificationProjector`.
 
-**Bundled locales:** Arabic, German, English, Spanish, Persian, French, Hebrew, Hindi, Indonesian, Italian, Japanese, Korean, Malay, Norwegian Bokmål, Dutch, Polish, Portuguese, Brazilian Portuguese, Romanian, Russian, Swedish, Thai, Turkish, Ukrainian, Vietnamese, Chinese (Simplified).
+**Bundled locales:** Arabic, German, English, Spanish, Persian, French, Hebrew, Hindi, Indonesian, Italian, Japanese,
+Korean, Malay, Norwegian Bokmål, Dutch, Polish, Portuguese, Brazilian Portuguese, Romanian, Russian, Swedish, Thai,
+Turkish, Ukrainian, Vietnamese, Chinese (Simplified).
 
 This replaces the need for `laravel-lang` or any external language package.
 
 ### Translation loading at runtime
 
-`LinguaManager` extends Laravel's built-in `FileLoader` and is registered via `extend()` on the `translation.loader` binding. At runtime it merges:
+`LinguaManager` extends Laravel's built-in `FileLoader` and is registered via `extend()` on the `translation.loader`
+binding. At runtime it merges:
 
 1. File-based translations from `lang/` (via `FileLoader`)
 2. Database translations via the `Db` loader (`Rivalex\Lingua\Database\Db`)
 
-Database translations take precedence over file translations. All translations are cached per `(locale, group)` pair via `Cache::rememberForever`. Cache is invalidated surgically on model save/delete — no full-cache flush required.
+Database translations take precedence over file translations. All translations are cached per `(locale, group)` pair via
+`Cache::rememberForever`. Cache is invalidated surgically on model save/delete — no full-cache flush required.
 
 ### Translation types
 
 Each string is classified automatically during sync:
 
-| Type | Use case | Auto-detected when… |
-|------|----------|----------------------|
-| `text` | Plain strings, labels, messages | Default |
-| `html` | Rich content with HTML markup | String contains HTML tags |
-| `markdown` | Markdown-formatted content | String parses as Markdown |
+| Type       | Use case                        | Auto-detected when…       |
+|------------|---------------------------------|---------------------------|
+| `text`     | Plain strings, labels, messages | Default                   |
+| `html`     | Rich content with HTML markup   | String contains HTML tags |
+| `markdown` | Markdown-formatted content      | String parses as Markdown |
 
-The type drives which editor is shown in the Translations UI. Types are preserved in database mode; flattened to `text` in file mode.
+The type drives which editor is shown in the Translations UI. Types are preserved in database mode; flattened to `text`
+in file mode.
 
 ### Bi-directional sync
 
@@ -1008,8 +1065,11 @@ lang/vendor/…        │  ← lingua:sync-to-local
                     ─┘
 ```
 
-- **`sync-to-database`** — reads every locale file (core + vendor packages) and upserts rows in `language_lines`, auto-creating `languages` records for any new locales discovered. The default locale is processed first and its keys form the reference set.
-- **`sync-to-local`** — reads every row in `language_lines` and writes locale-specific PHP/JSON files back to `lang/`, including vendor subdirectories.
+- **`sync-to-database`** — reads every locale file (core + vendor packages) and upserts rows in `language_lines`,
+  auto-creating `languages` records for any new locales discovered. The default locale is processed first and its keys
+  form the reference set.
+- **`sync-to-local`** — reads every row in `language_lines` and writes locale-specific PHP/JSON files back to `lang/`,
+  including vendor subdirectories.
 
 ### Locale middleware
 
@@ -1021,7 +1081,8 @@ lang/vendor/…        │  ← lingua:sync-to-local
 
 ### Authorization
 
-When `LINGUA_GATE` is set, `can:{gate}` middleware is added to all admin routes. Configure the gate in `AuthServiceProvider` or `AppServiceProvider`:
+When `LINGUA_GATE` is set, `can:{gate}` middleware is added to all admin routes. Configure the gate in
+`AuthServiceProvider` or `AppServiceProvider`:
 
 ```php
 Gate::define('manage-translations', fn (User $user) => $user->isAdmin());
@@ -1080,7 +1141,8 @@ The suite uses [Pest](https://pestphp.com) v4 and covers:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please open an issue first to discuss your proposed change, then submit a PR. Run `composer lint` before pushing.
+Contributions are welcome! Please open an issue first to discuss your proposed change, then submit a PR. Run
+`composer lint` before pushing.
 
 ---
 
