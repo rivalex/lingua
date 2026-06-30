@@ -17,11 +17,18 @@
 [![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
 [![Tests](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml/badge.svg)](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml)
 
-Lingua is a self-hosted translation management package for Laravel applications built on the TALL stack (Tailwind,
-Alpine, Livewire). It gives you a clean admin UI to edit, organize, and synchronize your app's translation strings —
-backed by either a database or your native lang/ files. Import and export translations in CSV, JSON, XLSX, and ODS,
-manage published vendor translations safely, and optionally machine-translate missing strings. No bloated dependencies,
-no third-party translation services required for core features. Built for Laravel 13, Livewire 4, and PHP 8.3+.
+**Lingua** is a self-hosted translation management package for Laravel — a native, database-driven alternative to
+tools like Weblate, Locize, Lokalise, Crowdin, and SimpleLocalize, and a drop-in replacement for
+`spatie/laravel-translation-loader` and `laravel-lang/common`. If you need to manage translations in a Laravel
+application without depending on an external SaaS or downloading third-party language packages, Lingua gives you a
+complete Livewire admin UI to edit, organize, import, export, and synchronize your i18n / l10n strings directly inside
+your app.
+
+Built on the TALL stack (Tailwind, Alpine, Livewire), Lingua stores translations in either your **database** or your
+native `lang/` **files** — switchable with a single config value. It ships a bundled dataset of 26 locales aligned to
+Laravel 13 (no `laravel-lang` required), handles published vendor translations safely, supports **CSV, JSON, XLSX, and
+ODS** import/export with a mandatory dry-run preview, offers full RTL support, and can optionally AI-translate missing
+strings via Lingua Pro. Built for **Laravel 11–13, Livewire 4, and PHP 8.3+**.
 
 [Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Storage Drivers](#-storage-drivers) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Import / Export](#-import--export) · [Language Selector](#-language-selector) · [Facade](#-lingua-facade) · [Architecture](#-architecture) · [Lingua Pro](#-lingua-pro)
 

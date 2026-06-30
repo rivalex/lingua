@@ -1,10 +1,11 @@
 {
     "name": "rivalex/lingua",
-    "description": "Laravel package for multilingual management with database, Livewire UI and translation synchronization",
+    "description": "Self-hosted Laravel translation manager for the TALL stack: edit, sync, import/export and AI-translate your i18n / l10n language files via a Livewire UI. Database & file drivers, vendor translations, CSV/JSON/XLSX/ODS. A native alternative to laravel-lang and external services.",
     "keywords": [
         "laravel",
         "translation",
         "translations",
+        "translation-manager",
         "localization",
         "internationalization",
         "i18n",
@@ -12,9 +13,10 @@
         "multilingual",
         "livewire",
         "tall-stack",
-        "translation-manager",
+        "laravel-package",
         "language-files",
         "lang",
+        "self-hosted",
         "import-export",
         "vendor-translations"
     ],
