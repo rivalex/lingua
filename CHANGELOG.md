@@ -2,6 +2,14 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 2.0.1 - 2026-07-18
+
+### Lingua v2.0.1 - 2026-07-18
+
+#### Fixed
+
+- **`group_key` NOT NULL violation on seed (PostgreSQL)** — `Translation::create()`/`updateOrCreate()` could omit `group_key` from the INSERT, crashing `migrate:fresh --seed` (and any `Lingua::addLanguage()` call) with `SQLSTATE[23502]` on PostgreSQL. Root cause: the model populated `group_key` through two overlapping mechanisms (a dirty-gated `creating`/`saving` pair, plus a `groupKey()` Attribute `set:` closure) that could drift out of sync. Consolidated into a single unconditional `saving()` hook — `group_key` is now recomputed from `group`/`key`/`is_vendor`/`vendor` on every persist, insert or update, regardless of dirty state. Added end-to-end regression coverage (`tests/Feature/Models/TranslationGroupKeyTest.php`) driving the full `Lingua::addLanguage()` → `syncToDatabase()` path and asserting no row is ever left with a null/empty `group_key`.
+
 ## Lingua v2.0.1 - 2026-07-18
 
 ### Fixed
@@ -41,34 +49,58 @@ All notable changes to `lingua` will be documented in this file.
 #### Added
 
 - **Storage driver abstraction** — `database` (default) and `file` drivers controlled by `LINGUA_STORAGE_DRIVER` env / `config('lingua.storage.driver')`. `TranslationRepository` contract with `DatabaseRepository` (language_lines JSON text column) and `FileRepository` (lang/ PHP+JSON) implementations.
+  
 - **`lingua:storage {driver} [--force] [--write-env] [--no-migrate]`** — interactive driver switch: syncs translations before switching, warns on html/markdown type-loss when switching to `file`, publishes/runs driver-required migrations, prints `.env` instruction or writes it directly with `--write-env`.
+  
 - **`lingua:uninstall [--force] [--keep-config] [--keep-published]`** — safe package teardown: exports DB→lang/ (database driver only, no data loss), drops `language_lines`/`languages`/`lingua_settings` tables, removes published config/views/migrations. `lang/` always preserved.
+  
 - **Transfer page** (`/lingua/transfer`, `lingua.transfer` route):
+  
   - **Export** — bilingual (source + one locale), multi-locale (source + all), and JSON-native scopes. Formats: CSV + JSON built-in; XLSX + ODS via optional `openspout/openspout`. Formula-injection guard (cells starting with `= + - @ \t \r` prefixed with `'`). Download via `lingua.transfer.export` (GET, `TransferExportController`).
   - **Import** — `ImportDiffService` dry-run preview (create/update/skip/error counts, capped row lists); `ImportCommitService` transactional commit (type-precedence rules, vendor guard). `TransferSchema`, `RowMapper`, `ParsedRow`, `ImportDiff` DTOs.
   - `FormatRegistry` + 8 format implementations: `CsvWriter`/`CsvReader`, `JsonWriter`/`JsonReader`, `XlsxWriter`/`XlsxReader`, `OdsWriter`/`OdsReader`.
   - `SpreadsheetSupport::available()` gates XLSX/ODS; `SpreadsheetUnavailableException` thrown when requested without openspout.
   
 - **Shared navigation menu** — `x-lingua::nav` anonymous Blade component on all 5 admin pages (Languages, Translations, Statistics, Transfer, Settings). Active-page highlighting (`variant="filled"` + `aria-current="page"`). `lingua.nav.enabled` config key (default `true`) + toggle in Settings UI (Routing & Navigation card).
+  
 - **Bundled translation dataset** — 26 locales × 7 groups (auth, pagination, passwords, validation, http-statuses, errors, notifications); 5902 strings; aligned to Laravel v13.14.0. Read by `BundledTranslationSource`. Replaces laravel-lang as the provisioning source. Merged into the database during `syncToDatabase()` and `installLocale()`. Bundled notification translations projected into `lang/{locale}.json` via `NotificationProjector` (non-destructive merge, `.lingua-managed.json` sidecar for selective removal on uninstall).
+  
 - **`LocaleRegistry`** — internal static dataset (129+ locales) replacing `laravel-lang/common` facade. `LocaleInfo` final readonly VO (`code`, `regional`, `type`, `name`, `native`, `direction`).
+  
 - **Statistics page** (`/lingua/statistics`, `lingua.statistics`) — per-language coverage with progress bars, group breakdown, missing-key drill-down, vendor toggle.
+  
 - **Settings page** (`/lingua/settings`, `lingua.settings`) — persistent UI settings in `lingua_settings` table; `LinguaSetting` model; `SelectorMode` enum (sidebar/modal/dropdown/headless).
+  
 - **Headless language selector** (`lingua::headless-language-selector`) — zero-CSS, `data-lingua-*` attributes, named `$item`/`$current` slots.
+  
 - **`ManagesLocale` trait** — shared locale management (`changeLocale()`, `languages()` computed, `currentUrl` capture) for all selector components (sidebar, dropdown, modal, headless).
+  
 - **`AtomicFileWriter`** — stateless I/O helper: writes via temp-file + atomic `rename()`; verifies all return values; calls `opcache_invalidate($path, true)` after PHP file writes; `ensureDir()`, `put()`, `putJson()`, `putPhp()` methods.
+  
 - **`MigrationPublisher`** — driver-aware selective migration publish. File driver skips `create_language_lines_table`. Idempotent (skips already-published basenames). Used by `lingua:install` and `lingua:storage`.
+  
 - **`CacheKey` helper** — canonical cache key builder: `{prefix}.{locale}.{group}` and `{prefix}.{locale}.{vendor}::{group}`.
+  
 - **`VendorTranslationProtectedException`** — thrown when attempting to delete a vendor-owned translation. Vendor translations can be edited (value/type) but not deleted.
+  
 - **`x-lingua::select`** — custom searchable/clearable select with native Popover API (`popover="manual"` + `showPopover()`/`hidePopover()`). Eliminates Flux modal `transform`/`overflow` stacking context issues. Fallback: `position:fixed` for browsers without Popover API support.
+  
 - **`HtmlSanitizer`** — DOM-based whitelist sanitizer with per-tag allowed-attribute map and URI scheme validation.
+  
 - **Pro extension hooks** — `suppress_pro_nudge` config, `pro_upgrade_url`, `extensions.enabled` kill-switch; `ExtensionRegistry` for third-party Livewire component injection via `allTranslationTabComponents()` / `allTranslationActionComponents()`.
+  
 - **Facade additions** — `get(?string $locale)`, `getDefault()`, `getFallback()`, `available()`, `installed()`, `notInstalled()`, `isInstalled(?string $locale)`, `isAvailable(?string $locale)`, `info(mixed $locale)`, `installDefaultLanguage()`, `updateLanguages()`, `setVendorTranslation()`. `optimize()` deprecated (surgical cache invalidation makes it unnecessary).
+  
 - **9-locale UI translations** (ar, en, es, fr, hi, it, pt, ru, zh) for nav menu, Transfer page, Settings routing/nav toggles, and security error messages.
+  
 - **`lingua:install` improvements** — arrow-key `select()` driver prompt (CI-friendly numbered fallback); file-mode deploy warnings (Forge/Envoyer/CI overwrite, dirty tree); driver-aware migration publish.
+  
 - **`lingua:sync-to-local --force`** — override file-mode no-op guard for deliberate DB→file export.
+  
 - **`TranslationFactory`** — `->core()` and `->vendor(string $vendor)` states; `HasFactory` added to `Translation` model.
+  
 - **`LangFileKeyParityTest`** — guards key parity across all 9 bundled UI locale files.
+  
 
 #### Changed
 
@@ -157,34 +189,58 @@ All notable changes to `lingua` will be documented in this file.
 ### Added
 
 - **Storage driver abstraction** — `database` (default) and `file` drivers controlled by `LINGUA_STORAGE_DRIVER` env / `config('lingua.storage.driver')`. `TranslationRepository` contract with `DatabaseRepository` (language_lines JSON text column) and `FileRepository` (lang/ PHP+JSON) implementations.
+  
 - **`lingua:storage {driver} [--force] [--write-env] [--no-migrate]`** — interactive driver switch: syncs translations before switching, warns on html/markdown type-loss when switching to `file`, publishes/runs driver-required migrations, prints `.env` instruction or writes it directly with `--write-env`.
+  
 - **`lingua:uninstall [--force] [--keep-config] [--keep-published]`** — safe package teardown: exports DB→lang/ (database driver only, no data loss), drops `language_lines`/`languages`/`lingua_settings` tables, removes published config/views/migrations. `lang/` always preserved.
+  
 - **Transfer page** (`/lingua/transfer`, `lingua.transfer` route):
+  
   - **Export** — bilingual (source + one locale), multi-locale (source + all), and JSON-native scopes. Formats: CSV + JSON built-in; XLSX + ODS via optional `openspout/openspout`. Formula-injection guard (cells starting with `= + - @ \t \r` prefixed with `'`). Download via `lingua.transfer.export` (GET, `TransferExportController`).
   - **Import** — `ImportDiffService` dry-run preview (create/update/skip/error counts, capped row lists); `ImportCommitService` transactional commit (type-precedence rules, vendor guard). `TransferSchema`, `RowMapper`, `ParsedRow`, `ImportDiff` DTOs.
   - `FormatRegistry` + 8 format implementations: `CsvWriter`/`CsvReader`, `JsonWriter`/`JsonReader`, `XlsxWriter`/`XlsxReader`, `OdsWriter`/`OdsReader`.
   - `SpreadsheetSupport::available()` gates XLSX/ODS; `SpreadsheetUnavailableException` thrown when requested without openspout.
   
 - **Shared navigation menu** — `x-lingua::nav` anonymous Blade component on all 5 admin pages (Languages, Translations, Statistics, Transfer, Settings). Active-page highlighting (`variant="filled"` + `aria-current="page"`). `lingua.nav.enabled` config key (default `true`) + toggle in Settings UI (Routing & Navigation card).
+  
 - **Bundled translation dataset** — 26 locales × 7 groups (auth, pagination, passwords, validation, http-statuses, errors, notifications); 5902 strings; aligned to Laravel v13.14.0. Read by `BundledTranslationSource`. Replaces laravel-lang as the provisioning source. Merged into the database during `syncToDatabase()` and `installLocale()`. Bundled notification translations projected into `lang/{locale}.json` via `NotificationProjector` (non-destructive merge, `.lingua-managed.json` sidecar for selective removal on uninstall).
+  
 - **`LocaleRegistry`** — internal static dataset (129+ locales) replacing `laravel-lang/common` facade. `LocaleInfo` final readonly VO (`code`, `regional`, `type`, `name`, `native`, `direction`).
+  
 - **Statistics page** (`/lingua/statistics`, `lingua.statistics`) — per-language coverage with progress bars, group breakdown, missing-key drill-down, vendor toggle.
+  
 - **Settings page** (`/lingua/settings`, `lingua.settings`) — persistent UI settings in `lingua_settings` table; `LinguaSetting` model; `SelectorMode` enum (sidebar/modal/dropdown/headless).
+  
 - **Headless language selector** (`lingua::headless-language-selector`) — zero-CSS, `data-lingua-*` attributes, named `$item`/`$current` slots.
+  
 - **`ManagesLocale` trait** — shared locale management (`changeLocale()`, `languages()` computed, `currentUrl` capture) for all selector components (sidebar, dropdown, modal, headless).
+  
 - **`AtomicFileWriter`** — stateless I/O helper: writes via temp-file + atomic `rename()`; verifies all return values; calls `opcache_invalidate($path, true)` after PHP file writes; `ensureDir()`, `put()`, `putJson()`, `putPhp()` methods.
+  
 - **`MigrationPublisher`** — driver-aware selective migration publish. File driver skips `create_language_lines_table`. Idempotent (skips already-published basenames). Used by `lingua:install` and `lingua:storage`.
+  
 - **`CacheKey` helper** — canonical cache key builder: `{prefix}.{locale}.{group}` and `{prefix}.{locale}.{vendor}::{group}`.
+  
 - **`VendorTranslationProtectedException`** — thrown when attempting to delete a vendor-owned translation. Vendor translations can be edited (value/type) but not deleted.
+  
 - **`x-lingua::select`** — custom searchable/clearable select with native Popover API (`popover="manual"` + `showPopover()`/`hidePopover()`). Eliminates Flux modal `transform`/`overflow` stacking context issues. Fallback: `position:fixed` for browsers without Popover API support.
+  
 - **`HtmlSanitizer`** — DOM-based whitelist sanitizer with per-tag allowed-attribute map and URI scheme validation.
+  
 - **Pro extension hooks** — `suppress_pro_nudge` config, `pro_upgrade_url`, `extensions.enabled` kill-switch; `ExtensionRegistry` for third-party Livewire component injection via `allTranslationTabComponents()` / `allTranslationActionComponents()`.
+  
 - **Facade additions** — `get(?string $locale)`, `getDefault()`, `getFallback()`, `available()`, `installed()`, `notInstalled()`, `isInstalled(?string $locale)`, `isAvailable(?string $locale)`, `info(mixed $locale)`, `installDefaultLanguage()`, `updateLanguages()`, `setVendorTranslation()`. `optimize()` deprecated (surgical cache invalidation makes it unnecessary).
+  
 - **9-locale UI translations** (ar, en, es, fr, hi, it, pt, ru, zh) for nav menu, Transfer page, Settings routing/nav toggles, and security error messages.
+  
 - **`lingua:install` improvements** — arrow-key `select()` driver prompt (CI-friendly numbered fallback); file-mode deploy warnings (Forge/Envoyer/CI overwrite, dirty tree); driver-aware migration publish.
+  
 - **`lingua:sync-to-local --force`** — override file-mode no-op guard for deliberate DB→file export.
+  
 - **`TranslationFactory`** — `->core()` and `->vendor(string $vendor)` states; `HasFactory` added to `Translation` model.
+  
 - **`LangFileKeyParityTest`** — guards key parity across all 9 bundled UI locale files.
+  
 
 ### Changed
 
