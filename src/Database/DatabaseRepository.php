@@ -304,6 +304,10 @@ final class DatabaseRepository implements TranslationRepository
                 [
                     'type' => $existing->type ?? LinguaType::text,
                     'text' => array_merge($existing->text ?? [], [$locale => $entry['value']]),
+                    // Belt-and-braces alongside Translation::save()'s own recompute.
+                    // Cast to string: bundled entries can carry an int key for a
+                    // top-level numeric-indexed array item (see TranslationFileReader::flatten()).
+                    'group_key' => Translation::buildGroupKey((string) $entry['group'], (string) $entry['key'], false, null),
                 ],
             );
         }

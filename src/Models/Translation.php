@@ -77,6 +77,13 @@ class Translation extends Model
     protected $fillable = [
         'group',
         'key',
+        // Derived (group.key composite), NOT NULL + UNIQUE by design. Fillable
+        // so write sites can set it explicitly as a belt-and-braces alongside
+        // save()'s authoritative recompute — see save() below. Every call site
+        // passes a fixed key array (verified: no request-input spreading
+        // anywhere in this package), so this carries no mass-assignment risk,
+        // and save() overwrites any caller-supplied value regardless.
+        'group_key',
         'type',
         'text',
         'is_vendor',
@@ -104,18 +111,6 @@ class Translation extends Model
     public static function boot(): void
     {
         parent::boot();
-        // Single authoritative populate path: saving() fires before both
-        // insert and update, so it covers every persist. Recomputed
-        // unconditionally (cheap string concat) rather than gated on dirty
-        // tracking, so group_key can never end up null or stale.
-        static::saving(function (self $model) {
-            $model->group_key = self::buildGroupKey(
-                $model->group,
-                $model->key,
-                $model->is_vendor ?? false,
-                $model->vendor
-            );
-        });
         // Suppress per-row cache clears during bulk sync; a single clear fires in the finally block.
         static::saved(function (self $model) {
             if (! self::$syncing) {
@@ -125,6 +120,29 @@ class Translation extends Model
         static::deleted(function (self $model) {
             $model->forgetCacheForLocales();
         });
+    }
+
+    /**
+     * Persist the model, guaranteeing group_key is populated even when Eloquent
+     * events are unavailable (e.g. the event dispatcher is unbound while this
+     * model first boots during `artisan migrate:fresh --seed`, or events are
+     * suppressed via withoutEvents()/saveQuietly()). A previous fix relied on a
+     * saving() event hook alone — that hook silently never registers when the
+     * dispatcher isn't bound yet, leaving group_key absent from the INSERT and
+     * violating the NOT NULL + UNIQUE constraint. group_key must never depend
+     * on the event pipeline, so it is recomputed here, in the write path
+     * itself, before every persist.
+     */
+    public function save(array $options = []): bool
+    {
+        $this->group_key = self::buildGroupKey(
+            $this->group,
+            $this->key,
+            $this->is_vendor ?? false,
+            $this->vendor,
+        );
+
+        return parent::save($options);
     }
 
     /**
@@ -236,7 +254,7 @@ class Translation extends Model
         );
     }
 
-    protected static function buildGroupKey(string $group, string $key, bool $isVendor, ?string $vendor): string
+    public static function buildGroupKey(string $group, string $key, bool $isVendor, ?string $vendor): string
     {
         $prefix = $isVendor && $vendor ? $vendor.'::' : '';
 
@@ -600,6 +618,17 @@ class Translation extends Model
                 'text' => array_merge(
                     $existing->text ?? [],
                     [$translation['locale'] => $translation['value']]
+                ),
+                // Belt-and-braces alongside save()'s own recompute — see save() above.
+                // Cast group/key to string: TranslationFileReader::flatten() can yield
+                // an int key for a top-level numeric-indexed array entry, which
+                // Eloquent's 'key' => 'string' cast would normally absorb but the
+                // strictly-typed buildGroupKey() will not.
+                'group_key' => self::buildGroupKey(
+                    (string) $translation['group'],
+                    (string) $translation['key'],
+                    $translation['is_vendor'],
+                    $translation['vendor']
                 ),
             ]
         );
