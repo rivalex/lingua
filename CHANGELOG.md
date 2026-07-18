@@ -2,6 +2,10 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 2.0.2 - 2026-07-18
+
+**Full Changelog**: https://github.com/rivalex/lingua/compare/v2.0.0...v2.0.2
+
 ## Lingua 2.0.1 - 2026-07-18
 
 ### Lingua v2.0.1 - 2026-07-18
