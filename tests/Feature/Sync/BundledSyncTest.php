@@ -6,6 +6,8 @@ use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
+use function Pest\Laravel\assertDatabaseHas;
+
 // ─── Per-test isolated lang + bundled directories ───────────────────────────
 
 beforeEach(function () {
@@ -56,7 +58,14 @@ it('imports bundled default-locale translations into the database', function () 
     $row = Translation::where('group', 'auth')->where('key', 'failed')->first();
 
     expect($row)->not->toBeNull()
-        ->and($row->text['en'])->toBe('These credentials do not match.');
+        ->and($row->text['en'])->toBe('These credentials do not match.')
+        ->and($row->group_key)->toBe('auth.failed');
+
+    assertDatabaseHas('language_lines', [
+        'group' => 'auth',
+        'key' => 'failed',
+        'group_key' => 'auth.failed',
+    ]);
 });
 
 it('imports bundled translations for an installed non-default locale', function () {

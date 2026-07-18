@@ -104,23 +104,17 @@ class Translation extends Model
     public static function boot(): void
     {
         parent::boot();
-        static::creating(function ($model) {
+        // Single authoritative populate path: saving() fires before both
+        // insert and update, so it covers every persist. Recomputed
+        // unconditionally (cheap string concat) rather than gated on dirty
+        // tracking, so group_key can never end up null or stale.
+        static::saving(function (self $model) {
             $model->group_key = self::buildGroupKey(
                 $model->group,
                 $model->key,
                 $model->is_vendor ?? false,
                 $model->vendor
             );
-        });
-        static::saving(function ($model) {
-            if ($model->isDirty('group') || $model->isDirty('key') || $model->isDirty('is_vendor') || $model->isDirty('vendor')) {
-                $model->group_key = self::buildGroupKey(
-                    $model->group,
-                    $model->key,
-                    $model->is_vendor ?? false,
-                    $model->vendor
-                );
-            }
         });
         // Suppress per-row cache clears during bulk sync; a single clear fires in the finally block.
         static::saved(function (self $model) {
@@ -235,14 +229,10 @@ class Translation extends Model
 
     protected function groupKey(): Attribute
     {
+        // Population lives solely in the saving() hook above — this accessor
+        // only normalizes the stored value on read.
         return Attribute::make(
             get: fn ($value) => Str::squish($value),
-            set: fn () => self::buildGroupKey(
-                $this->group,
-                $this->key,
-                $this->is_vendor ?? false,
-                $this->vendor,
-            )
         );
     }
 

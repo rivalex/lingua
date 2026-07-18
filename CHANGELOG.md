@@ -2,6 +2,12 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua v2.0.1 - 2026-07-18
+
+### Fixed
+
+- **`group_key` NOT NULL violation on seed (PostgreSQL)** — `Translation::create()`/`updateOrCreate()` could omit `group_key` from the INSERT, crashing `migrate:fresh --seed` (and any `Lingua::addLanguage()` call) with `SQLSTATE[23502]` on PostgreSQL. Root cause: the model populated `group_key` through two overlapping mechanisms (a dirty-gated `creating`/`saving` pair, plus a `groupKey()` Attribute `set:` closure) that could drift out of sync. Consolidated into a single unconditional `saving()` hook — `group_key` is now recomputed from `group`/`key`/`is_vendor`/`vendor` on every persist, insert or update, regardless of dirty state. Added end-to-end regression coverage (`tests/Feature/Models/TranslationGroupKeyTest.php`) driving the full `Lingua::addLanguage()` → `syncToDatabase()` path and asserting no row is ever left with a null/empty `group_key`.
+
 ## Lingua v2.0.0 - 2026-06-30
 
 ### Lingua 2.0.0 - 2026-06-29
