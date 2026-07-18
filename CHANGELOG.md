@@ -2,7 +2,19 @@
 
 All notable changes to `lingua` will be documented in this file.
 
-## Lingua v2.0.2 - 2026-07-18
+## Lingua 2.0.2 - 2026-07-18
+
+**Full Changelog**: https://github.com/rivalex/lingua/compare/v2.0.0...v2.0.2
+
+## Lingua 2.0.1 - 2026-07-18
+
+### Lingua v2.0.1 - 2026-07-18
+
+#### Fixed
+
+- **`group_key` NOT NULL violation on seed (PostgreSQL)** — `Translation::create()`/`updateOrCreate()` could omit `group_key` from the INSERT, crashing `migrate:fresh --seed` (and any `Lingua::addLanguage()` call) with `SQLSTATE[23502]` on PostgreSQL. Root cause: the model populated `group_key` through two overlapping mechanisms (a dirty-gated `creating`/`saving` pair, plus a `groupKey()` Attribute `set:` closure) that could drift out of sync. First consolidated into a single unconditional `saving()` hook — but that alone was still insufficient: under `artisan migrate:fresh --seed` the Eloquent event dispatcher can be unbound when `Translation` first boots, so the `saving()` listener silently never registers and `group_key` stays absent from the INSERT regardless. Fixed for real by making population event-**independent**: `Translation::save()` is overridden to recompute `group_key` immediately before every `parent::save()` call, and `writeTranslation()` / `DatabaseRepository::installLocale()` also set it explicitly in their `updateOrCreate()` payloads as a belt-and-braces measure (`group_key` added to `$fillable`; `buildGroupKey()` made `public static`). Added end-to-end regression coverage (`tests/Feature/Models/TranslationGroupKeyTest.php`), including cases run under `Translation::withoutEvents()` that reproduce the dispatcher-unbound failure deterministically and would have failed against the `saving()`-hook-only fix.
+
+## Lingua v2.0.1 - 2026-07-18
 
 ### Fixed
 
