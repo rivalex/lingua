@@ -2,6 +2,12 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 2.0.4 - 2026-07-28
+
+### Fixed
+
+- **`codecov/patch` check failing on 2.0.3 dark-mode commit** — patch coverage sat at 19.04% against a 67.79% target because `Settings::$forceDarkMode`'s mount/save logic (`src/Livewire/Settings.php`) had no test coverage. Added four tests mirroring the existing `showFlags` pattern: config-default load, DB-override load, persistence on `save()`, and an `assertSee` for the new "Appearance" card. 794/796 suite green (2 pre-existing skips).
+
 ## Lingua 2.0.3 - 2026-07-28
 
 ### Fixed
