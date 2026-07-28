@@ -1,4 +1,4 @@
-<div class="lingua">
+<x-lingua::dark-scope>
     <x-lingua::branding />
 
     <section class="flex flex-col gap-6">
@@ -29,6 +29,14 @@
             @include('lingua::settings.partials._routing')
         </x-lingua::card>
 
+        {{-- Appearance --}}
+        <x-lingua::card
+            :title="__('lingua::lingua.settings.appearance.title')"
+            :subtitle="__('lingua::lingua.settings.appearance.subtitle')"
+            icon="moon">
+            @include('lingua::settings.partials._appearance')
+        </x-lingua::card>
+
         {{-- Editor toolbar --}}
         <x-lingua::card
             :title="__('lingua::lingua.settings.editor.title')"
@@ -46,7 +54,7 @@
         @endforeach
 
     </section>
-</div>
+</x-lingua::dark-scope>
 @assets
 @once
     <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">

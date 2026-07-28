@@ -19,6 +19,7 @@ use Rivalex\Lingua\Enums\SelectorMode;
  * ### Known keys (use the public constants):
  * - `KEY_SHOW_FLAGS`   — selector.show_flags (bool)
  * - `KEY_SELECTOR_MODE` — selector.mode (string, validated against SelectorMode)
+ * - `KEY_DARK_MODE_FORCE` — dark_mode.force (bool)
  *
  * ### Fallback priority:
  * 1. DB value (this model)
@@ -72,6 +73,9 @@ final class LinguaSetting extends Model
 
     /** Whether the shared navigation menu is shown on all Lingua admin pages. */
     public const string KEY_NAV_ENABLED = 'nav.enabled';
+
+    /** Whether Lingua's dark theme is forced regardless of host app / OS color scheme. */
+    public const string KEY_DARK_MODE_FORCE = 'dark_mode.force';
 
     // -------------------------------------------------------------------------
     // Public API

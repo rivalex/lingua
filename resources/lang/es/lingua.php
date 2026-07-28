@@ -246,6 +246,12 @@ return [
             'mode_description' => 'Choose how the language selector renders: sidebar (inline panel), modal (overlay dialog), dropdown (compact menu), or headless (no rendering — implement your own UI).',
             'headless_note' => 'Headless mode disables built-in rendering. You must implement the selector manually in your layout. See the Headless section in the Lingua documentation for details.',
         ],
+        'appearance' => [
+            'title' => 'Apariencia',
+            'subtitle' => 'Controla el tema visual de Lingua.',
+            'force_dark_mode' => 'Forzar modo oscuro',
+            'force_dark_mode_description' => 'Muestra siempre el tema oscuro de Lingua, independientemente de la aplicación anfitriona o del esquema de color del sistema operativo. Útil cuando la aplicación anfitriona no tiene un selector de modo oscuro, o durante el desarrollo local con un sistema en modo claro.',
+        ],
         'routing' => [
             'title' => 'Routing & Navigation',
             'subtitle' => 'Control how Lingua navigates between pages and how links to the translation editor behave.',

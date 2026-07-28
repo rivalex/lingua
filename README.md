@@ -65,6 +65,7 @@ strings via Lingua Pro. Built for **Laravel 11–13, Livewire 4, and PHP 8.3+**.
 | **Language selector**            | Configurable sidebar, dropdown, modal, or headless language switcher                             |
 | **Translation statistics**       | Per-language coverage with progress bars, group breakdown, and missing-key drill-down            |
 | **Shared navigation menu**       | Built-in nav bar on all admin pages; active-page highlighting; toggleable                        |
+| **Force dark mode**              | Render Lingua's dark theme regardless of host app / OS color scheme — config or Settings UI      |
 | **DB-persisted settings**        | Selector mode, flags, nav, editor toolbar managed from the UI                                    |
 | **Headless language selector**   | Zero-CSS semantic HTML component for full styling freedom                                        |
 | **RTL support**                  | First-class right-to-left language handling                                                      |
@@ -220,6 +221,16 @@ return [
         'sticky_top' => 0,
     ],
 
+    // Lingua's own CSS follows a class-based dark variant (&:where(.dark, .dark *)),
+    // so it normally activates via the host app's <html class="dark"> ancestor —
+    // same convention as Tailwind's default class strategy. Set 'force' to true to
+    // always render Lingua's dark theme regardless of the host app / OS color scheme
+    // (e.g. embedding in a host with no dark-mode toggle, or local dev on a light
+    // system). Overridable live from the Settings UI (Appearance card).
+    'dark_mode' => [
+        'force' => env('LINGUA_FORCE_DARK_MODE', false),
+    ],
+
     // -------------------------------------------------------------------------
     // STORAGE / LOADERS
     // -------------------------------------------------------------------------
@@ -268,6 +279,7 @@ return [
 | `LINGUA_GATE`               | `null`                       | Laravel Gate name for admin authorization |
 | `LINGUA_CACHE_STORE`        | `null`                       | Cache store (null = app default)          |
 | `LINGUA_CACHE_PREFIX`       | `lingua.trans`               | Cache key prefix                          |
+| `LINGUA_FORCE_DARK_MODE`    | `false`                      | Force Lingua's dark theme regardless of host app / OS color scheme |
 | `LINGUA_SUPPRESS_PRO_NUDGE` | `false`                      | Hide the Lingua Pro upgrade prompt        |
 | `LINGUA_PRO_UPGRADE_URL`    | `https://lingua.rivalex.dev` | Pro upgrade link shown in admin UI        |
 | `LINGUA_EXTENSIONS_ENABLED` | `true`                       | Enable/disable the extension system       |
@@ -627,6 +639,7 @@ The settings page lets you configure Lingua's UI behaviour without touching conf
 - **Flag icons** — toggle country flag icons next to language names
 - **Navigation menu** — enable or disable the shared nav bar shown on all Lingua pages
 - **Routing** — toggle `wire:navigate`, set sticky bar top offset (`ui.sticky_top`), configure extra route parameters
+- **Appearance** — force Lingua's dark theme on regardless of the host app / OS color scheme (`dark_mode.force`)
 - **Editor toolbar** — enable or disable individual toolbar buttons (bold, italic, headings, code-block, …) across 3
   groups (13 toggles total)
 

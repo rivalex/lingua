@@ -58,6 +58,13 @@ final class Settings extends Component
     public bool $navEnabled = true;
 
     // -------------------------------------------------------------------------
+    // Appearance
+    // -------------------------------------------------------------------------
+
+    /** Whether Lingua's dark theme is forced regardless of host app / OS color scheme. */
+    public bool $forceDarkMode = false;
+
+    // -------------------------------------------------------------------------
     // Editor toolbar
     // -------------------------------------------------------------------------
 
@@ -114,6 +121,11 @@ final class Settings extends Component
             config('lingua.nav.enabled', true),
         );
 
+        $this->forceDarkMode = (bool) LinguaSetting::get(
+            LinguaSetting::KEY_DARK_MODE_FORCE,
+            config('lingua.dark_mode.force', false),
+        );
+
         $this->editor = (array) LinguaSetting::get(
             LinguaSetting::KEY_EDITOR,
             config('lingua.editor', []),
@@ -166,6 +178,7 @@ final class Settings extends Component
             : $this->uiStickyTop;
         LinguaSetting::set(LinguaSetting::KEY_UI_STICKY_TOP, $stickyValue);
         LinguaSetting::set(LinguaSetting::KEY_NAV_ENABLED, $this->navEnabled);
+        LinguaSetting::set(LinguaSetting::KEY_DARK_MODE_FORCE, $this->forceDarkMode);
 
         if (! empty($this->editor)) {
             LinguaSetting::set(LinguaSetting::KEY_EDITOR, $this->editor);

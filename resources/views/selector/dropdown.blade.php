@@ -1,4 +1,4 @@
-<div class="lingua">
+<x-lingua::dark-scope>
     <div x-data="{ open: false }" class="relative">
         <flux:button variant="filled" square @click="open = !open" class="cursor-pointer">
             <div class="flex flex-col items-center w-full px-1.5 space-y-[2px]">
@@ -38,7 +38,7 @@
         </div>
         @endisland
     </div>
-</div>
+</x-lingua::dark-scope>
 @assets
 @once
     <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">

@@ -2,6 +2,12 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 2.0.3 - 2026-07-28
+
+### Fixed
+
+- **feat: force dark mode option** — Lingua's own Tailwind build compiled `dark:` utilities under the default `@media (prefers-color-scheme: dark)` strategy, scoped `.lingua .dark\:*`, fully decoupled from any host app's class-based dark toggle (`<html class="dark">`). Package styling only rendered when the *browser/OS* preference was dark, regardless of the host app's own theme state — verified via chrome-devtools (emulated light color-scheme, compiled CSS inspection). Switched the Tailwind entry (`resources/css/lingua.css`) to a class-based `dark:` variant (`@custom-variant dark (&:where(.dark, .dark *))`); `vite.config.js`'s `postcss-prefix-selector` transform already anticipated this (`:where(.dark,...) .lingua <rest>` reconstruction) but the directive was never added. Added `config('lingua.dark_mode.force')` (env `LINGUA_FORCE_DARK_MODE`) + `LinguaSetting::KEY_DARK_MODE_FORCE` DB override + Settings UI toggle ("Appearance" card) so Lingua's dark theme can be forced on regardless of host app / OS state — same config+DB+UI precedent as `nav.enabled`. New `x-lingua::dark-scope` anonymous component wraps the `.lingua` root on all 8 package views (5 full pages + 3 selector variants) with a conditional `.dark` ancestor. 9-locale i18n for the new Appearance card. 790/792 tests green (2 pre-existing skips).
+
 ## Lingua 2.0.2 - 2026-07-18
 
 **Full Changelog**: https://github.com/rivalex/lingua/compare/v2.0.0...v2.0.2

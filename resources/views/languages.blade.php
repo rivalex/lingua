@@ -1,7 +1,7 @@
 @php
     use Rivalex\Lingua\Facades\Lingua;
 @endphp
-<div class="lingua">
+<x-lingua::dark-scope>
     <x-lingua::branding />
 
     <section class="flex flex-col gap-6">
@@ -117,7 +117,7 @@
         </div>
         <livewire:lingua::language.table wire:model.live="search" lazy/>
     </section>
-</div>
+</x-lingua::dark-scope>
 @assets
 @once
     <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">

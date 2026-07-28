@@ -246,6 +246,12 @@ return [
             'mode_description' => 'Scegli come viene visualizzato il selettore: sidebar (pannello inline), modal (finestra sovrapposta), dropdown (menu compatto), oppure headless (nessun rendering — implementa il tuo).',
             'headless_note' => 'La modalità headless disabilita il rendering integrato. Devi implementare il selettore manualmente nel tuo layout. Consulta la sezione Headless nella documentazione di Lingua per i dettagli.',
         ],
+        'appearance' => [
+            'title' => 'Aspetto',
+            'subtitle' => 'Controlla il tema visivo di Lingua.',
+            'force_dark_mode' => 'Forza modalità scura',
+            'force_dark_mode_description' => 'Mostra sempre il tema scuro di Lingua, indipendentemente dall\'applicazione host o dal tema del sistema operativo. Utile quando l\'app host non ha un selettore di modalità scura, o durante lo sviluppo locale con sistema in modalità chiara.',
+        ],
         'routing' => [
             'title' => 'Routing & Navigazione',
             'subtitle' => 'Controlla come Lingua naviga tra le pagine e come funzionano i link all\'editor di traduzione.',

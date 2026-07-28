@@ -1,4 +1,4 @@
-<div class="lingua">
+<x-lingua::dark-scope>
     <x-lingua::menu-group expandable :expanded="false" heading="{{ __('lingua::lingua.selector.menu_title') }}" class="grid">
         <x-slot name="icon" class="p-0">
             <livewire:lingua::selector.icon locale="{{ app()->currentLocale() }}" :show-flags="$showFlags"/>
@@ -18,7 +18,7 @@
             </flux:sidebar.item>
         @endforeach
     </x-lingua::menu-group>
-</div>
+</x-lingua::dark-scope>
 @assets
 @once
     <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">

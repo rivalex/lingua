@@ -1,4 +1,4 @@
-<div class="lingua">
+<x-lingua::dark-scope>
     <flux:modal.trigger name="{{ $modalName }}">
         <flux:button variant="filled" square class="cursor-pointer">
             <div class="flex flex-col items-center w-full px-1.5 space-y-[2px]">
@@ -38,7 +38,7 @@
             @endisland
         </div>
     </flux:modal>
-</div>
+</x-lingua::dark-scope>
 @assets
 @once
     <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">
