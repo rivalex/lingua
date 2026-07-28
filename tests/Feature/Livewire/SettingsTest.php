@@ -22,6 +22,11 @@ it('shows the selector section', function (): void {
         ->assertSee('Language Selector');
 });
 
+it('shows the appearance section', function (): void {
+    Livewire::test(Settings::class)
+        ->assertSee('Force dark mode');
+});
+
 it('exposes all four selector mode options', function (): void {
     $component = Livewire::test(Settings::class);
 
@@ -62,6 +67,20 @@ it('loads selectorMode from DB when a row exists', function (): void {
         ->assertSet('selectorMode', 'dropdown');
 });
 
+it('loads forceDarkMode from config when no DB row exists', function (): void {
+    config(['lingua.dark_mode.force' => true]);
+
+    Livewire::test(Settings::class)
+        ->assertSet('forceDarkMode', true);
+});
+
+it('loads forceDarkMode from DB when a row exists', function (): void {
+    LinguaSetting::set(LinguaSetting::KEY_DARK_MODE_FORCE, true);
+
+    Livewire::test(Settings::class)
+        ->assertSet('forceDarkMode', true);
+});
+
 // ---------------------------------------------------------------------------
 // save()
 // ---------------------------------------------------------------------------
@@ -80,6 +99,14 @@ it('persists selectorMode to the database on save', function (): void {
         ->call('save');
 
     expect(LinguaSetting::get(LinguaSetting::KEY_SELECTOR_MODE))->toBe('modal');
+});
+
+it('persists forceDarkMode to the database on save', function (): void {
+    Livewire::test(Settings::class)
+        ->set('forceDarkMode', true)
+        ->call('save');
+
+    expect(LinguaSetting::get(LinguaSetting::KEY_DARK_MODE_FORCE))->toBeTrue();
 });
 
 it('dispatches a settings-saved browser event after save', function (): void {
