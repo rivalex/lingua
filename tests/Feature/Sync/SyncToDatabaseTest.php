@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Facades\DB;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
@@ -346,7 +347,7 @@ it('re-syncing unchanged files issues no writes to language_lines', function () 
     Translation::syncToDatabase();
 
     $writes = [];
-    Illuminate\Support\Facades\DB::listen(function ($query) use (&$writes): void {
+    DB::listen(function ($query) use (&$writes): void {
         if (preg_match('/^\s*(insert|update|delete)\b.*language_lines/i', $query->sql)) {
             $writes[] = $query->sql;
         }
@@ -368,7 +369,7 @@ it('reads language_lines once per sync regardless of the number of keys', functi
     Translation::syncToDatabase();
 
     $reads = 0;
-    Illuminate\Support\Facades\DB::listen(function ($query) use (&$reads): void {
+    DB::listen(function ($query) use (&$reads): void {
         if (preg_match('/^\s*select\b.*from\s+["`]?language_lines/i', $query->sql)) {
             $reads++;
         }
