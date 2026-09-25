@@ -2,6 +2,13 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 2.0.5 - 2026-09-25
+
+### Fixed
+
+- **perf(sync): `syncToDatabase()` timed out behind reverse proxies** — every entry did its own lookup plus an `updateOrCreate()` (two SELECTs and one write per key per locale, in autocommit). On a remote database this is latency-bound: a real app with ~1,150 rows issued 6,389 queries per sync, which exceeded Cloudflare's 100 s edge timeout when triggered from the Languages UI (HTTP 504). Existing rows are now loaded once into an in-memory index, unchanged values are skipped, only changed or new rows are written, and both passes run in a single transaction (no partial state if the request is killed). Cache invalidation is deduplicated per locale/group. Same app: 19 queries, 0.15 s (was 4.33 s on a local database). Row-creation semantics (type detection, `group_key`, int-key cast) are unchanged.
+- **fix(command): `lingua:sync-to-database` exited 0 on failure** — the exception was printed but swallowed, so deploy hooks and CI could not detect a failed sync. The command now returns `FAILURE`.
+
 ## Lingua 2.0.4 - 2026-07-28
 
 ### Fixed

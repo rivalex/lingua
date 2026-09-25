@@ -335,3 +335,74 @@ it('re-syncing the same files does not duplicate Translation rows', function () 
     expect($countAfterFirst)->toBe(1)
         ->and($countAfterSecond)->toBe(1);
 });
+
+// ─── Performance contract ───────────────────────────────────────────────────
+
+it('re-syncing unchanged files issues no writes to language_lines', function () {
+    mkdir($this->syncDir.'/en', 0777, true);
+    file_put_contents($this->syncDir.'/en/ui.php', '<?php return ["submit" => "Submit", "cancel" => "Cancel"];');
+    file_put_contents($this->syncDir.'/en.json', json_encode(['Hello' => 'Hello']));
+
+    Translation::syncToDatabase();
+
+    $writes = [];
+    Illuminate\Support\Facades\DB::listen(function ($query) use (&$writes): void {
+        if (preg_match('/^\s*(insert|update|delete)\b.*language_lines/i', $query->sql)) {
+            $writes[] = $query->sql;
+        }
+    });
+
+    Translation::syncToDatabase();
+
+    expect($writes)->toBe([]);
+});
+
+it('reads language_lines once per sync regardless of the number of keys', function () {
+    mkdir($this->syncDir.'/en', 0777, true);
+    $keys = [];
+    for ($i = 0; $i < 50; $i++) {
+        $keys["k{$i}"] = "Value {$i}";
+    }
+    file_put_contents($this->syncDir.'/en/bulk.php', '<?php return '.var_export($keys, true).';');
+
+    Translation::syncToDatabase();
+
+    $reads = 0;
+    Illuminate\Support\Facades\DB::listen(function ($query) use (&$reads): void {
+        if (preg_match('/^\s*select\b.*from\s+["`]?language_lines/i', $query->sql)) {
+            $reads++;
+        }
+    });
+
+    Translation::syncToDatabase();
+
+    expect($reads)->toBe(1);
+});
+
+it('re-syncing updates a value changed in the lang file', function () {
+    mkdir($this->syncDir.'/en', 0777, true);
+    file_put_contents($this->syncDir.'/en/ui.php', '<?php return ["submit" => "Submit"];');
+    Translation::syncToDatabase();
+
+    file_put_contents($this->syncDir.'/en/ui.php', '<?php return ["submit" => "Send"];');
+    Translation::syncToDatabase();
+
+    $row = Translation::where('group', 'ui')->where('key', 'submit')->sole();
+
+    expect($row->text['en'])->toBe('Send');
+});
+
+it('re-syncing preserves values of other locales on the same row', function () {
+    mkdir($this->syncDir.'/en', 0777, true);
+    file_put_contents($this->syncDir.'/en/ui.php', '<?php return ["submit" => "Submit"];');
+    Translation::syncToDatabase();
+
+    $row = Translation::where('group', 'ui')->where('key', 'submit')->sole();
+    $row->text = array_merge($row->text, ['it' => 'Invia']);
+    $row->save();
+
+    file_put_contents($this->syncDir.'/en/ui.php', '<?php return ["submit" => "Send"];');
+    Translation::syncToDatabase();
+
+    expect($row->fresh()->text)->toBe(['en' => 'Send', 'it' => 'Invia']);
+});

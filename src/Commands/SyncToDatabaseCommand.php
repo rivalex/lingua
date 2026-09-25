@@ -25,8 +25,10 @@ final class SyncToDatabaseCommand extends Command
 
     /**
      * Execute the console command.
+     *
+     * Returns FAILURE when the sync throws, so deploy hooks and CI stop on it.
      */
-    public function handle(): void
+    public function handle(): int
     {
         if (linguaIsFileMode()) {
             $this->info('Note: file-mode active — DB is a staging copy only.');
@@ -39,6 +41,10 @@ final class SyncToDatabaseCommand extends Command
             $this->info('Translations synced to database successfully.');
         } catch (\Throwable $e) {
             $this->error('Failed to sync translations to database: '.$e->getMessage());
+
+            return self::FAILURE;
         }
+
+        return self::SUCCESS;
     }
 }

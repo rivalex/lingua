@@ -19,7 +19,7 @@ it('syncs translations from local files to database', function () {
     expect(Translation::count())->toBeGreaterThanOrEqual($initialCount);
 });
 
-it('outputs error when sync to database fails', function () {
+it('outputs error and fails when sync to database fails', function () {
     $this->mock(Translation::class, function ($mock) {
         $mock->shouldReceive('syncToDatabase')
             ->once()
@@ -27,6 +27,6 @@ it('outputs error when sync to database fails', function () {
     });
 
     $this->artisan('lingua:sync-to-database')
-        ->assertSuccessful()
+        ->assertFailed()
         ->expectsOutputToContain('Failed to sync translations to database: Database connection failed.');
 });

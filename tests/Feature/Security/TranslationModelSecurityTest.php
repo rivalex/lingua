@@ -127,15 +127,16 @@ it('skips type detection for oversized values via writeTranslation (F7)', functi
 
     $huge = '# '.str_repeat('a', 11000); // markdown marker + >10k chars
 
+    $index = [];
     $start = microtime(true);
-    $method->invoke(null, [
+    $method->invokeArgs(null, [[
         'locale' => 'en',
         'group' => 'sec_group',
         'key' => 'huge',
         'value' => $huge,
         'is_vendor' => false,
         'vendor' => null,
-    ], 'en');
+    ], 'en', &$index]);
     $elapsed = microtime(true) - $start;
 
     expect($elapsed)->toBeLessThan(1.0);

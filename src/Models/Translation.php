@@ -409,6 +409,12 @@ class Translation extends Model
      * Existing DB records are never deleted; removals in lang files are ignored.
      * The model's saved() cache:clear hook is suppressed during bulk writes and
      * replaced by a single cache:clear at the end of the operation.
+     *
+     * Performance: existing rows are loaded ONCE into an in-memory index and only
+     * rows whose value actually changes are written, all inside one transaction.
+     * The previous per-entry lookup (two SELECTs + one write per key per locale)
+     * was latency-bound: a few thousand round-trips to a remote database exceeded
+     * reverse-proxy timeouts (e.g. Cloudflare 100 s) when triggered from the UI.
      */
     public static function syncToDatabase(): void
     {
@@ -433,90 +439,100 @@ class Translation extends Model
         self::$syncing = true;
 
         try {
-            // ─── Pass 1: Default locale ────────────────────────────────────────────
-            $defaultTranslations = array_merge(
-                $bundledSource->translationsFor($defaultLocale),
-                $reader->collect($langPath, $defaultLocale)
-            );
-            self::ensureLanguageRecord($defaultLocale);
-            $installedCodes[$defaultLocale] = true;
-
-            $defaultKeys = [];
-            foreach ($defaultTranslations as $translation) {
-                if (! $translation['is_vendor']) {
-                    $composite = $translation['group'].'|'.$translation['key'].'|0|';
-                    $defaultKeys[$composite] = true;
+            self::query()->getConnection()->transaction(function () use (
+                $bundledSource, $reader, $langPath, $defaultLocale, $remainingLocales, &$installedCodes
+            ): void {
+                // One query for every existing row; writeTranslation() resolves against it.
+                $index = [];
+                foreach (self::query()->get() as $row) {
+                    $index[self::indexKey($row->group, $row->key, $row->is_vendor, $row->vendor)] = $row;
                 }
-                self::writeTranslation($translation, $defaultLocale);
-            }
 
-            // ─── Pass 2: Remaining locales ─────────────────────────────────────────
-            foreach ($remainingLocales as $locale) {
-                // Bundled content only for INSTALLED locales — never auto-install
-                // the whole bundled catalogue. Lang files always participate;
-                // they are appended after bundled entries so app files override
-                // bundled values for the same key.
-                $translations = array_merge(
-                    isset($installedCodes[$locale]) ? $bundledSource->translationsFor($locale) : [],
-                    $reader->collect($langPath, $locale)
+                // ─── Pass 1: Default locale ────────────────────────────────────────────
+                $defaultTranslations = array_merge(
+                    $bundledSource->translationsFor($defaultLocale),
+                    $reader->collect($langPath, $defaultLocale)
                 );
-                $localeEnsured = false;
+                self::ensureLanguageRecord($defaultLocale);
+                $installedCodes[$defaultLocale] = true;
 
-                // Sub-pass A: Non-vendor keys — must exist in default locale key set.
-                foreach ($translations as $translation) {
-                    if ($translation['is_vendor']) {
-                        continue;
-                    }
-
-                    $composite = $translation['group'].'|'.$translation['key'].'|0|';
-
-                    if (! isset($defaultKeys[$composite])) {
-                        if (config('app.debug')) {
-                            Log::debug('Lingua sync: skipping orphan key', [
-                                'group' => $translation['group'],
-                                'key' => $translation['key'],
-                                'locale' => $locale,
-                            ]);
-                        }
-
-                        continue;
-                    }
-
-                    if (! $localeEnsured) {
-                        self::ensureLanguageRecord($locale);
-                        $installedCodes[$locale] = true;
-                        $localeEnsured = true;
-                    }
-
-                    self::writeTranslation($translation, $defaultLocale);
-                }
-
-                // Sub-pass B: Vendor keys — require Language record to exist.
-                if (! isset($installedCodes[$locale])) {
-                    if (config('app.debug')) {
-                        $skipped = array_filter($translations, fn (array $t): bool => $t['is_vendor']);
-                        if ($skipped !== []) {
-                            Log::debug('Lingua sync: skipping vendor keys — locale not installed', [
-                                'locale' => $locale,
-                                'count' => count($skipped),
-                            ]);
-                        }
-                    }
-
-                    continue;
-                }
-
-                foreach ($translations as $translation) {
+                $defaultKeys = [];
+                foreach ($defaultTranslations as $translation) {
                     if (! $translation['is_vendor']) {
+                        $composite = $translation['group'].'|'.$translation['key'].'|0|';
+                        $defaultKeys[$composite] = true;
+                    }
+                    self::writeTranslation($translation, $defaultLocale, $index);
+                }
+
+                // ─── Pass 2: Remaining locales ─────────────────────────────────────────
+                foreach ($remainingLocales as $locale) {
+                    // Bundled content only for INSTALLED locales — never auto-install
+                    // the whole bundled catalogue. Lang files always participate;
+                    // they are appended after bundled entries so app files override
+                    // bundled values for the same key.
+                    $translations = array_merge(
+                        isset($installedCodes[$locale]) ? $bundledSource->translationsFor($locale) : [],
+                        $reader->collect($langPath, $locale)
+                    );
+                    $localeEnsured = false;
+
+                    // Sub-pass A: Non-vendor keys — must exist in default locale key set.
+                    foreach ($translations as $translation) {
+                        if ($translation['is_vendor']) {
+                            continue;
+                        }
+
+                        $composite = $translation['group'].'|'.$translation['key'].'|0|';
+
+                        if (! isset($defaultKeys[$composite])) {
+                            if (config('app.debug')) {
+                                Log::debug('Lingua sync: skipping orphan key', [
+                                    'group' => $translation['group'],
+                                    'key' => $translation['key'],
+                                    'locale' => $locale,
+                                ]);
+                            }
+
+                            continue;
+                        }
+
+                        if (! $localeEnsured) {
+                            self::ensureLanguageRecord($locale);
+                            $installedCodes[$locale] = true;
+                            $localeEnsured = true;
+                        }
+
+                        self::writeTranslation($translation, $defaultLocale, $index);
+                    }
+
+                    // Sub-pass B: Vendor keys — require Language record to exist.
+                    if (! isset($installedCodes[$locale])) {
+                        if (config('app.debug')) {
+                            $skipped = array_filter($translations, fn (array $t): bool => $t['is_vendor']);
+                            if ($skipped !== []) {
+                                Log::debug('Lingua sync: skipping vendor keys — locale not installed', [
+                                    'locale' => $locale,
+                                    'count' => count($skipped),
+                                ]);
+                            }
+                        }
+
                         continue;
                     }
-                    self::writeTranslation($translation, $defaultLocale);
+
+                    foreach ($translations as $translation) {
+                        if (! $translation['is_vendor']) {
+                            continue;
+                        }
+                        self::writeTranslation($translation, $defaultLocale, $index);
+                    }
                 }
-            }
+            });
         } finally {
             self::$syncing = false;
             $store = Cache::store(config('lingua.cache.store'));
-            foreach (self::$touchedCacheKeys as [$locale, $group, $isVendor, $vendor]) {
+            foreach (array_unique(self::$touchedCacheKeys, SORT_REGULAR) as [$locale, $group, $isVendor, $vendor]) {
                 if ($isVendor && $vendor) {
                     $store->forget(CacheKey::forVendorGroup($locale, $vendor, $group));
                 } else {
@@ -580,14 +596,43 @@ class Translation extends Model
      *
      * @param  array{locale: string, group: string, key: string, value: string, is_vendor: bool, vendor: string|null}  $translation
      * @param  string  $defaultLocale  The default locale resolved by the caller.
+     * @param  array<string, self>  $index  Existing rows keyed by indexKey(); new rows are added to it.
      */
-    private static function writeTranslation(array $translation, string $defaultLocale): void
+    private static function writeTranslation(array $translation, string $defaultLocale, array &$index): void
     {
-        $existing = self::where('group', $translation['group'])
-            ->where('key', $translation['key'])
-            ->where('is_vendor', $translation['is_vendor'])
-            ->where('vendor', $translation['vendor'])
-            ->first();
+        $indexKey = self::indexKey(
+            (string) $translation['group'],
+            (string) $translation['key'],
+            (bool) $translation['is_vendor'],
+            $translation['vendor'],
+        );
+        $existing = $index[$indexKey] ?? null;
+
+        // Cache keys are touched even when nothing is written, preserving the
+        // "sync refreshes the cache" contract; the finally block deduplicates them.
+        self::$touchedCacheKeys[] = [
+            $translation['locale'],
+            $translation['group'],
+            (bool) $translation['is_vendor'],
+            $translation['vendor'] ?? null,
+        ];
+
+        if ($existing !== null) {
+            // Type is decided only when a row is created (unchanged behaviour),
+            // so an existing row needs a write only when its locale value differs.
+            if (array_key_exists($translation['locale'], $existing->text ?? [])
+                && $existing->text[$translation['locale']] === $translation['value']) {
+                return;
+            }
+
+            $existing->text = array_merge(
+                $existing->text ?? [],
+                [$translation['locale'] => $translation['value']]
+            );
+            $existing->save();
+
+            return;
+        }
 
         $stringType = LinguaType::text;
 
@@ -606,39 +651,31 @@ class Translation extends Model
             }
         }
 
-        Translation::updateOrCreate(
-            [
-                'group' => $translation['group'],
-                'key' => $translation['key'],
-                'is_vendor' => $translation['is_vendor'],
-                'vendor' => $translation['vendor'],
-            ],
-            [
-                'type' => $existing->type ?? $stringType,
-                'text' => array_merge(
-                    $existing->text ?? [],
-                    [$translation['locale'] => $translation['value']]
-                ),
-                // Belt-and-braces alongside save()'s own recompute — see save() above.
-                // Cast group/key to string: TranslationFileReader::flatten() can yield
-                // an int key for a top-level numeric-indexed array entry, which
-                // Eloquent's 'key' => 'string' cast would normally absorb but the
-                // strictly-typed buildGroupKey() will not.
-                'group_key' => self::buildGroupKey(
-                    (string) $translation['group'],
-                    (string) $translation['key'],
-                    $translation['is_vendor'],
-                    $translation['vendor']
-                ),
-            ]
-        );
+        // save() recomputes group_key; group/key are cast to string because
+        // TranslationFileReader::flatten() can yield an int key for a top-level
+        // numeric-indexed array entry, which the strictly-typed buildGroupKey()
+        // would reject.
+        $row = new self([
+            'group' => (string) $translation['group'],
+            'key' => (string) $translation['key'],
+            'is_vendor' => $translation['is_vendor'],
+            'vendor' => $translation['vendor'],
+            'type' => $stringType,
+            'text' => [$translation['locale'] => $translation['value']],
+        ]);
+        $row->save();
 
-        self::$touchedCacheKeys[] = [
-            $translation['locale'],
-            $translation['group'],
-            (bool) $translation['is_vendor'],
-            $translation['vendor'] ?? null,
-        ];
+        $index[$indexKey] = $row;
+    }
+
+    /**
+     * Composite identity of a translation row, used by the in-memory sync index.
+     *
+     * Mirrors the (group, key, is_vendor, vendor) lookup previously done in SQL.
+     */
+    private static function indexKey(string $group, string $key, bool $isVendor, ?string $vendor): string
+    {
+        return $group."\0".$key."\0".($isVendor ? '1' : '0')."\0".($vendor ?? '');
     }
 
     /**
