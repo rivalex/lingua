@@ -15,6 +15,7 @@
     ],
     "homepage": "https://github.com/rivalex/lingua",
     "type": "library",
+    "version": "1.2.0",
     "license": "MIT",
     "authors": [
         {
@@ -24,7 +25,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
         "laravel-lang/common": "^6.7",
         "league/html-to-markdown": "^5.1",
@@ -38,6 +39,7 @@
         "larastan/larastan": "^v3.0.0",
         "laravel/pint": "^v1.24.0",
         "nunomaduro/collision": "^v8.8.0",
+        "nunomaduro/pao": "^1.0",
         "orchestra/testbench": "^9.0 || ^10.9 || ^11.0",
         "pestphp/pest": "^v4.4.0",
         "pestphp/pest-plugin-arch": "^v4.0.0",
@@ -95,6 +97,9 @@
                 "Lingua": "Rivalex\\Lingua\\Facades\\Lingua"
             }
         }
+    },
+    "suggest": {
+        "rivalex/lingua-pro": "Adds AI translation (DeepL, Anthropic, Google), translation memory, glossary, usage analytics, and license-gated features. Requires a Lingua Pro license."
     },
     "minimum-stability": "dev",
     "prefer-stable": true

@@ -110,4 +110,13 @@ return [
      */
     'suppress_pro_nudge' => env('LINGUA_SUPPRESS_PRO_NUDGE', false),
     'pro_upgrade_url' => env('LINGUA_PRO_UPGRADE_URL', 'https://lingua.rivalex.dev'),
+
+    /*
+     * Extension hook system settings.
+     * Set 'enabled' to false to disable all lingua extension hooks globally
+     * (emergency kill switch — useful during incidents without uninstalling extensions).
+     */
+    'extensions' => [
+        'enabled' => env('LINGUA_EXTENSIONS_ENABLED', true),
+    ],
 ];

@@ -6,6 +6,7 @@
     <testsuites>
         <testsuite name="Unit">
             <file>tests/Unit/helpersTest.php</file>
+            <file>tests/Unit/Services/ExtensionRegistryTest.php</file>
         </testsuite>
         <testsuite name="Feature">
             <file>tests/Feature/InitializeTest.php</file>
@@ -39,6 +40,9 @@
             <file>tests/Feature/Components/BladeComponentsTest.php</file>
             <!-- Sync -->
             <file>tests/Feature/Sync/SyncToDatabaseTest.php</file>
+            <!-- Extension hook system -->
+            <file>tests/Feature/Extensions/ExtensionInjectionTest.php</file>
+            <file>tests/Feature/Extensions/NavigationPartialTest.php</file>
         </testsuite>
     </testsuites>
 
