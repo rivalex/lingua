@@ -94,11 +94,29 @@ class Lingua
     /**
      * Update the application's language files.
      *
-     * Executes the 'lang:update' Artisan command to refresh or modify
-     * the application's language files as needed.
+     * Executes the 'lang:update' Artisan command only for locales tracked in the
+     * languages table. Any filesystem locale not present in the database is removed
+     * via 'lang:rm' before the update runs, preventing vendor-only locales from
+     * being pulled into the sync.
+     *
+     * Returns early without running any command when no languages are installed.
      */
     public static function updateLanguages(): void
     {
+        $dbLocales = Language::all()->pluck('code')->toArray();
+
+        if (empty($dbLocales)) {
+            return;
+        }
+
+        // Remove filesystem locales that are not tracked in the languages table so
+        // that lang:update only refreshes DB-managed locales.
+        foreach (Locales::raw()->installed() as $locale) {
+            if (! in_array($locale, $dbLocales)) {
+                Artisan::call('lang:rm '.$locale.' --force');
+            }
+        }
+
         Artisan::call('lang:update');
     }
 
