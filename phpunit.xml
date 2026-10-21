@@ -5,44 +5,11 @@
          colors="true">
     <testsuites>
         <testsuite name="Unit">
-            <file>tests/Unit/helpersTest.php</file>
-            <file>tests/Unit/Services/ExtensionRegistryTest.php</file>
+            <directory>tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
-            <file>tests/Feature/InitializeTest.php</file>
-            <!-- Artisan Commands -->
-            <file>tests/Feature/Commands/SyncToDatabaseCommandTest.php</file>
-            <file>tests/Feature/Commands/SyncToLocalCommandTest.php</file>
-            <file>tests/Feature/Commands/UpdateLangCommandTest.php</file>
-            <file>tests/Feature/Commands/AddLangCommandTest.php</file>
-            <file>tests/Feature/Commands/RemoveLangCommandTest.php</file>
-            <!-- Languages Management-->
-            <file>tests/Feature/Livewire/LanguagesTest.php</file>
-            <!-- Languages actions -->
-            <file>tests/Feature/Livewire/Language/TableTest.php</file>
-            <file>tests/Feature/Livewire/Language/RowTest.php</file>
-            <file>tests/Feature/Livewire/Language/CreateTest.php</file>
-            <file>tests/Feature/Livewire/Language/SortTest.php</file>
-            <file>tests/Feature/Livewire/Language/DeleteTest.php</file>
-            <file>tests/Feature/Livewire/Language/SetDefaultTest.php</file>
-            <!-- Language selector -->
-            <file>tests/Feature/Livewire/LanguageSelectorTest.php</file>
-            <file>tests/Feature/Livewire/Selector/IconTest.php</file>
-            <file>tests/Feature/Livewire/HeadlessLanguageSelectorTest.php</file>
-            <!-- Translations -->
-            <file>tests/Feature/Livewire/TranslationsTest.php</file>
-            <!-- Translation components -->
-            <file>tests/Feature/Livewire/Translation/CreateTest.php</file>
-            <file>tests/Feature/Livewire/Translation/UpdateTest.php</file>
-            <file>tests/Feature/Livewire/Translation/DeleteTest.php</file>
-            <file>tests/Feature/Livewire/Translation/RowTest.php</file>
-            <!-- Blade anonymous components -->
-            <file>tests/Feature/Components/BladeComponentsTest.php</file>
-            <!-- Sync -->
-            <file>tests/Feature/Sync/SyncToDatabaseTest.php</file>
-            <!-- Extension hook system -->
-            <file>tests/Feature/Extensions/ExtensionInjectionTest.php</file>
-            <file>tests/Feature/Extensions/NavigationPartialTest.php</file>
+            <directory>tests/Feature</directory>
+            <exclude>tests/Feature/Livewire/ProNudgeTest.php</exclude>
         </testsuite>
     </testsuites>
 

@@ -53,7 +53,7 @@ manage translations, and sync everything with a single command.
 | **Vendor translations**          | Manage package translations alongside your own                                                                 |
 | **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                                     |
 | **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations                          |
-| **Fully tested**                 | 220+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
+| **Fully tested**                 | 440+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
 | **Documentation**                | Comprehensive documentation and guides available at [Lingua Docs](https://rivalex.github.io/lingua-docs/)      |
 
 ---

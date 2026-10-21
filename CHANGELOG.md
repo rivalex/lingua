@@ -2,6 +2,14 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 1.1.5 - 2026-04-29
+
+### Changed
+
+- **Modal backdrop blur** — Added `backdrop-filter: blur(4px)` to all Flux modal backdrops via `[data-flux-modal] > dialog::backdrop` in `resources/css/lingua/styles.css`. PostCSS prefix-selector scopes the rule to `.lingua [data-flux-modal] > dialog::backdrop`. Both unprefixed and `-webkit-` variants emitted by Lightning CSS for full browser coverage (Chrome, Firefox, Safari).
+
+---
+
 ## Lingua 1.1.4 - 2026-04-22
 
 ### Fixed
