@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Rivalex\Lingua\Livewire\Language;
 
-use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -89,8 +88,6 @@ class Delete extends Component
      * Render the component
      *
      * Returns the delete language confirmation view.
-     *
-     * @return View|Factory
      */
     public function render()
     {

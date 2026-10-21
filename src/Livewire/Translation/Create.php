@@ -25,9 +25,6 @@ class Create extends Component
     public string $key = '';
 
     #[Validate]
-    public string $value = '';
-
-    #[Validate]
     public string $textValue = '';
 
     #[Validate]

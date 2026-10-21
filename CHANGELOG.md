@@ -2,6 +2,32 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Lingua 1.1.7 - 2026-05-11
+
+### Security
+
+- **[HIGH] Artisan argument injection in Commands** — `AddLangCommand`, `RemoveLangCommand`, `UpdateLangCommand` concatenated locale strings directly into `Artisan::call()` bypassing the `validateLocale()` guard used in `Lingua.php`. Converted all calls to array form `['locales' => [$locale]]` with correct argument name.
+- **[HIGH] Artisan injection in `Translation::syncToDatabase()`** — Same concatenation pattern used when bootstrapping the default locale. Fixed to array form.
+- **[HIGH] Artisan injection in `LinguaSeeder`** — Same pattern in seeder bootstrap. Fixed to array form.
+- **[MEDIUM] Open redirect via Livewire `$currentUrl`** — `ManagesLocale::changeLocale()` redirected to `$currentUrl`, a public Livewire property modifiable via network snapshot. Added same-origin validation: host must match `config('app.url')`, otherwise falls back to `/`.
+- **[MEDIUM] Stored XSS in HTML translation preview** — `translation/row.blade.php` rendered `$defaultValue` via `{!! !!}` for all translation types. Raw output now scoped to `html` type only; `text` type uses escaped `{{ }}`.
+- **[MEDIUM] Unescaped translation strings in delete modal** — `translation/delete.blade.php` rendered `$deleteHeader` and `$deleteAction` via `{!! !!}`. Changed to `{{ }}`.
+- **[MEDIUM] Unvalidated drag-drop parameters in `Language\Sort`** — `updateLanguageOrder()` accepted untyped `$item` and `$position` from Livewire network payload. Added `int` type hints and early return for negative positions.
+- **[MEDIUM] Unbounded `$perPage` in Translations** — URL-bound `?p=` parameter had no upper limit, enabling DoS via large result sets. Clamped to `max(1, min(x, 100))` in `mount()`.
+
+### Fixed
+
+- `helpers.php` `linguaLanguageCode()` returned `Stringable` instead of `string` under strict types. Added `->toString()` cast.
+- Removed dead `$queryString` manual tracking in `Translations.php`; `updatedCurrentLocale()` now builds redirect params inline from `#[Url]`-tracked properties.
+- `LinguaServiceProvider` loader/translator singletons now survive composer script context (null config fallback, DB try/catch).
+
+### Changed
+
+- Added `declare(strict_types=1)` to all remaining PHP source files.
+- Removed dead code: `$value` in `Translation\Create`, `getGroupKey()` in `Translation` model, `$syncDatabase`/`$totalStrings` in `Language\Table`, `$canDelete` in `Translation\Delete`, `$canSetDefault` in `Language\SetDefault`, unused `View|Factory` imports in `Language\Delete`, dead `$attribute` in `Translation\Row::validationAttributes()`.
+
+---
+
 ## Lingua 1.1.6 - 2026-05-08
 
 ### Security

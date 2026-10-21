@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Facades;
 
 use Illuminate\Database\Eloquent\Collection;

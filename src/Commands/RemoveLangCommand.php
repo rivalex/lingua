@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
@@ -46,7 +48,7 @@ class RemoveLangCommand extends Command
 
         try {
             $this->info('Removing language files via Laravel Lang...');
-            Artisan::call('lang:rm '.strtolower($locale).' --force');
+            Artisan::call('lang:rm', ['locales' => [strtolower($locale)], '--force' => true]);
 
             if ($language) {
                 $this->info('Removing translations from database...');

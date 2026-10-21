@@ -66,6 +66,13 @@ trait ManagesLocale
             return;
         }
 
+        // Guard against open redirect — only allow same-origin redirects.
+        $parsed = parse_url($this->currentUrl);
+        $appHost = parse_url(config('app.url'), PHP_URL_HOST);
+        if (isset($parsed['host']) && $parsed['host'] !== $appHost) {
+            $this->currentUrl = '/';
+        }
+
         Session::put(config('lingua.session_variable'), $locale);
         app()->setLocale($locale);
         $this->redirect(url: $this->currentUrl, navigate: true);

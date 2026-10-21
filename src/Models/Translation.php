@@ -134,11 +134,6 @@ class Translation extends LanguageLine
         return Str::wrap('.', before: $prefix.Str::squish($group), after: Str::squish($key));
     }
 
-    public static function getGroupKey(string $group, string $key, bool $isVendor, ?string $vendor): string
-    {
-        return static::buildGroupKey($group, $key, $isVendor, $vendor);
-    }
-
     public function getLangKeyAttribute(): string
     {
         return self::buildGroupKey($this->group, $this->key, $this->is_vendor ?? false, $this->vendor);
@@ -314,7 +309,7 @@ class Translation extends LanguageLine
         $langPath = config('lingua.lang_dir');
 
         if (Locales::installed()->count() === 0) {
-            Artisan::call('lang:add '.config('lingua.default_locale'));
+            Artisan::call('lang:add', ['locales' => [config('lingua.default_locale')]]);
         }
 
         $defaultLocale = Language::default()?->code ?? config('lingua.default_locale', 'en');

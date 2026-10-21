@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
@@ -44,7 +46,7 @@ class UpdateLangCommand extends Command
             // lang:update only refreshes DB-managed locales.
             foreach (Locales::raw()->installed() as $locale) {
                 if (! in_array($locale, $dbLocales)) {
-                    Artisan::call('lang:rm '.$locale.' --force');
+                    Artisan::call('lang:rm', ['locales' => [$locale], '--force' => true]);
                 }
             }
 

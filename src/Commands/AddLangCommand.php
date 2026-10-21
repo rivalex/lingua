@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
@@ -37,7 +39,7 @@ class AddLangCommand extends Command
             $newLanguage = Locales::info(locale: $locale);
 
             $this->info('Installing language files via Laravel Lang...');
-            Artisan::call('lang:add '.$locale);
+            Artisan::call('lang:add', ['locales' => [$locale]]);
 
             $this->info('Creating language record in database...');
             app(Language::class)->updateOrCreate(

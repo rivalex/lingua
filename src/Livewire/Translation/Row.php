@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Translation;
 
 use Livewire\Attributes\On;
@@ -36,12 +38,6 @@ class Row extends Component
 
     public function validationAttributes(): array
     {
-        $attribute = match ($this->translation->type->value) {
-            'text' => __('lingua::lingua.translations.attributes.text_value'),
-            'html' => __('lingua::lingua.translations.attributes.html_value'),
-            'markdown' => __('lingua::lingua.translations.attributes.md_value')
-        };
-
         return [
             'value' => match ($this->translation->type->value) {
                 'text' => __('lingua::lingua.translations.attributes.text_value'),

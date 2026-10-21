@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -18,7 +20,7 @@ class LinguaSeeder extends Seeder
         $defaultLocale = app()->getFallbackLocale() ?? config('lingua.default_locale');
 
         if (! Locales::installed()->contains($defaultLocale)) {
-            Artisan::call('lang:add '.$defaultLocale);
+            Artisan::call('lang:add', ['locales' => [$defaultLocale]]);
         }
 
         $defaultLanguage = Locales::info($defaultLocale);
