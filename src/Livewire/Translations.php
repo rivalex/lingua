@@ -28,7 +28,7 @@ class Translations extends Component
     #[Url(as: 'm', except: false)]
     public bool $showOnlyMissing = false;
 
-    public Language $language;
+    public ?Language $language = null;
 
     public array $availableLocale = [];
 
@@ -46,7 +46,8 @@ class Translations extends Component
         $this->showOnlyMissing = request('m', false);
 
         $this->language = Language::where('code', $locale ?? linguaDefaultLocale())->first();
-        $this->currentLocale = $this->language->code ?? $locale ?? app()->currentLocale();
+        // Fall back to default locale when the requested locale does not exist in DB.
+        $this->currentLocale = $this->language?->code ?? linguaDefaultLocale();
         $this->setDefaults();
         $this->queryString = request()->query();
     }
@@ -86,18 +87,21 @@ class Translations extends Component
     #[Computed]
     public function translations()
     {
-        $locale = $this->currentLocale;
+        // Validate locale format before interpolating into JSON column paths to prevent SQL injection.
+        // currentLocale is a Livewire public property and can be tampered via the network layer.
+        $safeLocale = preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $this->currentLocale)
+            ? $this->currentLocale
+            : linguaDefaultLocale();
+
         $defaultLocale = linguaDefaultLocale();
 
         return Translation::query()
             ->when(! empty($this->search),
                 fn ($q) => $q->where(fn ($query) => $query->whereLike('group_key', "%{$this->search}%")
-                    ->orWhereLike('text->'.$defaultLocale,
-                        "%{$this->search}%")
-                    ->orWhereLike('text->'.$locale,
-                        "%{$this->search}%"))
+                    ->orWhereLike('text->'.$defaultLocale, "%{$this->search}%")
+                    ->orWhereLike('text->'.$safeLocale, "%{$this->search}%"))
             )
-            ->when($this->showOnlyMissing, fn ($q) => $q->whereNull('text->'.$locale))
+            ->when($this->showOnlyMissing, fn ($q) => $q->whereNull('text->'.$safeLocale))
             ->when($this->group, fn ($q) => $q->where('group', '=', $this->group))
             ->paginate($this->perPage);
     }

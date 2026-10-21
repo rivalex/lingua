@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire;
 
 use Illuminate\Support\Facades\Log;

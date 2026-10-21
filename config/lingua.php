@@ -32,10 +32,13 @@ return [
 
     /*
      * Specifies the middleware that should be applied to the lingua routes.
-     * By default, the 'web' middleware is applied.
-     * You can add additional middleware as needed for your application such as 'auth', 'guest', etc.
+     *
+     * ⚠️  SECURITY: The translation management UI must be protected by an
+     * authentication gate. The 'auth' middleware is included by default.
+     * Remove it only if you gate access elsewhere (e.g. a custom policy).
+     * You can add role-based guards (e.g. 'role:admin') as needed.
      */
-    'middleware' => ['web'],
+    'middleware' => ['web', 'auth'],
 
     /*
      * Specifies the prefix for the lingua routes.

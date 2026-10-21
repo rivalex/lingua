@@ -161,6 +161,24 @@ class Translation extends LanguageLine
      * Synchronize database translations to local files.
      * Generates JSON and PHP translation files for each language.
      */
+    /**
+     * Reject path segments that could enable directory traversal.
+     * Throws on separators, null bytes, or dot-dot sequences.
+     */
+    private static function assertSafePathSegment(string $segment, string $context = ''): void
+    {
+        if ($segment === '' ||
+            str_contains($segment, '/') ||
+            str_contains($segment, '\\') ||
+            str_contains($segment, '..') ||
+            str_contains($segment, "\0")
+        ) {
+            throw new \InvalidArgumentException(
+                '[Lingua] Unsafe path segment'.($context !== '' ? " ({$context})" : '').": {$segment}"
+            );
+        }
+    }
+
     public static function syncToLocal(): void
     {
         $languages = Language::orderBy('sort', 'desc')->get();
@@ -169,6 +187,7 @@ class Translation extends LanguageLine
 
         foreach ($languages as $language) {
             $locale = $language->code;
+            self::assertSafePathSegment($locale, 'locale');
 
             $coreGroups = [];
             $vendorGroups = [];
@@ -206,6 +225,7 @@ class Translation extends LanguageLine
                     continue;
                 }
 
+                self::assertSafePathSegment($group, 'group');
                 $langFolder = $langPath.'/'.$locale;
                 if (! is_dir($langFolder)) {
                     mkdir($langFolder, 0755, true);
@@ -218,6 +238,7 @@ class Translation extends LanguageLine
 
             // Vendor JSON + PHP
             foreach ($vendorGroups as $vendor => $groups) {
+                self::assertSafePathSegment($vendor, 'vendor');
                 $vendorRoot = $langPath.'/vendor/'.$vendor;
 
                 if (isset($groups['single'])) {
@@ -234,6 +255,7 @@ class Translation extends LanguageLine
                         continue;
                     }
 
+                    self::assertSafePathSegment($group, 'vendor group');
                     $vendorLangFolder = $vendorRoot.'/'.$locale;
                     if (! is_dir($vendorLangFolder)) {
                         mkdir($vendorLangFolder, 0755, true);
@@ -519,7 +541,9 @@ class Translation extends LanguageLine
             if (preg_match('#(?<=<)\w+(?=[^<]*?>)#', $string->toString())) {
                 $stringType = LinguaType::html;
             }
-            if ($string->markdown()->toString() === $string->toString()) {
+            // Detect markdown only when no HTML was found — look for common markdown markers.
+            if ($stringType === LinguaType::text &&
+                preg_match('/^#{1,6}\s|\n#{1,6}\s|^\s*[-*+]\s|\[.+\]\(https?:/im', $string->toString())) {
                 $stringType = LinguaType::markdown;
             }
         }

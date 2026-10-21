@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Language;
 
 use Illuminate\Support\Facades\Log;
@@ -21,7 +23,7 @@ class SetDefault extends Component
         $this->modalName = 'language-set-default-modal-'.$this->language->code;
         $this->confirm = Str::of(__('lingua::lingua.languages.default.confirm',
             ['language' => $this->language->name]))
-            ->upper()->squish()->trim();
+            ->upper()->squish()->trim()->toString();
     }
 
     public function setDefaultLanguage(): void

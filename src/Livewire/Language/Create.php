@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Livewire\Language;
 
 use Illuminate\Support\Facades\Artisan;

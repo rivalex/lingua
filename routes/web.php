@@ -21,9 +21,18 @@ Route::group([
         ->name('lingua.settings');
 
     Route::get('assets/{path}', function (string $path) {
-        // Serve built assets directly from the package when they are not published
-        $file = dirname(__DIR__)."/src/dist/{$path}";
-        abort_unless(is_file($file), 404);
+        // Serve built assets directly from the package when they are not published.
+        // Realpath jail: prevent path traversal outside src/dist/.
+        $base = realpath(dirname(__DIR__).'/src/dist');
+        $file = realpath(dirname(__DIR__).'/src/dist/'.$path);
+
+        abort_unless(
+            $base !== false &&
+            $file !== false &&
+            str_starts_with($file, $base.DIRECTORY_SEPARATOR) &&
+            is_file($file),
+            404
+        );
 
         $mime = match (pathinfo($file, PATHINFO_EXTENSION)) {
             'css' => 'text/css',
@@ -36,5 +45,5 @@ Route::group([
             'Content-Type' => $mime,
             'Cache-Control' => 'public, max-age=31536000',
         ]));
-    })->where('path', '.*')->name('lingua.assets');
+    })->where('path', '.+')->name('lingua.assets');
 });
