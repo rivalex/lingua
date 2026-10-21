@@ -1,0 +1,101 @@
+{
+    "name": "rivalex/lingua",
+    "description": "Laravel package for multilingual management with database, Livewire UI and translation synchronization",
+    "keywords": [
+        "laravel",
+        "translation",
+        "multilingual",
+        "localization",
+        "i18n",
+        "livewire",
+        "language",
+        "locale",
+        "laravel-package",
+        "translation-management"
+    ],
+    "homepage": "https://github.com/rivalex/lingua",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alessandro Rivolta",
+            "email": "alessandro@rivalex.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "illuminate/contracts": "^12.0",
+        "laravel-lang/common": "^6.7",
+        "league/html-to-markdown": "^5.1",
+        "livewire/flux": "^2.12",
+        "livewire/livewire": "^4.1",
+        "outhebox/blade-flags": "^1.6",
+        "spatie/laravel-package-tools": "^1.92",
+        "spatie/laravel-translation-loader": "^2.8"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.14",
+        "nunomaduro/collision": "^8.8",
+        "orchestra/testbench": "^10.9",
+        "pestphp/pest": "^4.4",
+        "pestphp/pest-plugin-arch": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "phpunit/phpunit": "^12.5",
+        "spatie/laravel-ray": "^1.35"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rivalex\\Lingua\\": "src/",
+            "Rivalex\\Lingua\\Database\\Factories\\": "database/factories/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Rivalex\\Lingua\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare",
+            "@composer run prepare"
+        ],
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint",
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "lint": [
+            "@php vendor/bin/pint --ansi"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Rivalex\\Lingua\\LinguaServiceProvider"
+            ],
+            "aliases": {
+                "Lingua": "Rivalex\\Lingua\\Facades\\Lingua"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
