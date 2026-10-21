@@ -45,7 +45,7 @@
                                 <circle cx="15" cy="5" r="1"/>
                                 <circle cx="15" cy="19" r="1"/>
                             </svg>
-                            <livewire:lingua::selector.icon :locale="linguaLanguageCode($language->code)"/>
+                            <livewire:lingua::selector.icon :locale="$language->code"/>
                         </flux:badge>
                     </li>
                 @endforeach

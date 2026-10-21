@@ -102,4 +102,12 @@ return [
      * This is the translation manager which overrides the default Laravel `translation.loader`
      */
     'translation_manager' => LinguaManager::class,
+
+    /*
+     * Lingua Pro upgrade nudge settings.
+     * Set suppress_pro_nudge to true to hide all Pro CTAs (e.g. for users who have lingua-pro installed).
+     * pro_upgrade_url is the link used in upgrade prompts.
+     */
+    'suppress_pro_nudge' => env('LINGUA_SUPPRESS_PRO_NUDGE', false),
+    'pro_upgrade_url' => env('LINGUA_PRO_UPGRADE_URL', 'https://lingua.rivalex.dev'),
 ];

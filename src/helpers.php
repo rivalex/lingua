@@ -28,6 +28,6 @@ if (! function_exists('linguaLanguageCode')) {
      */
     function linguaLanguageCode(?string $locale = null): string
     {
-        return Str::of($locale ?? app()->getLocale())->lower()->replace('_', '-');
+        return Str::of($locale ?? app()->getLocale())->replace('_', '-');
     }
 }

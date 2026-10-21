@@ -27,6 +27,7 @@
             <!-- Language selector -->
             <file>tests/Feature/Livewire/LanguageSelectorTest.php</file>
             <file>tests/Feature/Livewire/Selector/IconTest.php</file>
+            <file>tests/Feature/Livewire/HeadlessLanguageSelectorTest.php</file>
             <!-- Translations -->
             <file>tests/Feature/Livewire/TranslationsTest.php</file>
             <!-- Translation components -->
@@ -36,6 +37,8 @@
             <file>tests/Feature/Livewire/Translation/RowTest.php</file>
             <!-- Blade anonymous components -->
             <file>tests/Feature/Components/BladeComponentsTest.php</file>
+            <!-- Sync -->
+            <file>tests/Feature/Sync/SyncToDatabaseTest.php</file>
         </testsuite>
     </testsuites>
 

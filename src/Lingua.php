@@ -54,7 +54,7 @@ class Lingua
      */
     protected static function language(string $locale)
     {
-        $locale = Str::of($locale)->squish()->trim()->lower();
+        $locale = Str::of($locale)->squish()->trim();
 
         return Language::query()->where('code', '=', $locale)
             ->orWhere('regional', '=', $locale);
@@ -151,7 +151,7 @@ class Lingua
      */
     public static function removeLanguage(string $locale): void
     {
-        Artisan::call('lang:rm '.strtolower($locale).' --force');
+        Artisan::call('lang:rm '.$locale.' --force');
     }
 
     /**

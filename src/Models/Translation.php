@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use LaravelLang\Locales\Facades\Locales;
 use Rivalex\Lingua\Database\Factories\TranslationFactory;
@@ -73,6 +76,12 @@ class Translation extends LanguageLine
     ];
 
     /**
+     * Guards cache:clear calls during bulk sync operations.
+     * Set to true by syncToDatabase() and restored in a finally block.
+     */
+    private static bool $syncing = false;
+
+    /**
      * Bootstrap the model and its traits.
      * Automatically generates UUID for new translations.
      */
@@ -97,8 +106,11 @@ class Translation extends LanguageLine
                 );
             }
         });
+        // Suppress per-row cache clears during bulk sync; a single clear fires in the finally block.
         static::saved(function () {
-            Artisan::call('cache:clear');
+            if (! self::$syncing) {
+                Artisan::call('cache:clear');
+            }
         });
     }
 
@@ -260,138 +272,273 @@ class Translation extends LanguageLine
     }
 
     /**
-     * Synchronize local translation files to database.
-     * Imports translations from JSON and PHP files into the database.
+     * Synchronize local translation files to the database.
+     *
+     * Implements a two-pass strategy:
+     *   Pass 1 — Default locale: all keys are imported unconditionally; the set of
+     *             group+key combinations becomes the reference for Pass 2.
+     *   Pass 2 — Remaining locales:
+     *             • Non-vendor keys are imported only if the same key exists in the
+     *               default locale files (orphan keys are silently skipped).
+     *             • Vendor keys are imported only if a Language record exists for
+     *               the locale at the time the vendor sub-pass runs.
+     *
+     * Existing DB records are never deleted; removals in lang files are ignored.
+     * The model's saved() cache:clear hook is suppressed during bulk writes and
+     * replaced by a single cache:clear at the end of the operation.
      */
     public static function syncToDatabase(): void
     {
         $langPath = config('lingua.lang_dir');
-        $translations = [];
 
         if (Locales::installed()->count() === 0) {
             Artisan::call('lang:add '.config('lingua.default_locale'));
         }
 
-        $locales = array_values(array_unique(array_merge(
+        $defaultLocale = Language::default()?->code ?? config('lingua.default_locale', 'en');
+
+        $allLocales = array_values(array_unique(array_merge(
             self::discoverLocales($langPath),
             Locales::installed()->pluck('code')->all()
         )));
 
-        foreach ($locales as $locale) {
-            // 1) Core JSON
-            $jsonFile = $langPath.'/'.$locale.'.json';
-            if (file_exists($jsonFile)) {
-                $jsonTranslations = json_decode(file_get_contents($jsonFile), true);
-                if (is_array($jsonTranslations)) {
-                    foreach ($jsonTranslations as $key => $value) {
-                        $translations[] = [
+        $remainingLocales = array_values(array_diff($allLocales, [$defaultLocale]));
+
+        // Pre-cache Language codes currently in DB so vendor key filtering
+        // can be updated incrementally as new records are created in Pass 2.
+        $installedCodes = Language::pluck('code')->flip()->all();
+
+        self::$syncing = true;
+
+        try {
+            // ─── Pass 1: Default locale ────────────────────────────────────────────
+            $defaultTranslations = self::collectLocaleTranslations($langPath, $defaultLocale);
+            self::ensureLanguageRecord($defaultLocale);
+            $installedCodes[$defaultLocale] = true;
+
+            $defaultKeys = [];
+            foreach ($defaultTranslations as $translation) {
+                if (! $translation['is_vendor']) {
+                    $composite = $translation['group'].'|'.$translation['key'].'|0|';
+                    $defaultKeys[$composite] = true;
+                }
+                self::writeTranslation($translation);
+            }
+
+            // ─── Pass 2: Remaining locales ─────────────────────────────────────────
+            foreach ($remainingLocales as $locale) {
+                $translations = self::collectLocaleTranslations($langPath, $locale);
+                $localeEnsured = false;
+
+                // Sub-pass A: Non-vendor keys — must exist in default locale key set.
+                foreach ($translations as $translation) {
+                    if ($translation['is_vendor']) {
+                        continue;
+                    }
+
+                    $composite = $translation['group'].'|'.$translation['key'].'|0|';
+
+                    if (! isset($defaultKeys[$composite])) {
+                        if (config('app.debug')) {
+                            Log::debug('Lingua sync: skipping orphan key', [
+                                'group' => $translation['group'],
+                                'key' => $translation['key'],
+                                'locale' => $locale,
+                            ]);
+                        }
+
+                        continue;
+                    }
+
+                    if (! $localeEnsured) {
+                        self::ensureLanguageRecord($locale);
+                        $installedCodes[$locale] = true;
+                        $localeEnsured = true;
+                    }
+
+                    self::writeTranslation($translation);
+                }
+
+                // Sub-pass B: Vendor keys — require Language record to exist.
+                if (! isset($installedCodes[$locale])) {
+                    if (config('app.debug')) {
+                        $skipped = array_filter($translations, fn (array $t): bool => $t['is_vendor']);
+                        if ($skipped !== []) {
+                            Log::debug('Lingua sync: skipping vendor keys — locale not installed', [
+                                'locale' => $locale,
+                                'count' => count($skipped),
+                            ]);
+                        }
+                    }
+
+                    continue;
+                }
+
+                foreach ($translations as $translation) {
+                    if (! $translation['is_vendor']) {
+                        continue;
+                    }
+                    self::writeTranslation($translation);
+                }
+            }
+        } finally {
+            self::$syncing = false;
+            Artisan::call('cache:clear');
+        }
+    }
+
+    /**
+     * Collect all translation entries for a single locale from the filesystem.
+     *
+     * Reads core JSON, core PHP, vendor JSON, and vendor PHP files in order.
+     * Returns a flat array; each item has keys:
+     *   locale, group, key, value, is_vendor, vendor.
+     *
+     * @param  string  $langPath  Absolute path to the lang directory.
+     * @param  string  $locale  ISO locale code to collect files for.
+     * @return array<int, array{locale: string, group: string, key: string, value: string, is_vendor: bool, vendor: string|null}>
+     */
+    private static function collectLocaleTranslations(string $langPath, string $locale): array
+    {
+        $result = [];
+
+        // 1) Core JSON
+        $jsonFile = $langPath.'/'.$locale.'.json';
+        if (file_exists($jsonFile)) {
+            $decoded = json_decode(file_get_contents($jsonFile), true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $key => $value) {
+                    $result[] = [
+                        'locale' => $locale,
+                        'group' => 'single',
+                        'key' => $key,
+                        'value' => $value ?? '',
+                        'is_vendor' => false,
+                        'vendor' => null,
+                    ];
+                }
+            }
+        }
+
+        // 2) Core PHP
+        $langFolder = $langPath.'/'.$locale;
+        if (is_dir($langFolder)) {
+            foreach (glob($langFolder.'/*.php') ?: [] as $file) {
+                $group = basename($file, '.php');
+                $groupTranslations = include $file;
+                if (is_array($groupTranslations)) {
+                    self::flattenTranslations($groupTranslations, $result, $locale, $group, false, null);
+                }
+            }
+        }
+
+        // 3) Vendor JSON + PHP
+        foreach (self::discoverVendorPackages($langPath) as $vendor) {
+            $vendorRoot = $langPath.'/vendor/'.$vendor;
+
+            $vendorJson = $vendorRoot.'/'.$locale.'.json';
+            if (file_exists($vendorJson)) {
+                $decoded = json_decode(file_get_contents($vendorJson), true);
+                if (is_array($decoded)) {
+                    foreach ($decoded as $key => $value) {
+                        $result[] = [
                             'locale' => $locale,
                             'group' => 'single',
                             'key' => $key,
                             'value' => $value ?? '',
-                            'is_vendor' => false,
-                            'vendor' => null,
+                            'is_vendor' => true,
+                            'vendor' => $vendor,
                         ];
                     }
                 }
             }
 
-            // 2) Core PHP
-            $langFolder = $langPath.'/'.$locale;
-            if (is_dir($langFolder)) {
-                $phpFiles = glob($langFolder.'/*.php') ?: [];
-                foreach ($phpFiles as $file) {
+            $vendorLangFolder = $vendorRoot.'/'.$locale;
+            if (is_dir($vendorLangFolder)) {
+                foreach (glob($vendorLangFolder.'/*.php') ?: [] as $file) {
                     $group = basename($file, '.php');
                     $groupTranslations = include $file;
                     if (is_array($groupTranslations)) {
-                        self::flattenTranslations($groupTranslations, $translations, $locale, $group, false, null);
-                    }
-                }
-            }
-
-            // 3) Vendor JSON + PHP
-            foreach (self::discoverVendorPackages($langPath) as $vendor) {
-                $vendorRoot = $langPath.'/vendor/'.$vendor;
-
-                $vendorJson = $vendorRoot.'/'.$locale.'.json';
-                if (file_exists($vendorJson)) {
-                    $jsonTranslations = json_decode(file_get_contents($vendorJson), true);
-                    if (is_array($jsonTranslations)) {
-                        foreach ($jsonTranslations as $key => $value) {
-                            $translations[] = [
-                                'locale' => $locale,
-                                'group' => 'single',
-                                'key' => $key,
-                                'value' => $value ?? '',
-                                'is_vendor' => true,
-                                'vendor' => $vendor,
-                            ];
-                        }
-                    }
-                }
-
-                $vendorLangFolder = $vendorRoot.'/'.$locale;
-                if (is_dir($vendorLangFolder)) {
-                    $phpFiles = glob($vendorLangFolder.'/*.php') ?: [];
-                    foreach ($phpFiles as $file) {
-                        $group = basename($file, '.php');
-                        $groupTranslations = include $file;
-                        if (is_array($groupTranslations)) {
-                            self::flattenTranslations($groupTranslations, $translations, $locale, $group, true, $vendor);
-                        }
+                        self::flattenTranslations($groupTranslations, $result, $locale, $group, true, $vendor);
                     }
                 }
             }
         }
 
-        foreach ($translations as $translation) {
-            $newLanguage = Locales::info($translation['locale']);
+        return $result;
+    }
 
-            if (! $translation['is_vendor']) {
-                Language::updateOrCreate(
-                    [
-                        'code' => $newLanguage->code,
-                        'regional' => $newLanguage->regional,
-                    ],
-                    [
-                        'type' => $newLanguage->type,
-                        'name' => $newLanguage->locale->name,
-                        'native' => $newLanguage->native,
-                        'direction' => $newLanguage->direction->value,
-                    ]
-                );
+    /**
+     * Create or update the Language record for a given locale using Locales metadata.
+     *
+     * Called once per locale during sync — never per translation row.
+     * Only applicable to non-vendor locales that have qualifying keys.
+     *
+     * @param  string  $locale  ISO locale code.
+     */
+    private static function ensureLanguageRecord(string $locale): void
+    {
+        $localeInfo = Locales::info($locale);
+
+        Language::updateOrCreate(
+            [
+                'code' => $localeInfo->code,
+                'regional' => $localeInfo->regional,
+            ],
+            [
+                'type' => $localeInfo->type,
+                'name' => $localeInfo->locale->name,
+                'native' => $localeInfo->native,
+                'direction' => $localeInfo->direction->value,
+            ]
+        );
+    }
+
+    /**
+     * Persist a single translation entry to the database.
+     *
+     * Merges the new locale value into the existing text JSON column rather than
+     * replacing it, preserving translations for all other locales.
+     * Detects LinguaType (text/html/markdown) only for default-locale values;
+     * for all other locales the existing type is preserved.
+     *
+     * @param  array{locale: string, group: string, key: string, value: string, is_vendor: bool, vendor: string|null}  $translation
+     */
+    private static function writeTranslation(array $translation): void
+    {
+        $existing = self::where('group', $translation['group'])
+            ->where('key', $translation['key'])
+            ->where('is_vendor', $translation['is_vendor'])
+            ->where('vendor', $translation['vendor'])
+            ->first();
+
+        $stringType = LinguaType::text;
+
+        if ($translation['locale'] === linguaDefaultLocale()) {
+            $string = Str::of($translation['value'])->trim();
+            if (preg_match('#(?<=<)\w+(?=[^<]*?>)#', $string->toString())) {
+                $stringType = LinguaType::html;
             }
-
-            $stringType = LinguaType::text;
-            if ($translation['locale'] === linguaDefaultLocale()) {
-                $string = Str::of($translation['value'])->trim();
-                if (preg_match('#(?<=<)\w+(?=[^<]*?>)#', $string->toString())) {
-                    $stringType = LinguaType::html;
-                }
-                if ($string->markdown()->toString() === $string->toString()) {
-                    $stringType = LinguaType::markdown;
-                }
+            if ($string->markdown()->toString() === $string->toString()) {
+                $stringType = LinguaType::markdown;
             }
+        }
 
-            $existing = self::where('group', $translation['group'])
-                ->where('key', $translation['key'])
-                ->where('is_vendor', $translation['is_vendor'])
-                ->where('vendor', $translation['vendor'])
-                ->first();
-
-            Translation::updateOrCreate([
+        Translation::updateOrCreate(
+            [
                 'group' => $translation['group'],
                 'key' => $translation['key'],
                 'is_vendor' => $translation['is_vendor'],
                 'vendor' => $translation['vendor'],
-            ], [
+            ],
+            [
                 'type' => $existing->type ?? $stringType,
                 'text' => array_merge(
                     $existing->text ?? [],
                     [$translation['locale'] => $translation['value']]
                 ),
-            ]);
-        }
+            ]
+        );
     }
 
     protected static function flattenTranslations(

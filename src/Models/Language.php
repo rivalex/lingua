@@ -154,9 +154,22 @@ class Language extends Model
      * @param  Builder  $query  Query builder instance
      * @return Builder Modified query builder
      */
-    public function scopeActive(Builder $query): Builder
+    public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort');
+    }
+
+    /**
+     * Scope to retrieve active languages in sort order.
+     *
+     * @todo Filter by is_active when field is added.
+     *
+     * @param  Builder  $query  Query builder instance
+     * @return Builder Modified query builder
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $this->scopeOrdered($query);
     }
 
     /**

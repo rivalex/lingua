@@ -96,15 +96,15 @@
     </flux:table.cell>
 
     <flux:table.cell align="center" class="lingua-row center" wire:loading.class="pointer-events-none">
-{{--        @if(!config('lingua.suppress_pro_nudge', false) && $currentLocale !== linguaDefaultLocale())--}}
-{{--            <flux:tooltip :content="__('lingua::lingua.pro.auto_translate_tooltip')" position="top">--}}
-{{--                <a href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.com') }}" target="_blank" rel="noopener noreferrer" tabindex="-1">--}}
-{{--                    <flux:button tabindex="-1" variant="ghost" size="sm" icon="sparkles" disabled>--}}
-{{--                        @lang('lingua::lingua.pro.auto_translate')--}}
-{{--                    </flux:button>--}}
-{{--                </a>--}}
-{{--            </flux:tooltip>--}}
-{{--        @endif--}}
+        @if(!config('lingua.suppress_pro_nudge', false) && $currentLocale !== linguaDefaultLocale())
+            <flux:tooltip :content="__('lingua::lingua.pro.auto_translate_tooltip')" position="top">
+                <a href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.com') }}" target="_blank" rel="noopener noreferrer" tabindex="-1">
+                    <flux:button tabindex="-1" variant="ghost" size="sm" icon="sparkles" disabled>
+                        @lang('lingua::lingua.pro.auto_translate')
+                    </flux:button>
+                </a>
+            </flux:tooltip>
+        @endif
         <flux:button.group>
             @if($this->currentLocale === linguaDefaultLocale())
                 <flux:modal.trigger name="{{ $editModalName }}">

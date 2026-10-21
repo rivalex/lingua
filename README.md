@@ -36,21 +36,25 @@ manage translations, and sync everything with a single command.
 
 ## ✨ Features
 
-| Feature                          | Description                                                                                                    |
-|----------------------------------|----------------------------------------------------------------------------------------------------------------|
-| **Database-backed translations** | All translations stored in the database, editable instantly without deployments                                |
-| **Livewire UI**                  | Reactive, real-time language and translation management interface                                              |
-| **Flux UI components**           | Modern, accessible UI built with Livewire Flux                                                                 |
-| **Bi-directional sync**          | Push translations to the database or pull them back to local PHP/JSON files                                    |
-| **Laravel Lang integration**     | Install 70+ languages with one command, auto-updated via `laravel-lang`                                        |
-| **Rich text support**            | Translations can be plain text, HTML, or Markdown                                                              |
-| **Language selector**            | Configurable sidebar, dropdown, or modal language switcher for users                                           |
-| **Progress tracking**            | Per-language completion percentage and missing-translation counts                                              |
-| **RTL support**                  | First-class right-to-left language handling                                                                    |
-| **Vendor translations**          | Manage package translations alongside your own                                                                 |
-| **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                                     |
-| **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations                          |
-| **Fully tested**                 | 150+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
+| Feature                          | Description                                                                                                   |
+|----------------------------------|---------------------------------------------------------------------------------------------------------------|
+| **Database-backed translations** | All translations stored in the database, editable instantly without deployments                               |
+| **Livewire UI**                  | Reactive, real-time language and translation management interface                                             |
+| **Flux UI components**           | Modern, accessible UI built with Livewire Flux                                                                |
+| **Bi-directional sync**          | Push translations to the database or pull them back to local PHP/JSON files                                   |
+| **Laravel Lang integration**     | Install 70+ languages with one command, auto-updated via `laravel-lang`                                       |
+| **Rich text support**            | Translations can be plain text, HTML, or Markdown                                                             |
+| **Language selector**            | Configurable sidebar, dropdown, modal, or headless language switcher for users                                |
+| **Translation statistics**       | Per-language coverage with progress bars, group breakdown, and missing-key drill-down                         |
+| **DB-persisted settings**        | Selector mode and flag display managed from the UI — no config file changes needed                            |
+| **Headless language selector**   | Zero-CSS semantic HTML component for full styling freedom with any CSS framework                              |
+| **Progress tracking**            | Per-language completion percentage and missing-translation counts                                             |
+| **RTL support**                  | First-class right-to-left language handling                                                                   |
+| **Vendor translations**          | Manage package translations alongside your own                                                                |
+| **Database-agnostic**            | Full support for SQLite, MySQL, PostgreSQL, and SQL Server                                                    |
+| **Lingua Facade**                | Fluent programmatic API for reading, writing, and managing languages and translations                         |
+| **Fully tested**                 | 190+ tests with Pest, covering commands, Livewire components, Blade components, helpers, and the Lingua facade |
+| **Documentation**                | Comprehensive documentation and guides available at [rivalex/lingua](https://github.com/rivalex/lingua)       |
 
 ---
 
@@ -92,6 +96,8 @@ That's it — Lingua is ready.
 |--------------|-----------------------------------------------|-----------------------|
 | Languages    | `your-app.test/lingua/languages`              | `lingua.languages`    |
 | Translations | `your-app.test/lingua/translations/{locale?}` | `lingua.translations` |
+| Statistics   | `your-app.test/lingua/statistics`             | `lingua.statistics`   |
+| Settings     | `your-app.test/lingua/settings`               | `lingua.settings`     |
 
 ---
 
@@ -225,8 +231,9 @@ Publishes the database migrations to `database/migrations/`.
 php artisan vendor:publish --tag="lingua-migrations"
 ```
 
-Use this when you need to modify the `languages` or `language_lines` table schema — for example to add indexes, change
-column types, or integrate with an existing translations table. After publishing, run `php artisan migrate` as normal.
+Use this when you need to modify the `languages`, `language_lines`, or `lingua_settings` table schema — for example to
+add indexes, change column types, or integrate with an existing translations table. After publishing, run
+`php artisan migrate` as normal.
 
 > **Note:** The `lingua:install` wizard publishes and runs the migrations automatically. Only publish manually if you
 > need to customise the schema before running them.
@@ -295,30 +302,20 @@ resources/views/vendor/lingua/
 
 ---
 
-#### `lingua-assets`
-
-Publishes the compiled CSS and JavaScript assets to `public/vendor/lingua/`.
-
-```bash
-php artisan vendor:publish --tag="lingua-assets"
-```
-
-This is required only if you serve assets from `public/` rather than loading them via Vite or a CDN. Re-run this command
-after every Lingua upgrade to keep the assets in sync with the package version.
-
----
-
 ### Re-publishing after upgrades
 
-After updating Lingua via Composer, re-publish any assets that may have changed:
+After updating Lingua via Composer, re-publish any tags that may have changed:
 
 ```bash
-# Force-overwrite previously published assets
-php artisan vendor:publish --tag="lingua-assets" --force
+# Force-overwrite previously published translations
 php artisan vendor:publish --tag="lingua-translations" --force
 ```
 
 The `--force` flag overwrites existing files. Omit it for views and config so your local customisations are not lost.
+
+> **Note:** Compiled CSS and JavaScript assets are served directly from the package via Lingua's own asset route.
+> Publishing assets to `public/` is not required and the `lingua-assets` tag is no longer supported.
+> If you previously published assets, you can safely delete `public/vendor/lingua/` from your project.
 
 ---
 
@@ -354,6 +351,42 @@ Manage individual translation strings with a filterable, paginated table.
 - **Edit** any string inline — the rich-text editor activates automatically for HTML and Markdown types
 - **Delete** translations globally or for a specific locale only
 - **Copy** the translation key to clipboard with one click
+
+### Statistics page — `/lingua/statistics`
+
+The statistics page gives you a bird's-eye view of your translation coverage.
+
+**What it shows:**
+
+- **Per-language coverage** — progress bar for each installed locale with the percentage of translated keys and a count of missing ones
+- **Group breakdown** — table showing how many keys are translated per locale across each translation group
+- **Missing-key drill-down** — click the missing count for any language to expand a list of untranslated keys with direct links to the translation editor
+- **Vendor toggle** — include or exclude vendor translations from all statistics with a single switch
+
+Link to the page from anywhere in your application:
+
+```blade
+<a href="{{ route('lingua.statistics') }}">Translation Statistics</a>
+```
+
+---
+
+### Settings page — `/lingua/settings`
+
+The settings page lets you configure Lingua's UI behaviour without touching config files or redeploying.
+
+**What you can configure:**
+
+- **Selector mode** — choose between `sidebar`, `modal`, `dropdown`, or `headless`
+- **Flag icons** — toggle the display of country flag icons next to language names in the selector
+
+Settings are stored in the `lingua_settings` database table and take effect immediately. Values from `config/lingua.php` continue to serve as the fallback when no database setting has been saved yet — no changes to your config file are required.
+
+```blade
+<a href="{{ route('lingua.settings') }}">Lingua Settings</a>
+```
+
+---
 
 ### RTL / LTR text direction
 
@@ -448,6 +481,76 @@ Control the display mode via config or inline props:
 
 > **Note:** To show or hide the language flags, set the `lingua.show_flags` config option to `true` or `false`.
 > Alternatively, use the `:show-flags` prop to override the config setting for a specific instance.
+
+#### Headless mode
+
+The headless selector renders zero CSS and no framework-specific markup — just semantic HTML that you style entirely with your own CSS or utility classes. Use it when you want full control over the language switcher's appearance.
+
+**Basic usage:**
+
+```blade
+<livewire:lingua::headless-language-selector />
+```
+
+The list is always present in the DOM. Show/hide it with CSS or Alpine.js `x-show` — no built-in trigger is provided by design.
+
+**Named slots:**
+
+Override the default button markup inside each language item using the `$item` slot, which receives the `Language` model:
+
+```blade
+<livewire:lingua::headless-language-selector>
+    <x-slot:item="language">
+        {{ $language->native }} ({{ $language->code }})
+    </x-slot>
+</livewire:lingua::headless-language-selector>
+```
+
+Override the rendering of the **currently selected** language with the `$current` slot (falls through to `$item` if not provided):
+
+```blade
+<livewire:lingua::headless-language-selector>
+    <x-slot:current="language">
+        <strong>{{ $language->native }}</strong>
+    </x-slot>
+    <x-slot:item="language">
+        {{ $language->native }}
+    </x-slot>
+</livewire:lingua::headless-language-selector>
+```
+
+**CSS targeting API (`data-lingua-*` attributes):**
+
+| Attribute              | Element                              |
+|------------------------|--------------------------------------|
+| `data-lingua-selector` | Root `<nav>` element                 |
+| `data-lingua-list`     | The `<ul>` language list             |
+| `data-lingua-item`     | Each `<li>` language entry           |
+| `data-lingua-active`   | The `<li>` of the active language    |
+| `data-lingua-button`   | The `<button>` inside each `<li>`    |
+| `data-lingua-name`     | Language English display name `<span>` |
+| `data-lingua-native`   | Language native name `<span>`        |
+| `data-lingua-code`     | Language ISO code `<span>`           |
+
+**Plain CSS example:**
+
+```css
+[data-lingua-selector] { display: flex; gap: 0.5rem; }
+[data-lingua-item] { cursor: pointer; }
+[data-lingua-active] { font-weight: bold; }
+```
+
+**Tailwind CSS example:**
+
+```blade
+<livewire:lingua::headless-language-selector>
+    <x-slot:item="language">
+        <span class="px-3 py-1 rounded hover:bg-gray-100">
+            {{ $language->native }}
+        </span>
+    </x-slot>
+</livewire:lingua::headless-language-selector>
+```
 
 ---
 
@@ -617,7 +720,9 @@ lang/vendor/…        │  ← lingua:sync-to-local
 ```
 
 - **`sync-to-database`** — reads every locale file (core + vendor packages) and upserts rows in `language_lines`,
-  auto-creating `languages` records for any new locales discovered.
+  auto-creating `languages` records for any new locales discovered. The default locale is processed first and its keys
+  form the reference set; keys absent from the default locale are skipped for other locales. Vendor keys are imported
+  only when the vendor locale is installed in the `languages` table.
 - **`sync-to-local`** — reads every row in `language_lines` and writes locale-specific PHP/JSON files back to `lang/`,
   including vendor subdirectories.
 

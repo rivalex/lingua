@@ -3,6 +3,7 @@
 namespace Rivalex\Lingua\Livewire\Selector;
 
 use Livewire\Component;
+use Rivalex\Lingua\Models\LinguaSetting;
 
 class Icon extends Component
 {
@@ -22,8 +23,10 @@ class Icon extends Component
 
     public function mount($showFlags = null): void
     {
-        $this->locale = $this->locale ?? app()->currentLocale();
-        $this->showFlags = ($showFlags !== null) ? (bool) $showFlags : config('lingua.selector.show_flags' ?? true);
+        $this->locale = linguaLanguageCode($this->locale ?? app()->currentLocale());
+        $this->showFlags = ($showFlags !== null)
+            ? (bool) $showFlags
+            : (bool) LinguaSetting::get(LinguaSetting::KEY_SHOW_FLAGS, config('lingua.selector.show_flags', true));
         if ($this->showFlags) {
             $this->buildFlag();
         } else {

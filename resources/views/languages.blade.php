@@ -113,7 +113,7 @@
 </section>
 @assets
 @once
-    <link rel="stylesheet" href="{{ asset('vendor/lingua/css/lingua.min.css') }}">
-    <script type="module" src="{{ asset('vendor/lingua/js/lingua.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
+    <script type="module" src="{{ route('lingua.assets', 'js/lingua.min.js') }}"></script>
 @endonce
 @endassets
