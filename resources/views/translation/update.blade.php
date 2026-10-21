@@ -1,4 +1,4 @@
-<flux:modal name="{{ $modalName }}" class="lingua-modal text-start">
+<flux:modal name="{{ $modalName }}" class="lingua lingua-modal text-start">
     <div class="flex flex-col gap-4">
         <flux:heading size="xl" level="1">
             @lang('lingua::lingua.translations.update.header')

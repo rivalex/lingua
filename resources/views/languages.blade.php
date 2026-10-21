@@ -2,6 +2,7 @@
     use LaravelLang\Locales\Facades\Locales;
     use Rivalex\Lingua\Facades\Lingua;
 @endphp
+<div class="lingua">
 <section class="flex flex-col gap-4">
     <div class="relative w-full">
         <flux:heading size="xl" level="1">@lang('lingua::lingua.languages.title')</flux:heading>
@@ -111,6 +112,7 @@
         <livewire:lingua::language.table wire:model.live="search" lazy/>
     </div>
 </section>
+</div>
 @assets
 @once
     <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
