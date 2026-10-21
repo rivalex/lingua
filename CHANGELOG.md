@@ -2,6 +2,10 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## v2.1.1 - 2026-10-21
+
+v2.1.1
+
 ## Lingua 2.1.0 - 2026-10-18
 
 ### Removed
