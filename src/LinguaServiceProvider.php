@@ -33,7 +33,6 @@ class LinguaServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews('lingua')
             ->hasTranslations()
-            ->hasAssets()
             ->hasRoute('web')
             ->hasMigration('create_language_lines_table')
             ->hasMigration('create_languages_table')
@@ -51,7 +50,6 @@ class LinguaServiceProvider extends PackageServiceProvider
                         $command->info('Hello, and welcome to Lingua new package!');
                         $command->info('Starting the installation process...');
                     })
-                    ->publishAssets()
                     ->publishConfigFile()
                     ->publishMigrations()
                     ->askToRunMigrations()

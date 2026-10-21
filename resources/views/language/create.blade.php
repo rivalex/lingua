@@ -28,8 +28,8 @@
                                  x-on:click="$flux.modal('{{ $modalName }}').close()">@lang('lingua::lingua.global.close')</flux:button>
                     <flux:button type="submit" variant="primary" color="green"
                                  icon="check">@lang('lingua::lingua.global.save')</flux:button>
-				</div>
-			</form>
-		</div>
-	</flux:modal>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
 </div>
