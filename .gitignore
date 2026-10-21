@@ -214,5 +214,3 @@ Temporary Items
 /web/js/
 
 # End of https://www.toptal.com/developers/gitignore/api/osx,intellij+all,laravel,symfony,git
-auth.json
-/public/build

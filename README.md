@@ -12,9 +12,9 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/rivalex/lingua.svg)](https://packagist.org/packages/rivalex/lingua)
 [![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue)](https://php.net)
-[![Laravel Version](https://img.shields.io/badge/Laravel-12--13-orange)](https://laravel.com)
+[![Laravel Version](https://img.shields.io/badge/Laravel-11--13-orange)](https://laravel.com)
 [![License](https://img.shields.io/github/license/rivalex/lingua)](LICENSE.md)
-[![codecov](https://codecov.io/github/rivalex/lingua/branch/master/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
+[![codecov](https://codecov.io/github/rivalex/lingua/branch/main/graph/badge.svg?token=9RKRB8AYD6)](https://codecov.io/github/rivalex/lingua)
 [![Tests](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml/badge.svg)](https://github.com/rivalex/lingua/actions/workflows/run-tests.yml)
 
 <br>
@@ -34,7 +34,7 @@ Built on the TALL stack (Tailwind, Alpine, Livewire), Lingua stores translations
 native `lang/` **files** — switchable with a single config value. It ships a bundled dataset of 26 locales aligned to
 Laravel 13 (no `laravel-lang` required), handles published vendor translations safely, supports **CSV, JSON, XLSX, and
 ODS** import/export with a mandatory dry-run preview, offers full RTL support, and can optionally AI-translate missing
-strings via Lingua Pro. Built for **Laravel 12–13, Livewire 4, and PHP 8.3+**.
+strings via Lingua Pro. Built for **Laravel 11–13, Livewire 4, and PHP 8.3+**.
 
 [Features](#-features) · [Installation](#-installation) · [Configuration](#-configuration) · [Storage Drivers](#-storage-drivers) · [Artisan Commands](#-artisan-commands) · [Publishing](#-publishing) · [UI Guide](#-ui-guide) · [Import / Export](#-import--export) · [Language Selector](#-language-selector) · [Facade](#-lingua-facade) · [Architecture](#-architecture) · [Lingua Pro](#-lingua-pro)
 
@@ -83,7 +83,7 @@ strings via Lingua Pro. Built for **Laravel 12–13, Livewire 4, and PHP 8.3+**.
 ## 📦 Requirements
 
 - PHP **8.3+**
-- Laravel **12 | 13**
+- Laravel **11 | 12 | 13**
 - Livewire **4.1+**
 - Livewire Flux **2.12+**
 
@@ -298,7 +298,6 @@ Lingua supports two storage backends, selectable at install time or switched lat
 
 - Translations stored in the `language_lines` table (one JSON `text` column, all locales per row)
 - Runtime DB queries cached `rememberForever` per `(locale, group)` pair; surgical invalidation on save/delete
-- A cache store outage degrades to direct database reads (reported, then skipped for the rest of the request); it never breaks rendering
 - Full-featured: HTML/Markdown translation types, vendor translation guard, statistics, import/export
 - Works with SQLite, MySQL, PostgreSQL, and SQL Server
 
@@ -1087,11 +1086,6 @@ binding. At runtime it merges:
 
 Database translations take precedence over file translations. All translations are cached per `(locale, group)` pair via
 `Cache::rememberForever`. Cache is invalidated surgically on model save/delete — no full-cache flush required.
-
-The cache is an optimisation, the database stays the source of truth: if the cache store is unavailable (for example a
-Redis timeout), reads and the write-back after a miss fall back to the database, the exception is reported, and a
-request-scoped circuit breaker skips the store for the rest of the request. Invalidation is deliberately not guarded: a
-failed forget surfaces instead of leaving a stale entry behind.
 
 ### Translation types
 

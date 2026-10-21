@@ -22,7 +22,7 @@
     ],
     "homepage": "https://github.com/rivalex/lingua",
     "type": "library",
-    "version": "v2.1.1",
+    "version": "v2.0.5",
     "license": "MIT",
     "authors": [
         {
@@ -35,7 +35,7 @@
         "php": "^8.3",
         "ext-dom": "*",
         "ext-libxml": "*",
-        "illuminate/contracts": "^12.0 || ^13.0",
+        "illuminate/contracts": "^11.0 || ^12.0 || ^13.0",
         "league/html-to-markdown": "^5.1",
         "livewire/flux": "^v2.12.0",
         "livewire/livewire": "^v4.1.0",
@@ -48,7 +48,7 @@
         "nunomaduro/collision": "^v8.8.0",
         "nunomaduro/pao": "^1.0",
         "openspout/openspout": "^5.7",
-        "orchestra/testbench": "^10.9 || ^11.0",
+        "orchestra/testbench": "^9.0 || ^10.9 || ^11.0",
         "pestphp/pest": "^v4.4.0",
         "pestphp/pest-plugin-arch": "^v4.0.0",
         "pestphp/pest-plugin-laravel": "^v4.0.0",

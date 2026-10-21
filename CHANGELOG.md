@@ -2,25 +2,6 @@
 
 All notable changes to `lingua` will be documented in this file.
 
-## v2.1.1 - 2026-10-21
-
-v2.1.1
-
-## Lingua 2.1.0 - 2026-10-18
-
-### Removed
-
-- **Laravel 11 support** - `illuminate/contracts` now requires `^12.0 || ^13.0` and the dev dependency `orchestra/testbench` `^10.9 || ^11.0`. Laravel 11 reached the end of security support on March 12, 2026, and its stable releases no longer resolve with current Composer defaults (only `11.x-dev` does). Applications on Laravel 11 keep receiving Lingua 2.0.5. See UPGRADE.md.
-
-### Fixed
-
-- **fix(cache): a translation cache store outage returned HTTP 500** - in production, `RedisException: Connection timed out` thrown by `Redis->pconnect()` inside `rememberForever()` (from `Translation::getTranslationsForGroup()`, reached by a Blade `__()` call) broke the public home page. The database is the source of truth and the cache only an optimisation, so the read path now degrades: `getTranslationsForGroup()` and `getVendorTranslationsForGroup()` read the cache and write back after a miss inside a guarded helper; on failure the exception is reported and the values come straight from the database. A request-scoped circuit breaker (`CacheCircuit`, bound as scoped so it resets between Octane requests and queue jobs) makes the first failure skip the store for the rest of the request, instead of every translation group retrying the connection and waiting for the timeout. Database errors are not caught (the missing-table fallback in `LinguaManager::load()` still works) and an invalid cache store name stays a loud error. Write-path invalidation (`forgetCacheForLocales()` and the forget in `syncToDatabase()`) is intentionally unchanged: a swallowed failed forget would leave a forever-cached stale entry alive after the store recovers.
-- **fix(loader): vendor rows leaked into app groups with the same name** - `Translation::getTranslationsForGroup()`, which serves the app namespace in database mode, filtered by `group` only, so a vendor row (`is_vendor = true`) in a group named like an app group was merged into the app translations and could overwrite app keys. It now reads non-vendor rows only; vendor rows keep being served by `getVendorTranslationsForGroup()`. Upgrade note: app groups already cached forever may still hold leaked vendor keys, so clear the translation cache once after upgrading (`php artisan cache:clear`, or forget the `lingua.trans.*` keys on the configured store).
-
-### Changed
-
-- **ci: test matrix extended to PHP 8.3 and Laravel 13** - `run-tests.yml` now runs PHP 8.3 and 8.4 against Laravel 12 and 13 (previously PHP 8.4 with Laravel 12 only). On PHP 8.3 the dev-only `openspout/openspout`, which requires PHP 8.4, is removed before install and the XLSX/ODS tests skip.
-
 ## Lingua 2.0.5 - 2026-09-25
 
 ### Fixed

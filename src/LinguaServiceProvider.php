@@ -31,7 +31,6 @@ use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Services\ExtensionRegistry;
 use Rivalex\Lingua\Storage\FileRepository;
 use Rivalex\Lingua\Support\AtomicFileWriter;
-use Rivalex\Lingua\Support\CacheCircuit;
 use Rivalex\Lingua\Support\MigrationPublisher;
 use Rivalex\Lingua\Support\TranslationFileReader;
 use Rivalex\Lingua\TranslationManager\LinguaManager;
@@ -71,8 +70,6 @@ class LinguaServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(TranslationFileReader::class);
-
-        $this->app->scoped(CacheCircuit::class);
 
         $this->app->bind(AtomicFileWriter::class);
 

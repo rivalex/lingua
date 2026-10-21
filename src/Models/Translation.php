@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Models;
 
 use Carbon\Carbon;
-use Closure;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,12 +18,10 @@ use Rivalex\Lingua\Enums\LinguaType;
 use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
 use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Support\AtomicFileWriter;
-use Rivalex\Lingua\Support\CacheCircuit;
 use Rivalex\Lingua\Support\PathGuard;
 use Rivalex\Lingua\Support\PhpArrayExporter;
 use Rivalex\Lingua\Support\TranslationFileReader;
 use Rivalex\Lingua\TranslationManager\CacheKey;
-use Throwable;
 
 /**
  * Class Translation
@@ -114,7 +111,7 @@ class Translation extends Model
     public static function boot(): void
     {
         parent::boot();
-        // Suppress per-row cache forgets during bulk sync; syncToDatabase() forgets each touched key once in its finally block.
+        // Suppress per-row cache clears during bulk sync; a single clear fires in the finally block.
         static::saved(function (self $model) {
             if (! self::$syncing) {
                 $model->forgetCacheForLocales();
@@ -149,17 +146,13 @@ class Translation extends Model
     }
 
     /**
-     * Retrieve all app (non-vendor) translations for the given locale and group, caching the result forever.
-     *
-     * Vendor rows are excluded: they are served by getVendorTranslationsForGroup() under their
-     * own namespace, and a vendor group with the same name must not leak into the app group.
+     * Retrieve all translations for the given locale and group, caching the result forever.
      *
      * @return array<string, mixed>
      */
     public static function getTranslationsForGroup(string $locale, string $group): array
     {
-        $resolve = fn (): array => static::where('is_vendor', false)
-            ->where('group', $group)
+        $resolve = fn (): array => static::where('group', $group)
             ->get()
             ->reduce(function (array $carry, self $translation) use ($locale): array {
                 $value = $translation->text[$locale] ?? null;
@@ -176,7 +169,10 @@ class Translation extends Model
             return $resolve();
         }
 
-        return self::rememberForeverResilient(CacheKey::forGroup($locale, $group), $resolve);
+        return Cache::store(config('lingua.cache.store'))->rememberForever(
+            CacheKey::forGroup($locale, $group),
+            $resolve
+        );
     }
 
     /**
@@ -208,54 +204,10 @@ class Translation extends Model
             return $resolve();
         }
 
-        return self::rememberForeverResilient(CacheKey::forVendorGroup($locale, $vendor, $group), $resolve);
-    }
-
-    /**
-     * rememberForever() that degrades to the database when the cache store is unavailable.
-     *
-     * Only cache I/O is guarded: the read and the write-back after a miss. A failure is
-     * reported, opens the request-scoped CacheCircuit and the value is served from the
-     * database. The resolver is deliberately NOT guarded: database exceptions must
-     * propagate unchanged, because LinguaManager::load() relies on QueryException for its
-     * missing-table fallback. The store itself is resolved outside any try block, so an
-     * invalid store name stays a loud misconfiguration error.
-     *
-     * @param  Closure(): array<string, mixed>  $resolve
-     * @return array<string, mixed>
-     */
-    private static function rememberForeverResilient(string $key, Closure $resolve): array
-    {
-        $store = Cache::store(config('lingua.cache.store'));
-        $circuit = app(CacheCircuit::class);
-
-        if ($circuit->isOpen()) {
-            return $resolve();
-        }
-
-        try {
-            $cached = $store->get($key);
-        } catch (Throwable $e) {
-            $circuit->open();
-            report($e);
-
-            return $resolve();
-        }
-
-        if ($cached !== null) {
-            return $cached;
-        }
-
-        $value = $resolve();
-
-        try {
-            $store->forever($key, $value);
-        } catch (Throwable $e) {
-            $circuit->open();
-            report($e);
-        }
-
-        return $value;
+        return Cache::store(config('lingua.cache.store'))->rememberForever(
+            CacheKey::forVendorGroup($locale, $vendor, $group),
+            $resolve
+        );
     }
 
     /**

@@ -1,18 +1,5 @@
 # Upgrade Guide
 
-## Upgrading to v2.1
-
-### Laravel 12 or later required
-
-Lingua 2.1 supports Laravel 12 and 13. Laravel 11 reached the end of security support on
-March 12, 2026, and its stable releases can no longer be installed with current Composer
-defaults. Applications still on Laravel 11 stay on Lingua 2.0.5, which Composer keeps
-selecting automatically, and should upgrade Laravel before updating Lingua.
-
-There are no other breaking changes: no config, migration or API change is needed.
-
----
-
 ## Upgrading to v2.0
 
 ### Why the major version?
