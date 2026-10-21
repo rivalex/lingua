@@ -92,6 +92,15 @@ return [
             'action' => 'Delete :language',
         ],
     ],
+    'pro' => [
+        'banner_text' => 'AI translation is available in Lingua Pro',
+        'banner_features' => 'DeepL, Claude Haiku, SmartRouter, Translation Memory',
+        'banner_cta' => 'Upgrade to Lingua Pro →',
+        'auto_translate' => 'Auto-translate',
+        'auto_translate_tooltip' => 'AI auto-translation is available in Lingua Pro. Click to learn more.',
+        'hint_text' => 'Want to auto-translate this string?',
+        'hint_cta' => 'Upgrade to Lingua Pro →',
+    ],
     'translations' => [
         'header' => ':locale Translations',
         'subheader' => 'Manage translations for :locale language.',

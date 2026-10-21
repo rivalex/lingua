@@ -2,6 +2,22 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## Rivalex Lingua - 2026-04-09
+
+### 2026-04-09
+
+#### Fixed
+
+- **`Translation/Create` — group preserved after creation** — the `group` field is now retained after a successful save, allowing multiple keys to be added to the same group consecutively without reselecting it. Only `key`, `translationType`, and value fields are reset.
+- **`Translation/Create` and `Translation/Update` — whitespace normalization** — `group` and `key` values are sanitized with `Str::squish()->trim()` before being persisted, preventing keys with leading, trailing, or excess internal spaces from being stored.
+
+#### Tests
+
+- `CreateTest`: corrected `group` assertions to reflect preservation after creation; added whitespace normalization test for `group` and `key`.
+- `UpdateTest`: added whitespace normalization test for `group` and `key`; added test confirming that vendor translation `group` and `key` fields are immutable.
+
+---
+
 ## Rivalex Lingua - 2026-04-01
 
 ### 2026-04-01

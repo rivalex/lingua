@@ -3,6 +3,7 @@
 namespace Rivalex\Lingua\Livewire\Translation;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
@@ -91,15 +92,15 @@ class Create extends Component
             // is_vendor is intentionally NOT exposed in the form — vendor translations
             // are managed exclusively through file sync and cannot be created manually.
             Translation::create([
-                'group' => $this->group,
-                'key' => $this->key,
+                'group' => Str::of($this->group)->squish()->trim(),
+                'key' => Str::of($this->key)->squish()->trim(),
                 'type' => $this->translationType,
                 'text' => [linguaDefaultLocale() => $translationValue],
                 'is_vendor' => false,
                 'vendor' => null,
             ]);
             $this->closeModal();
-            $this->reset('group', 'key', 'translationType');
+            $this->reset('key', 'translationType', 'textValue', 'htmlValue', 'mdValue');
             $this->getGroupsList();
             $this->dispatch('refreshTranslationsTableDefaults');
             $this->dispatch('translation_added');

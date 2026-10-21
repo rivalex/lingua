@@ -3,6 +3,7 @@
 namespace Rivalex\Lingua\Livewire\Translation;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
@@ -123,8 +124,8 @@ class Update extends Component
                 $this->translation->update(['type' => $this->translationType]);
             } else {
                 $this->translation->update([
-                    'group' => $this->group,
-                    'key' => $this->key,
+                    'group' => Str::of($this->group)->squish()->trim(),
+                    'key' => Str::of($this->key)->squish()->trim(),
                     'type' => $this->translationType,
                 ]);
             }
