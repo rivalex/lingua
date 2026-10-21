@@ -9,8 +9,9 @@ use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Support\TranslationLine;
 
 /**
  * Statistics component.
@@ -36,7 +37,14 @@ final class Statistics extends Component
     public bool $includeVendor = false;
 
     // -------------------------------------------------------------------------
-    // Computed — cached (invalidated manually in toggleVendor)
+    // Computed — per-request memoised (not cross-request cached)
+    //
+    // cache: true was removed: Livewire 4 caches with key
+    // lw_computed.{componentName}.{prop} — shared across ALL requests and
+    // users for 1 h, and the key ignores $includeVendor, so a vendor-on value
+    // could leak into a vendor-off request. Per-request memoisation (default
+    // #[Computed]) is sufficient for this dashboard; unset() in toggleVendor
+    // still busts the in-request cache as before.
     // -------------------------------------------------------------------------
 
     /**
@@ -44,7 +52,7 @@ final class Statistics extends Component
      *
      * @return Collection<int, Language>
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function languages(): Collection
     {
         return Language::orderBy('sort')->orderBy('name')->get();
@@ -53,7 +61,7 @@ final class Statistics extends Component
     /**
      * The language marked as the system default.
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function defaultLanguage(): ?Language
     {
         return $this->languages->firstWhere('is_default', true);
@@ -65,22 +73,16 @@ final class Statistics extends Component
      *
      * @return Collection<int, Translation>
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function lines(): Collection
     {
-        $query = Translation::select(['id', 'group', 'key', 'group_key', 'text', 'is_vendor', 'vendor']);
-
-        if (! $this->includeVendor) {
-            $query->where('is_vendor', false);
-        }
-
-        return $query->get();
+        return app(TranslationRepository::class)->all(includeVendor: $this->includeVendor);
     }
 
     /**
      * Total number of translation keys currently visible.
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function totalKeys(): int
     {
         return $this->lines->count();
@@ -89,7 +91,7 @@ final class Statistics extends Component
     /**
      * Total number of distinct translation groups.
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function totalGroups(): int
     {
         return $this->lines->pluck('group')->unique()->count();
@@ -106,7 +108,7 @@ final class Statistics extends Component
      *
      * @return Collection<int, array{language: Language, translated: int, missing: int, percentage: float}>
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function coverageStats(): Collection
     {
         $total = $this->totalKeys;
@@ -116,7 +118,7 @@ final class Statistics extends Component
             $locale = $language->code;
 
             $translated = $lines->filter(
-                fn (Translation $line): bool => $this->isTranslated($line->text, $locale)
+                fn (TranslationLine $line): bool => $this->isTranslated($line->text, $locale)
             )->count();
 
             $missing = $total - $translated;
@@ -140,7 +142,7 @@ final class Statistics extends Component
      *
      * @return Collection<string, array{total: int, locales: array<string, int>}>
      */
-    #[Computed(cache: true)]
+    #[Computed]
     public function groupBreakdown(): Collection
     {
         $localeCodes = $this->languages->pluck('code')->all();
@@ -152,7 +154,7 @@ final class Statistics extends Component
 
                 foreach ($localeCodes as $locale) {
                     $localeCounts[$locale] = $groupLines->filter(
-                        fn (Translation $line): bool => $this->isTranslated($line->text, $locale)
+                        fn (TranslationLine $line): bool => $this->isTranslated($line->text, $locale)
                     )->count();
                 }
 
@@ -184,11 +186,11 @@ final class Statistics extends Component
         $locale = $this->expandedLocale;
 
         return $this->lines
-            ->filter(fn (Translation $line): bool => ! $this->isTranslated($line->text, $locale))
-            ->map(fn (Translation $line): array => [
+            ->filter(fn (TranslationLine $line): bool => ! $this->isTranslated($line->text, $locale))
+            ->map(fn (TranslationLine $line): array => [
                 'group' => $line->group,
                 'key' => $line->key,
-                'group_key' => $line->group_key,
+                'group_key' => $line->groupKey,
             ])
             ->values();
     }
@@ -203,14 +205,17 @@ final class Statistics extends Component
      */
     public function toggleMissingKeys(string $locale): void
     {
+        if (! preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $locale)) {
+            return;
+        }
         $this->expandedLocale = $this->expandedLocale === $locale ? null : $locale;
     }
 
     /**
-     * Toggle vendor-translation inclusion and bust all cached computed properties.
+     * Toggle vendor-translation inclusion and bust all memoised computed properties.
      *
-     * Livewire 4 caches computed properties per request; unsetting them forces
-     * recomputation on the next access within the same request cycle.
+     * Unsetting a computed property clears its in-request memoised value so the
+     * next access within the same request re-evaluates with the new $includeVendor.
      */
     public function toggleVendor(): void
     {
@@ -233,7 +238,10 @@ final class Statistics extends Component
 
     public function render(): View
     {
-        return view('lingua::statistics');
+        $view = view('lingua::statistics');
+        $layout = config('lingua.layout');
+
+        return $layout ? $view->layout($layout) : $view;
     }
 
     // -------------------------------------------------------------------------

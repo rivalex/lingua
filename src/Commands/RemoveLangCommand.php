@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
+use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
-class RemoveLangCommand extends Command
+final class RemoveLangCommand extends Command
 {
     /**
      * The name and signature of the console command.
@@ -32,6 +32,13 @@ class RemoveLangCommand extends Command
     {
         $locale = $this->argument('locale');
 
+        // Validate the format BEFORE the locale reaches any JSON path expression.
+        if (! preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $locale)) {
+            $this->error("Invalid locale format: {$locale}");
+
+            return;
+        }
+
         $this->info("Removing language: {$locale}...");
 
         $language = Language::where('code', $locale)->first();
@@ -47,24 +54,25 @@ class RemoveLangCommand extends Command
         }
 
         try {
-            $this->info('Removing language files via Laravel Lang...');
-            Artisan::call('lang:rm', ['locales' => [strtolower($locale)], '--force' => true]);
-
             if ($language) {
                 $this->info('Removing translations from database...');
-                $translations = Translation::whereNotNull('text->'.$locale)->get();
+                $translations = Translation::all()->filter(
+                    fn ($t) => isset($t->text[$locale]) && ! $t->is_vendor
+                );
                 foreach ($translations as $translation) {
                     $translation->forgetTranslation($locale);
                 }
+            }
 
-                $this->info('Deleting language record...');
-                $language->delete();
+            Lingua::removeLanguage($locale);
+
+            if ($language) {
                 app(Language::class)->reorderLanguages();
             }
 
-            $this->info('Syncing remaining translations to database...');
-            app(Translation::class)->syncToDatabase();
-
+            // NOTE: no syncToDatabase() here. Re-syncing after a removal would
+            // re-import the locale from lang/{locale} files (and recreate its
+            // Language record), silently undoing the removal.
             $this->info("Language '{$locale}' removed successfully.");
         } catch (\Throwable $e) {
             $this->error("Failed to remove language '{$locale}': ".$e->getMessage());

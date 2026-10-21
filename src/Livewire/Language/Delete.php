@@ -8,9 +8,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\ModalsConfirm;
 
 /**
@@ -23,7 +23,7 @@ use Rivalex\Lingua\Traits\ModalsConfirm;
  * - Updating language records and reordering
  * - Providing confirmation modal functionality via ModalsConfirm trait
  */
-class Delete extends Component
+final class Delete extends Component
 {
     use ModalsConfirm;
 
@@ -51,11 +51,15 @@ class Delete extends Component
      *
      * This method performs the following operations:
      * 1. Validates the confirmation input
-     * 2. Removes language files using Artisan command
-     * 3. Removes translations for the language from database
-     * 4. Deletes the language record
-     * 5. Reorders remaining languages
-     * 6. Closes the modal and dispatches refresh event
+     * 2. Removes the locale's translation values from the repository
+     * 3. Deletes the Language record and unprojects notification keys
+     *    (both via Lingua::removeLanguage)
+     * 4. Reorders remaining languages
+     * 5. Closes the modal and dispatches refresh event
+     *
+     * No syncToDatabase() afterwards: re-syncing would re-import the locale
+     * from lang/{locale} files and recreate the Language record, silently
+     * undoing the removal.
      *
      * On failure, logs the error and dispatches a failure event.
      *
@@ -63,17 +67,17 @@ class Delete extends Component
      */
     public function deleteLanguage(): void
     {
-        $this->validate();
+        $this->validateConfirmControl();
         try {
             $locale = $this->language->code;
+            $repo = app(TranslationRepository::class);
+            $repo->all()
+                ->filter(fn ($line) => array_key_exists($locale, $line->text))
+                ->each(fn ($line) => $repo->forgetLocale($line, $locale));
+            // removeLanguage() unprojects notification keys AND deletes the
+            // Language record — no second delete on the in-memory model.
             Lingua::removeLanguage($locale);
-            $translations = Translation::whereNotNull('text->'.$locale)->get();
-            foreach ($translations as $translation) {
-                $translation->forgetTranslation($locale);
-            }
-            $this->language->delete();
             app(Language::class)->reorderLanguages();
-            app(Translation::class)->syncToDatabase();
             $this->close();
             $this->dispatch('refreshLanguages');
         } catch (\Throwable $e) {

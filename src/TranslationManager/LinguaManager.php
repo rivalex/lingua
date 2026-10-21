@@ -6,18 +6,26 @@ namespace Rivalex\Lingua\TranslationManager;
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
-use Spatie\TranslationLoader\LanguageLine;
-use Spatie\TranslationLoader\TranslationLoaderManager;
-use Spatie\TranslationLoader\TranslationLoaders\TranslationLoader;
+use Illuminate\Translation\FileLoader;
+use Rivalex\Lingua\Contracts\TranslationLoader;
+use Rivalex\Lingua\Contracts\TranslationRepository;
+use Rivalex\Lingua\Database\DatabaseRepository;
+use Rivalex\Lingua\Database\Db;
 
-class LinguaManager extends TranslationLoaderManager
+/**
+ * Extends FileLoader to merge file-based translations with database-backed ones.
+ *
+ * Registered as `translation.loader` in LinguaServiceProvider so that
+ * Laravel's Translator calls load() on every translation lookup.
+ */
+final class LinguaManager extends FileLoader
 {
     /**
      * Load the messages for the given locale.
      *
-     * @param  string  $locale
-     * @param  string  $group
-     * @param  string  $namespace
+     * In database mode, vendor namespaces are served from the DB (cached, merged
+     * over files). In file mode the file result is returned unchanged, exactly
+     * as before this change.
      */
     public function load($locale, $group, $namespace = null): array
     {
@@ -25,6 +33,13 @@ class LinguaManager extends TranslationLoaderManager
             $fileTranslations = parent::load($locale, $group, $namespace);
 
             if (! is_null($namespace) && $namespace !== '*') {
+                if (app(TranslationRepository::class) instanceof DatabaseRepository) {
+                    return array_replace_recursive(
+                        $fileTranslations,
+                        app(Db::class)->loadTranslations($locale, $group, $namespace)
+                    );
+                }
+
                 return $fileTranslations;
             }
 
@@ -33,9 +48,13 @@ class LinguaManager extends TranslationLoaderManager
             return array_replace_recursive($fileTranslations, $loaderTranslations);
         } catch (QueryException $exception) {
             $modelClass = config('lingua.model');
-            $model = new $modelClass;
 
-            if (is_a($model, LanguageLine::class) && ! Schema::hasTable($model->getTable())) {
+            if (
+                is_string($modelClass) &&
+                class_exists($modelClass) &&
+                method_exists($modelClass, 'getTable') &&
+                ! Schema::hasTable((new $modelClass)->getTable())
+            ) {
                 return parent::load($locale, $group, $namespace);
             }
 
@@ -49,11 +68,9 @@ class LinguaManager extends TranslationLoaderManager
         ?string $namespace = null
     ): array {
         return collect(config('lingua.translation_loaders'))
-            ->map(function (string $className) {
-                return app($className);
-            })
-            ->mapWithKeys(function (TranslationLoader $translationLoader) use ($locale, $group, $namespace) {
-                return $translationLoader->loadTranslations($locale, $group, $namespace);
+            ->map(fn (string $className) => app($className))
+            ->mapWithKeys(function (TranslationLoader $loader) use ($locale, $group, $namespace) {
+                return $loader->loadTranslations($locale, $group, $namespace);
             })
             ->toArray();
     }

@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Rivalex\Lingua\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use LaravelLang\Locales\Facades\Locales;
+use Rivalex\Lingua\Locales\LocaleRegistry;
 use Rivalex\Lingua\Models\Language;
 
 class LanguageFactory extends Factory
@@ -12,18 +14,19 @@ class LanguageFactory extends Factory
 
     public function definition(): array
     {
-        $availableLocales = Locales::available()->pluck('code')->toArray();
-        $bdLocales = Language::all()->pluck('code')->toArray();
-        $safeLocales = array_unique(array_diff($availableLocales, $bdLocales));
-        $localeData = Locales::info($safeLocales[array_rand($safeLocales)]);
+        $registry = app(LocaleRegistry::class);
+        $usedCodes = Language::all()->pluck('code')->toArray();
+        $available = array_diff($registry->availableCodes(), $usedCodes);
+        $code = $available[array_rand($available)];
+        $info = $registry->info($code);
 
         return [
-            'code' => $localeData->code,
-            'regional' => $localeData->regional,
-            'type' => $localeData->type,
-            'name' => $localeData->localized,
-            'native' => $localeData->native,
-            'direction' => $localeData->direction,
+            'code' => $info->code,
+            'regional' => $info->regional,
+            'type' => $info->type,
+            'name' => $info->name,
+            'native' => $info->native,
+            'direction' => $info->direction,
             'is_default' => false,
             'sort' => fake()->numberBetween(1, 100),
             'created_at' => now(),

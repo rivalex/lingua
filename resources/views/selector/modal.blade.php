@@ -1,4 +1,4 @@
-<div class="lingua">
+<x-lingua::dark-scope>
     <flux:modal.trigger name="{{ $modalName }}">
         <flux:button variant="filled" square class="cursor-pointer">
             <div class="flex flex-col items-center w-full px-1.5 space-y-[2px]">
@@ -24,8 +24,7 @@
                     <flux:button type="button" :key="'modal_locale_' . $locale->code"
                                  wire:click.prevent.stop="changeLocale('{{ $locale->code }}')"
                         @class(['bg-zinc-100 dark:bg-zinc-800' => $locale->code === app()->currentLocale()])>
-                        <div class="justify-between flex items-center text-start"
-                             style="width: 8rem; min-width: 8rem; max-width: 8rem;">
+                        <div class="justify-between flex items-center text-start w-32">
                             <div class="flex flex-col grow leading-5 truncate">
                                 <div class="truncate">{{ $locale->name }}</div>
                                 <div class="text-xs font-light text-zinc-500 truncate">{{ $locale->native }}</div>
@@ -39,9 +38,9 @@
             @endisland
         </div>
     </flux:modal>
-</div>
+</x-lingua::dark-scope>
 @assets
 @once
-    <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
+    <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">
 @endonce
 @endassets

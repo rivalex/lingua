@@ -12,13 +12,16 @@ declare(strict_types=1);
 namespace Rivalex\Lingua;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
-use LaravelLang\Locales\Data\LocaleData;
-use LaravelLang\Locales\Facades\Locales;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
+use Rivalex\Lingua\Locales\LocaleInfo;
+use Rivalex\Lingua\Locales\LocaleRegistry;
+use Rivalex\Lingua\Locales\NotificationProjector;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 
@@ -63,6 +66,25 @@ class Lingua
     }
 
     /**
+     * Execute a runtime DB read, returning $default when Lingua's tables are absent
+     * (pre-install or post-uninstall). Mirrors the guard in registerTranslator().
+     *
+     * @template T
+     *
+     * @param  callable():T  $read
+     * @param  T  $default
+     * @return T
+     */
+    private static function safeRead(callable $read, mixed $default): mixed
+    {
+        try {
+            return $read();
+        } catch (QueryException) {
+            return $default;
+        }
+    }
+
+    /**
      * Get a translation query builder for the specified key.
      *
      * Creates and executes a query to fetch a Translation model by its key.
@@ -100,6 +122,11 @@ class Lingua
      *
      * Executes the 'optimize:clear' artisan command to clear and rebuild
      * various caches, ensuring the application is optimized for the latest changes.
+     *
+     * @deprecated Translation cache is invalidated per-(locale,group) by model
+     *             hooks and the sync finally-block. Calling optimize:clear wipes
+     *             the entire host-app cache and is no longer invoked internally.
+     *             This method is retained for backward compatibility only.
      */
     public static function optimize(): void
     {
@@ -107,14 +134,9 @@ class Lingua
     }
 
     /**
-     * Update the application's language files.
+     * Sync translations for all installed languages from the filesystem to the database.
      *
-     * Executes the 'lang:update' Artisan command only for locales tracked in the
-     * languages table. Any filesystem locale not present in the database is removed
-     * via 'lang:rm' before the update runs, preventing vendor-only locales from
-     * being pulled into the sync.
-     *
-     * Returns early without running any command when no languages are installed.
+     * Returns early without running any sync when no languages are installed.
      */
     public static function updateLanguages(): void
     {
@@ -124,52 +146,89 @@ class Lingua
             return;
         }
 
-        // Remove filesystem locales that are not tracked in the languages table so
-        // that lang:update only refreshes DB-managed locales.
-        foreach (Locales::raw()->installed() as $locale) {
-            if (! in_array($locale, $dbLocales)) {
-                self::validateLocale($locale);
-                Artisan::call('lang:rm '.$locale.' --force');
-            }
-        }
-
-        Artisan::call('lang:update');
+        app(Translation::class)->syncToDatabase();
     }
 
     /**
-     * Add a new language to the application (installs language files).
+     * Add a new language by creating its DB record and seeding its storage.
      *
-     * Executes the 'lang:add' Artisan command to install language files
-     * for the specified locale via Laravel Lang.
+     * Database-mode: creates the Language row and syncs translations to DB.
+     * File-mode: creates the Language row and writes lang/{locale} files.
      *
-     * @param  string  $locale  The locale code to add (e.g., 'it', 'fr', 'de')
+     * @param  string  $locale  Locale code to add (e.g., 'it', 'fr', 'de')
      *
-     * @example
-     * Lingua::addLanguage('fr');
-     * // Installs French language files via laravel-lang
+     * @throws \InvalidArgumentException When the locale is not in the registry
      */
     public static function addLanguage(string $locale): void
     {
         self::validateLocale($locale);
-        Artisan::call('lang:add '.$locale);
+
+        $info = app(LocaleRegistry::class)->info($locale);
+
+        if ($info === null) {
+            throw new \InvalidArgumentException("[Lingua] Unknown locale: {$locale}");
+        }
+
+        Language::updateOrCreate(
+            ['code' => $info->code, 'regional' => $info->regional],
+            [
+                'type' => $info->type,
+                'name' => $info->name,
+                'native' => $info->native,
+                'direction' => $info->direction,
+                'is_default' => false,
+            ]
+        );
+
+        app(NotificationProjector::class)->project($info->code);
+        app(TranslationRepository::class)->installLocale($info->code);
     }
 
     /**
-     * Remove a language from the application (removes language files).
+     * Install the default language and seed its storage backend.
      *
-     * Executes the 'lang:rm' Artisan command with the --force flag to remove
-     * the language files for the specified locale without prompting for confirmation.
+     * Creates or updates the default Language record (is_default = true) and
+     * seeds its storage: database-mode → syncToDatabase; file-mode → writes lang/ files.
      *
-     * @param  string  $locale  The locale code to remove (e.g., 'it', 'fr', 'de')
+     * Used by lingua:install (file-mode branch) and the Languages Livewire component
+     * when it mounts in file mode with no languages configured.
+     */
+    public static function installDefaultLanguage(): void
+    {
+        $locale = linguaDefaultLocale();
+        $registry = app(LocaleRegistry::class);
+        $info = $registry->info($locale);
+
+        Language::updateOrCreate(
+            [
+                'code' => $info?->code ?? $locale,
+                'regional' => $info?->regional ?? null,
+            ],
+            [
+                'type' => $info?->type ?? 'Latn',
+                'name' => $info?->name ?? $locale,
+                'native' => $info?->native ?? $locale,
+                'direction' => $info?->direction ?? 'ltr',
+                'is_default' => true,
+            ]
+        );
+
+        app(NotificationProjector::class)->project($locale);
+        app(TranslationRepository::class)->installLocale($locale);
+    }
+
+    /**
+     * Remove a language by deleting its DB record (DB-native, no filesystem writes).
      *
-     * @example
-     * Lingua::removeLanguage('fr');
-     * // Removes French language files via laravel-lang
+     * @param  string  $locale  Locale code to remove (e.g., 'it', 'fr', 'de')
      */
     public static function removeLanguage(string $locale): void
     {
         self::validateLocale($locale);
-        Artisan::call('lang:rm '.$locale.' --force');
+
+        app(NotificationProjector::class)->unproject($locale);
+
+        Language::where('code', $locale)->delete();
     }
 
     /**
@@ -194,7 +253,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()?->is_default ?? false;
+        return self::safeRead(fn () => self::language($locale)->first()?->is_default ?? false, false);
     }
 
     /**
@@ -217,7 +276,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()->name ?? '';
+        return self::safeRead(fn () => self::language($locale)->first()->name ?? '', '');
     }
 
     /**
@@ -240,7 +299,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()->native ?? '';
+        return self::safeRead(fn () => self::language($locale)->first()->native ?? '', '');
     }
 
     /**
@@ -263,7 +322,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::language($locale)->first()->direction ?? 'ltr';
+        return self::safeRead(fn () => self::language($locale)->first()->direction ?? 'ltr', 'ltr');
     }
 
     /**
@@ -331,7 +390,7 @@ class Lingua
      */
     public static function available(): array
     {
-        return Locales::raw()->available();
+        return app(LocaleRegistry::class)->availableCodes();
     }
 
     /**
@@ -366,8 +425,7 @@ class Lingua
     public static function notInstalled(): array
     {
         $installed = self::installed();
-        $lang_available = Locales::raw()->available();
-        $available = array_diff($lang_available, $installed);
+        $available = array_diff(app(LocaleRegistry::class)->availableCodes(), $installed);
         asort($available);
 
         return array_values($available);
@@ -451,21 +509,19 @@ class Lingua
     /**
      * Get detailed information about a locale.
      *
-     * Retrieves comprehensive LocaleData information for the specified locale,
-     * optionally including country and currency information.
+     * Retrieves LocaleInfo for the specified locale from the static registry,
+     * resolving both code ('en') and regional ('en_US') forms.
      *
      * @param  mixed  $locale  The locale code to get information for
-     * @param  bool  $withCountry  Whether to include country information (default: false)
-     * @param  bool  $withCurrency  Whether to include currency information (default: false)
-     * @return LocaleData LocaleData object containing locale information
+     * @return LocaleInfo|null LocaleInfo object, or null when unknown
      *
      * @example
-     * $info = Lingua::info('en-US', withCountry: true, withCurrency: true);
-     * echo $info->native; // 'English (United States)'
+     * $info = Lingua::info('en-US');
+     * echo $info->native; // 'English'
      */
-    public static function info(mixed $locale, bool $withCountry = false, bool $withCurrency = false): LocaleData
+    public static function info(mixed $locale): ?LocaleInfo
     {
-        return Locales::info(locale: $locale, withCountry: $withCountry, withCurrency: $withCurrency);
+        return app(LocaleRegistry::class)->info((string) $locale);
     }
 
     /**
@@ -502,7 +558,7 @@ class Lingua
      */
     public static function translations(): Collection|array
     {
-        return Translation::all();
+        return app(TranslationRepository::class)->all(includeVendor: true);
     }
 
     /**
@@ -521,7 +577,7 @@ class Lingua
      */
     public static function getTranslations(?string $key): array
     {
-        return self::translation($key)?->text ?? [];
+        return app(TranslationRepository::class)->findByKey((string) $key)?->text ?? [];
     }
 
     /**
@@ -545,7 +601,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return self::translation($key)?->text[$locale] ?? '';
+        return app(TranslationRepository::class)->findByKey((string) $key)?->value($locale) ?? '';
     }
 
     /**
@@ -568,12 +624,11 @@ class Lingua
     public static function setTranslation(?string $key, string $value, ?string $locale = null): void
     {
         $locale = $locale ?? app()->getLocale();
-        $translation = self::translation($key);
-        if (! $translation) {
+        $line = app(TranslationRepository::class)->findByKey((string) $key);
+        if (! $line) {
             return;
         }
-        $translation->setTranslation($locale, $value);
-        $translation->save();
+        app(TranslationRepository::class)->setValue($line, $locale, $value);
     }
 
     /**
@@ -598,29 +653,27 @@ class Lingua
     public static function forgetTranslation(?string $key, ?string $locale = null): void
     {
         $locale = $locale ?? app()->getLocale();
-        $translation = self::translation($key);
-        if (! $translation) {
+        $repo = app(TranslationRepository::class);
+        $line = $repo->findByKey((string) $key);
+        if (! $line) {
             return;
         }
-        if ($translation->is_vendor) {
-            throw new VendorTranslationProtectedException;
-        }
         if (self::isDefaultLocale($locale)) {
-            $translation->delete();
+            $repo->deleteKey($line);
         } else {
-            $translation->forgetTranslation(locale: $locale);
+            $repo->forgetLocale($line, $locale);
         }
     }
 
     /**
      * Get translations by group.
      *
-     * Retrieves a collection of Translation models that belong to the specified group.
+     * Retrieves a collection of Translation lines that belong to the specified group.
      * Optionally filters to only include translations that have a value for the specified locale.
      *
      * @param  string  $group  The translation group name (e.g., 'messages', 'validation')
      * @param  string|null  $locale  Optional locale code to filter translations
-     * @return Collection|array Collection of Translation models
+     * @return Collection|array Collection of TranslationLine objects
      *
      * @example
      * $messages = Lingua::getTranslationByGroup('messages');
@@ -631,9 +684,14 @@ class Lingua
      */
     public static function getTranslationByGroup(string $group, ?string $locale = null): Collection|array
     {
-        return Translation::where('group', Str::of($group)->squish()->trim())
-            ->when($locale, fn ($query) => $query->whereNotNull('text->'.$locale))
-            ->get();
+        if ($locale !== null) {
+            self::validateLocale($locale);
+        }
+
+        return app(TranslationRepository::class)->byGroup(
+            Str::of($group)->squish()->trim()->toString(),
+            $locale,
+        );
     }
 
     /**
@@ -650,7 +708,7 @@ class Lingua
      */
     public static function getDefaultLocale(): string
     {
-        return Language::default()?->code ?? config('lingua.default_locale', 'en');
+        return self::safeRead(fn () => Language::default()?->code, null) ?? config('lingua.default_locale', 'en');
     }
 
     /**
@@ -669,7 +727,7 @@ class Lingua
      */
     public static function hasLocale(string $locale): bool
     {
-        return self::language($locale)->exists();
+        return self::safeRead(fn () => self::language($locale)->exists(), false);
     }
 
     /**
@@ -713,7 +771,7 @@ class Lingua
     {
         $locale = $locale ?? app()->getLocale();
 
-        return Translation::getLocaleStats($locale);
+        return app(TranslationRepository::class)->localeStats($locale);
     }
 
     /**
@@ -754,10 +812,14 @@ class Lingua
      */
     public static function getVendorTranslations(string $vendor, ?string $locale = null): Collection|array
     {
-        return Translation::where('is_vendor', true)
-            ->where('vendor', Str::of($vendor)->squish()->trim())
-            ->when($locale, fn ($q) => $q->whereNotNull('text->'.$locale))
-            ->get();
+        if ($locale !== null) {
+            self::validateLocale($locale);
+        }
+
+        return app(TranslationRepository::class)->vendor(
+            Str::of($vendor)->squish()->trim()->toString(),
+            $locale,
+        );
     }
 
     /**
@@ -785,12 +847,16 @@ class Lingua
         ?string $locale = null): void
     {
         $locale = $locale ?? app()->getLocale();
-        $translation = Translation::where('is_vendor', true)
-            ->where('vendor', Str::of($vendor)->squish()->trim())
-            ->where('group', Str::of($group)->squish()->trim())
-            ->where('key', Str::of($key)->squish()->trim())
-            ->firstOrFail();
-        $translation->setTranslation($locale, $value);
-        $translation->save();
+        $repo = app(TranslationRepository::class);
+        $line = $repo->find(
+            group: Str::of($group)->squish()->trim()->toString(),
+            key: Str::of($key)->squish()->trim()->toString(),
+            isVendor: true,
+            vendor: Str::of($vendor)->squish()->trim()->toString(),
+        );
+        if (! $line) {
+            throw new ModelNotFoundException;
+        }
+        $repo->setValue($line, $locale, $value);
     }
 }

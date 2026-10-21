@@ -1,34 +1,43 @@
-<section class="flex flex-col gap-3 mt-4">
-
-    <flux:heading size="lg" level="2">{{ __('lingua::lingua.statistics.breakdown.title') }}</flux:heading>
+<x-lingua::card :title="__('lingua::lingua.statistics.breakdown.title')">
 
     @if ($this->groupBreakdown->isEmpty())
-        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('lingua::lingua.statistics.breakdown.empty') }}</p>
+        <div class="p-6">
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('lingua::lingua.statistics.breakdown.empty') }}</p>
+        </div>
     @else
-        <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+        <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700">
+                <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
                     <tr>
-                        <th scope="col" class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300">{{ __('lingua::lingua.statistics.breakdown.group') }}</th>
-                        <th scope="col" class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300">{{ __('lingua::lingua.statistics.breakdown.total') }}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                            {{ __('lingua::lingua.statistics.breakdown.group') }}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                            {{ __('lingua::lingua.statistics.breakdown.total') }}
+                        </th>
                         @foreach ($this->languages as $lang)
-                            <th scope="col" class="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300" title="{{ $lang->native }}">
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400" title="{{ $lang->native }}">
                                 {{ $lang->code }}
                             </th>
                         @endforeach
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
                     @foreach ($this->groupBreakdown as $group => $data)
                         <tr class="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                            <td class="px-4 py-2">
-                                <code class="text-xs bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded">{{ $group }}</code>
+                            <td class="px-6 py-3">
+                                <code class="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{{ $group }}</code>
                             </td>
-                            <td class="px-4 py-2 tabular-nums text-zinc-600 dark:text-zinc-400">{{ $data['total'] }}</td>
+                            <td class="px-6 py-3 tabular-nums text-zinc-500 dark:text-zinc-400">{{ $data['total'] }}</td>
                             @foreach ($this->languages as $lang)
-                                @php $count = $data['locales'][$lang->code] ?? 0; @endphp
-                                <td class="px-4 py-2 tabular-nums {{ $count === $data['total'] ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400' }}">
-                                    {{ $count }}/{{ $data['total'] }}
+                                @php
+                                    $count = $data['locales'][$lang->code] ?? 0;
+                                    $full  = $count === $data['total'];
+                                @endphp
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium tabular-nums {{ $full ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' }}">
+                                        {{ $count }}/{{ $data['total'] }}
+                                    </span>
                                 </td>
                             @endforeach
                         </tr>
@@ -38,4 +47,4 @@
         </div>
     @endif
 
-</section>
+</x-lingua::card>

@@ -6,7 +6,6 @@ namespace Rivalex\Lingua\Facades;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Facade;
-use LaravelLang\Locales\Data\LocaleData;
 use Rivalex\Lingua\Models\Language;
 
 /**
@@ -70,16 +69,16 @@ use Rivalex\Lingua\Models\Language;
  *
  * ### Language lifecycle
  * ```
- * Lingua::addLanguage('fr');      // install language files via lang:add
- * Lingua::removeLanguage('fr');   // remove language files via lang:rm --force
+ * Lingua::addLanguage('fr');      // create Language DB record (DB-native)
+ * Lingua::removeLanguage('fr');   // delete Language DB record
  * ```
  *
  * ### Sync & maintenance
  * ```
  * Lingua::syncToDatabase();   // import local lang files → database
  * Lingua::syncToLocal();      // export database → local lang files
- * Lingua::updateLanguages();  // run lang:update (fetch latest translations)
- * Lingua::optimize();         // run optimize:clear
+ * Lingua::updateLanguages();  // sync installed languages to database
+ * Lingua::optimize();         // @deprecated — no longer called internally
  * ```
  * ---
  *
@@ -89,11 +88,12 @@ use Rivalex\Lingua\Models\Language;
  * @method static string getLocaleNative(?string $locale = null) Native name of the locale (e.g. 'Français'); '' when not found
  * @method static string getDirection(?string $locale = null) Text direction for the locale — 'ltr' or 'rtl'; defaults to 'ltr'
  * @method static string getDefaultLocale() The locale code of the default language (e.g. 'en')
- * @method static LocaleData info(mixed $locale, bool $withCountry = false, bool $withCurrency = false) Detailed locale data from laravel-lang/locales
- * @method static void addLanguage(string $locale) Install language files for the given locale via lang:add
- * @method static void removeLanguage(string $locale) Remove language files for the given locale via lang:rm --force
- * @method static void optimize() Clear the application cache (calls optimize:clear)
- * @method static void updateLanguages() Run lang:update to fetch the latest translations
+ * @method static LocaleInfo|null info(mixed $locale) Locale metadata from the static registry; null when unknown
+ * @method static void addLanguage(string $locale) Create Language DB/file record and seed storage for the given locale
+ * @method static void installDefaultLanguage() Create/update the default Language record and seed its storage (file-mode: writes lang/ files; DB-mode: syncToDatabase)
+ * @method static void removeLanguage(string $locale) Delete Language DB record for the given locale
+ * @method static void optimize() @deprecated Retained for BC; translation cache is invalidated per-(locale,group) — calling this wipes the entire host-app cache unnecessarily
+ * @method static void updateLanguages() Re-sync translations for all installed locales
  * @method static void syncToDatabase() Import local lang/ files into the database
  * @method static void syncToLocal() Export database translations to local lang/ files
  * @method static Collection languages() All installed Language models

@@ -40,9 +40,7 @@
                     </div>
                 </div>
             @endif
-            <div>
-                {{ $slot }}
-            </div>
+            {{ $slot }}
         </div>
     </button>
 </div>

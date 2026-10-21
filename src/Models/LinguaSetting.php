@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use InvalidArgumentException;
 use Rivalex\Lingua\Enums\SelectorMode;
 
@@ -18,6 +19,7 @@ use Rivalex\Lingua\Enums\SelectorMode;
  * ### Known keys (use the public constants):
  * - `KEY_SHOW_FLAGS`   — selector.show_flags (bool)
  * - `KEY_SELECTOR_MODE` — selector.mode (string, validated against SelectorMode)
+ * - `KEY_DARK_MODE_FORCE` — dark_mode.force (bool)
  *
  * ### Fallback priority:
  * 1. DB value (this model)
@@ -51,6 +53,30 @@ final class LinguaSetting extends Model
     /** Which rendering mode the language selector uses (sidebar|modal|dropdown|headless). */
     public const string KEY_SELECTOR_MODE = 'selector.mode';
 
+    /** Whether wire:navigate is used on internal Lingua redirects. */
+    public const string KEY_NAVIGATE = 'navigate';
+
+    /** Blade layout component used for full-page Lingua views (null = Livewire default). */
+    public const string KEY_LAYOUT = 'layout';
+
+    /** Whether the translations link is active in language rows and statistics. */
+    public const string KEY_LINKS_TRANSLATIONS_ENABLED = 'links.translations.enabled';
+
+    /** Route name used for all translation page links. */
+    public const string KEY_LINKS_TRANSLATIONS_ROUTE = 'links.translations.route';
+
+    /** CSS top offset for the sticky filter bar in the Translations page. */
+    public const string KEY_UI_STICKY_TOP = 'ui.sticky_top';
+
+    /** Editor toolbar feature toggles, stored as a JSON array. */
+    public const string KEY_EDITOR = 'editor';
+
+    /** Whether the shared navigation menu is shown on all Lingua admin pages. */
+    public const string KEY_NAV_ENABLED = 'nav.enabled';
+
+    /** Whether Lingua's dark theme is forced regardless of host app / OS color scheme. */
+    public const string KEY_DARK_MODE_FORCE = 'dark_mode.force';
+
     // -------------------------------------------------------------------------
     // Public API
     // -------------------------------------------------------------------------
@@ -68,7 +94,11 @@ final class LinguaSetting extends Model
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        $row = self::where('key', $key)->first();
+        try {
+            $row = self::where('key', $key)->first();
+        } catch (QueryException) {
+            return $default;
+        }
 
         if ($row === null) {
             return $default;

@@ -1,34 +1,39 @@
 <flux:table.row>
     <flux:table.cell class="lingua-row">
-        <div class="flex flex-col gap-2">
-            <div class="flex flex-row gap-2 items-center text-sm">
-                {!! $translation->type->iconColor(6) !!}
-                <p class="translation-group-key" style="font-weight: bold;">{{ $translation->type->label() }}</p>
+        <div class="flex flex-col gap-1.5">
+            {{-- Type badge (DB-mode only) --}}
+            @if(!$fileMode)
+            <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                {!! $translation->type->iconColor(4) !!}
+                <p class="translation-group-key">{{ $translation->type->label() }}</p>
             </div>
-            <flux:separator @class(['vendor' => $translation->is_vendor])/>
+            @endif
+
+            {{-- Vendor accent bar + vendor name (vendor rows only) --}}
             @if($translation->is_vendor)
-                <div class="flex flex-row gap-2 items-center">
+                <flux:separator class="vendor"/>
+                <div class="flex items-center gap-2">
                     <flux:tooltip content="Vendor package" position="top">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                             class="lucide lucide-box-icon lucide-box vendor_item">
-                            <path
-                                d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                             class="lucide lucide-box vendor_item shrink-0">
+                            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
                             <path d="m3.3 7 8.7 5 8.7-5"/>
                             <path d="M12 22V12"/>
                         </svg>
                     </flux:tooltip>
                     <x-lingua::clipboard text-to-copy="{{ $translation->vendor }}">
-                        <p class="translation-group-key vendor_item" style="font-weight: bold;">{{ \Illuminate\Support\Str::headline($translation->vendor) }}</p>
+                        <p class="translation-group-key text-xs vendor_item">{{ \Illuminate\Support\Str::headline($translation->vendor) }}</p>
                     </x-lingua::clipboard>
                 </div>
             @endif
 
-            <div class="flex flex-row gap-2">
+            {{-- Group --}}
+            <div class="flex items-center gap-2">
                 <flux:tooltip content="Translation group" position="top">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="lucide lucide-group-icon lucide-group">
+                         class="lucide lucide-group shrink-0 text-zinc-400 dark:text-zinc-500">
                         <path d="M3 7V5c0-1.1.9-2 2-2h2"/>
                         <path d="M17 3h2c1.1 0 2 .9 2 2v2"/>
                         <path d="M21 17v2c0 1.1-.9 2-2 2h-2"/>
@@ -38,22 +43,22 @@
                     </svg>
                 </flux:tooltip>
                 <x-lingua::clipboard text-to-copy="{{ $translation->group }}">
-                    <p class="translation-group-key" style="font-weight: bold;">{{ $translation->group }}</p>
+                    <p class="translation-group-key text-xs text-zinc-500 dark:text-zinc-400">{{ $translation->group }}</p>
                 </x-lingua::clipboard>
             </div>
 
-            <div class="flex flex-row gap-2">
+            {{-- Key — primary element, visually prominent --}}
+            <div class="flex items-center gap-2">
                 <flux:tooltip content="Translation key" position="top">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="lucide lucide-key-round-icon lucide-key-round">
-                        <path
-                            d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/>
+                         class="lucide lucide-key-round shrink-0 text-zinc-400 dark:text-zinc-500">
+                        <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/>
                         <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>
                     </svg>
                 </flux:tooltip>
                 <x-lingua::clipboard text-to-copy="{{ $translation->lang_key }}">
-                    <p class="translation-group-key">{{ $translation->key }}</p>
+                    <p class="translation-group-key font-medium text-zinc-900 dark:text-white text-sm">{{ $translation->key }}</p>
                 </x-lingua::clipboard>
             </div>
         </div>
@@ -62,7 +67,9 @@
     <flux:table.cell class="lingua-row">
         <div class="lingua-preview">
             <x-lingua::clipboard text-to-copy="{{ $defaultValue }}">
-                @if($translation->type->value === 'markdown')
+                @if($fileMode)
+                    <div class="preview">{{ $defaultValue }}</div>
+                @elseif($translation->type->value === 'markdown')
                     <div x-data="{ showMarkdown: @js($defaultValue) }">
                         <pre class="markdown" x-text="showMarkdown"></pre>
                     </div>
@@ -83,30 +90,35 @@
         </div>
     </flux:table.cell>
     <flux:table.cell class="lingua-row">
-        <div x-cloak x-show="$wire.translationType === 'text'">
-            <x-lingua::editor wire:model.blur.live="value" type="text"
-                              :placeholder="__('lingua::lingua.translations.fields.text')"/>
-        </div>
-        <div x-cloak x-show="$wire.translationType === 'html'">
-            <x-lingua::editor wire:model.blur.live="value" type="html"
-                              :placeholder="__('lingua::lingua.translations.fields.html')"/>
-        </div>
-        <div x-cloak x-show="$wire.translationType === 'markdown'">
-            <x-lingua::editor wire:model.blur.live="value" type="markdown"
-                              :placeholder="__('lingua::lingua.translations.fields.md')"/>
-        </div>
+        @if($fileMode)
+            <flux:textarea wire:model.blur.live="value"
+                           :placeholder="__('lingua::lingua.translations.fields.text')"/>
+        @else
+            <div x-cloak x-show="$wire.translationType === 'text'">
+                <x-lingua::editor wire:model.blur.live="value" type="text"
+                                  :placeholder="__('lingua::lingua.translations.fields.text')"/>
+            </div>
+            <div x-cloak x-show="$wire.translationType === 'html'">
+                <x-lingua::editor wire:model.blur.live="value" type="html"
+                                  :placeholder="__('lingua::lingua.translations.fields.html')"/>
+            </div>
+            <div x-cloak x-show="$wire.translationType === 'markdown'">
+                <x-lingua::editor wire:model.blur.live="value" type="markdown"
+                                  :placeholder="__('lingua::lingua.translations.fields.md')"/>
+            </div>
+        @endif
     </flux:table.cell>
 
     <flux:table.cell align="center" class="lingua-row center" wire:loading.class="pointer-events-none">
-        @if(!config('lingua.suppress_pro_nudge', false) && $currentLocale !== linguaDefaultLocale())
-            <flux:tooltip :content="__('lingua::lingua.pro.auto_translate_tooltip')" position="top">
-                <a href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.com') }}" target="_blank" rel="noopener noreferrer" tabindex="-1">
-                    <flux:button tabindex="-1" variant="ghost" size="sm" icon="sparkles" disabled>
-                        @lang('lingua::lingua.pro.auto_translate')
-                    </flux:button>
-                </a>
-            </flux:tooltip>
-        @endif
+{{--        @if(!config('lingua.suppress_pro_nudge', false) && $currentLocale !== linguaDefaultLocale())--}}
+{{--            <flux:tooltip :content="__('lingua::lingua.pro.auto_translate_tooltip')" position="top">--}}
+{{--                <a href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.com') }}" target="_blank" rel="noopener noreferrer" tabindex="-1">--}}
+{{--                    <flux:button tabindex="-1" variant="ghost" size="sm" icon="sparkles" disabled>--}}
+{{--                        @lang('lingua::lingua.pro.auto_translate')--}}
+{{--                    </flux:button>--}}
+{{--                </a>--}}
+{{--            </flux:tooltip>--}}
+{{--        @endif--}}
         <flux:button.group>
             @if($this->currentLocale === linguaDefaultLocale())
                 <flux:modal.trigger name="{{ $editModalName }}">
@@ -122,14 +134,14 @@
         </flux:button.group>
         @if($this->currentLocale === linguaDefaultLocale())
             <livewire:lingua::translation.update
-                :$translation :$currentLocale
-                wire:key="update-translation-{{ $translation->id }}"
+                :translation-identity="$translation->identity()" :$currentLocale
+                wire:key="update-translation-{{ md5($translation->identity()) }}"
                 :modal-name="$editModalName"/>
         @endif
         @if(!$translation->is_vendor)
             <livewire:lingua::translation.delete
-                :$translation :$currentLocale
-                wire:key="delete-translation-{{ $translation->id }}"
+                :translation-identity="$translation->identity()" :$currentLocale
+                wire:key="delete-translation-{{ md5($translation->identity()) }}"
                 :modal-name="$deleteModalName"/>
         @endif
     </flux:table.cell>

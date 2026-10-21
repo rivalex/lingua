@@ -20,7 +20,11 @@ return new class extends Migration
             // is the correct constraint — a standalone unique on 'regional' would
             // incorrectly prevent two languages from sharing the same regional code
             // (e.g., en_US and fr_US would both fail if 'US' were globally unique).
-            $table->string('regional', 10)->comment('Regional variant code (e.g., \'en_US\', \'en_GB\')');
+            // Note: nullable — unknown locales (not in the registry) and several
+            // registry entries legitimately have no regional variant (LocaleInfo
+            // declares ?string $regional). A NOT NULL column made syncToDatabase()
+            // crash on any locale directory missing from the registry.
+            $table->string('regional', 10)->nullable()->comment('Regional variant code (e.g., \'en_US\', \'en_GB\')');
             $table->string('type', 10)->comment('Language type classification');
             $table->string('name', 100)->comment('English name of the language (e.g., \'English\', \'Spanish\')');
             $table->string('native', 100)->comment('Native name of the language (e.g., \'English\', \'Espanol\')');

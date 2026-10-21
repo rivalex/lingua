@@ -1,6 +1,5 @@
 <div wire:ignore class="flex flex-col gap-4">
     @if(count($this->languages) > 1)
-    <flux:separator/>
     <div class="relative w-full">
         <div class="language-sort-container">
             <div class="flex w-full justify-between items-center">

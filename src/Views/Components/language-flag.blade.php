@@ -15,5 +15,5 @@
 		</div>
 	</div>
 @else
-	{!! $name . '&nbsp;(' . $description . ')' !!}
+	{{ $name }}&nbsp;({{ $description }})
 @endif

@@ -1,6 +1,6 @@
 <div wire:ignore>
     <flux:modal.trigger name="{{ $modalName }}">
-        <flux:button variant="primary" color="green"
+        <flux:button variant="primary" color="green" class="w-full"
                      icon="plus">@lang('lingua::lingua.languages.create.action')</flux:button>
     </flux:modal.trigger>
     <flux:modal name="{{ $modalName }}" class="lingua lingua-modal">
@@ -9,19 +9,21 @@
             <flux:separator/>
             <form wire:submit.prevent="addNewLanguage" id="addNewLanguageForm" class="flex flex-col gap-4">
                 @csrf
-                <flux:select required wire:model.live="language"
-                             :variant="Flux::pro() ? 'listbox' : null"
-                             :searchable="Flux::pro()"
-                             :clearable="Flux::pro()"
-                             id="new_language" :placeholder="__('lingua::lingua.languages.create.placeholder')"
-                             label="New Language">
+                <x-lingua::select required wire:model.live="language"
+                                  searchable clearable
+                                  id="new_language"
+                                  :placeholder="__('lingua::lingua.languages.create.placeholder')"
+                                  :label="__('lingua::lingua.languages.create.select')">
                     @foreach($availableLanguages as $lang)
-                        <flux:select.option :value="$lang['code']" :key="'option_' . $lang['code']">
+                        <x-lingua::select.option
+                            :value="$lang['code']"
+                            :label="$lang['label'].' '.$lang['description'].' '.$lang['code']"
+                            :selected-label="$lang['label']">
                             <x-lingua::language-flag :size="8" :code="$lang['code']" :name="$lang['label']"
                                                      :description="$lang['description']"/>
-                        </flux:select.option>
+                        </x-lingua::select.option>
                     @endforeach
-                </flux:select>
+                </x-lingua::select>
                 <flux:separator/>
                 <div class="flex justify-between gap-2 items-center">
                     <flux:button variant="filled" color="gray" icon="x-mark"

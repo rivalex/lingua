@@ -1,9 +1,10 @@
 @php
-    use LaravelLang\Locales\Facades\Locales;
     use Rivalex\Lingua\Facades\Lingua;
 @endphp
-<div class="lingua">
-    <section class="flex flex-col gap-4">
+<x-lingua::dark-scope>
+    <x-lingua::branding />
+
+    <section class="flex flex-col gap-6">
         <div class="relative w-full">
             <flux:heading size="xl" level="1">@lang('lingua::lingua.languages.title')</flux:heading>
             <flux:subheading size="lg" class="mb-6">
@@ -18,29 +19,35 @@
             </flux:subheading>
         </div>
 
+        <x-lingua::nav />
+
         @island(name: 'languageSort', always: true)
         <livewire:lingua::language.sort :key="'sortLanguages_'. uniqid()"/>
         @endisland
-        <flux:separator/>
-        <div
-            class="flex flex-col lg:flex-row w-full items-center justify-between sticky top-0 z-1 bg-white dark:bg-zinc-800 py-4 gap-4">
-            <div class="flex w-1/4">
-                <div class="relative w-full items-center justify-between">
+        <div class="-mx-4 px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-3 bg-white/70 dark:bg-zinc-900/70 border-b border-zinc-200/50 dark:border-white/10">
+            {{-- Row 1: search + new language (always visible) --}}
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="flex-1 min-w-48">
                     <flux:input type="search" wire:model.live.debounce.1000ms="search"
                                 :placeholder="__('lingua::lingua.global.search')"
                                 icon="magnifying-glass" wire:island="languagesRows"
                                 name="searchLanguage" id="searchLanguage"/>
                 </div>
+                <div class="shrink-0">
+                    <livewire:lingua::language.create :key="'newLanguage_'. uniqid()" />
+                </div>
             </div>
-            <div class="flex flex-col lg:flex-row w-max gap-2 items-center">
+            {{-- Row 2: sync/update actions (DB mode only) --}}
+            @unless($fileMode)
+            <div class="flex flex-wrap items-center gap-2">
                 <flux:button wire:click="syncToLocal" icon="arrow-path" variant="primary"
                              color="sky">@lang('lingua::lingua.languages.actions.sync.local')</flux:button>
                 <flux:button wire:click="syncToDatabase" icon="arrow-path" variant="primary"
                              color="sky">@lang('lingua::lingua.languages.actions.sync.database')</flux:button>
                 <flux:button wire:click="updateLanguages" icon="arrow-down-on-square" variant="primary"
                              color="orange">@lang('lingua::lingua.languages.actions.update_lang')</flux:button>
-                <livewire:lingua::language.create :key="'newLanguage_'. uniqid()"/>
             </div>
+            @endunless
         </div>
         <div class="flex flex-col w-full gap-2">
             <x-lingua::message on="language_added">
@@ -108,14 +115,12 @@
                 </flux:badge>
             </x-lingua::message>
         </div>
-        <div class="relative">
-            <livewire:lingua::language.table wire:model.live="search" lazy/>
-        </div>
+        <livewire:lingua::language.table wire:model.live="search" lazy/>
     </section>
-</div>
+</x-lingua::dark-scope>
 @assets
 @once
-    <link rel="stylesheet" href="{{ route('lingua.assets', 'css/lingua.min.css') }}">
-    <script type="module" src="{{ route('lingua.assets', 'js/lingua.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ linguaAssetUrl('css/lingua.min.css') }}">
+    <script type="module" src="{{ linguaAssetUrl('js/lingua.min.js') }}"></script>
 @endonce
 @endassets

@@ -1,25 +1,50 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Rivalex\Lingua\Http\Controllers\TransferExportController;
 
-$middleware = array_unique(array_merge(['web'], config('lingua.middleware', 'web')));
+$middleware = array_unique(array_merge(['web'], (array) config('lingua.middleware', ['web', 'auth'])));
+
+// Opt-in authorization gate: add `can:{gate}` when configured.
+$linguaGate = config('lingua.gate');
+if ($linguaGate !== null && $linguaGate !== '') {
+    $middleware[] = 'can:'.(string) $linguaGate;
+}
+
+$extraParams = config('lingua.routes_extra_parameters');
+$suffix = $extraParams ? '/'.ltrim((string) $extraParams, '/') : '';
 
 Route::group([
     'middleware' => $middleware,
     'prefix' => config('lingua.routes_prefix', 'lingua'),
-], function () {
-    Route::livewire('languages', 'lingua::languages')
+], function () use ($suffix) {
+    Route::livewire('languages'.$suffix, 'lingua::languages')
         ->name('lingua.languages');
 
-    Route::livewire('translations/{locale?}', 'lingua::translations')
+    Route::livewire('translations/{locale?}'.$suffix, 'lingua::translations')
         ->name('lingua.translations');
 
-    Route::livewire('statistics', 'lingua::statistics')
+    Route::livewire('statistics'.$suffix, 'lingua::statistics')
         ->name('lingua.statistics');
 
-    Route::livewire('settings', 'lingua::settings')
+    Route::livewire('settings'.$suffix, 'lingua::settings')
         ->name('lingua.settings');
 
+    Route::livewire('transfer'.$suffix, 'lingua::transfer')
+        ->name('lingua.transfer');
+
+    Route::get('transfer/export', [TransferExportController::class, 'download'])
+        ->name('lingua.transfer.export');
+});
+
+// Assets are served OUTSIDE the auth-protected group: the language selector
+// can be embedded on guest pages (login, public pages), so its CSS/JS must
+// be reachable without authentication. Only static files from src/dist are
+// served, jailed via realpath — no sensitive data is exposed.
+Route::group([
+    'middleware' => ['web'],
+    'prefix' => config('lingua.routes_prefix', 'lingua'),
+], function () {
     Route::get('assets/{path}', function (string $path) {
         // Serve built assets directly from the package when they are not published.
         // Realpath jail: prevent path traversal outside src/dist/.
@@ -38,6 +63,7 @@ Route::group([
             'css' => 'text/css',
             'js' => 'application/javascript',
             'map' => 'application/json',
+            'svg' => 'image/svg+xml',
             default => null,
         };
 

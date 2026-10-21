@@ -8,7 +8,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Rivalex\Lingua\Models\Language;
 
-class Row extends Component
+final class Row extends Component
 {
     public Language $language;
 

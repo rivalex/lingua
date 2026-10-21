@@ -1,0 +1,155 @@
+<?php
+
+use Livewire\Livewire;
+use Rivalex\Lingua\Livewire\Translation\Delete;
+use Rivalex\Lingua\Models\Language;
+use Rivalex\Lingua\Models\Translation;
+
+function makeTranslationWithLocale(): Translation
+{
+    return Translation::create([
+        'group' => 'test',
+        'key' => 'delete_test_'.uniqid(),
+        'type' => 'text',
+        'text' => ['en' => 'English value', 'it' => 'Italian value'],
+        'is_vendor' => false,
+        'vendor' => null,
+    ]);
+}
+
+it('can render `DELETE translation` component for default locale', function () {
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+
+    Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => linguaDefaultLocale(),
+    ])
+        ->assertStatus(200)
+        ->assertSet('isDefaultLocale', true);
+
+    $translation->delete();
+});
+
+it('can render `DELETE translation` component for non-default locale', function () {
+    Language::factory()->create(['code' => 'it', 'is_default' => false]);
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+
+    Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => 'it',
+    ])
+        ->assertStatus(200)
+        ->assertSet('isDefaultLocale', false);
+
+    $translation->delete();
+    Language::where('code', 'it')->delete();
+});
+
+it('shows correct `deleteHeader` for default locale (full delete)', function () {
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+
+    Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => linguaDefaultLocale(),
+    ])->assertSee(__('lingua::lingua.translations.delete.header'));
+
+    $translation->delete();
+});
+
+it('shows correct `deleteHeader` for non-default locale (locale-only delete)', function () {
+    Language::factory()->create(['code' => 'it', 'is_default' => false]);
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+    $italianName = Language::where('code', 'it')->first()->name;
+
+    Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => 'it',
+    ])->assertSee(strtoupper($italianName));
+
+    $translation->delete();
+    Language::where('code', 'it')->delete();
+});
+
+it('`deleteTranslation` deletes entire translation for default locale', function () {
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+    $id = $translation->id;
+
+    expect(Translation::find($id))->not->toBeNull();
+
+    $component = Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => linguaDefaultLocale(),
+    ]);
+    $component
+        ->set('control', $component->get('confirm'))
+        ->call('deleteTranslation')
+        ->assertDispatched('translation_deleted')
+        ->assertDispatched('refreshTranslationsTableDefaults');
+
+    expect(Translation::find($id))->toBeNull();
+});
+
+it('`deleteTranslation` forgets locale translation for non-default locale', function () {
+    Language::factory()->create(['code' => 'it', 'is_default' => false]);
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+
+    expect($translation->text['it'])->toBe('Italian value');
+
+    $component = Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => 'it',
+    ]);
+    $component
+        ->set('control', $component->get('confirm'))
+        ->call('deleteTranslation')
+        ->assertDispatched('translation_locale_deleted')
+        ->assertDispatched('refreshTranslationRow.'.$identity);
+
+    $translation->refresh();
+    expect(isset($translation->text['it']))->toBeFalse();
+    expect($translation->text['en'])->toBe('English value');
+
+    $translation->delete();
+    Language::where('code', 'it')->delete();
+});
+
+it('translation is gone from DB after global delete', function () {
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+    $id = $translation->id;
+
+    $component = Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => linguaDefaultLocale(),
+    ]);
+    $component->set('control', $component->get('confirm'))->call('deleteTranslation');
+
+    expect(Translation::find($id))->toBeNull();
+});
+
+it('translation EN value still exists after locale-only delete of IT', function () {
+    Language::factory()->create(['code' => 'it', 'is_default' => false]);
+    $translation = makeTranslationWithLocale();
+    $identity = $translation->group.'|'.$translation->key.'|0|';
+    $id = $translation->id;
+
+    $component = Livewire::test(Delete::class, [
+        'translationIdentity' => $identity,
+        'currentLocale' => 'it',
+    ]);
+    $component->set('control', $component->get('confirm'))->call('deleteTranslation');
+
+    $fresh = Translation::find($id);
+    expect($fresh)->not->toBeNull();
+    expect(isset($fresh->text['it']))->toBeFalse();
+    expect($fresh->text['en'])->toBe('English value');
+
+    $fresh->delete();
+    Language::where('code', 'it')->delete();
+});

@@ -7,14 +7,14 @@ namespace Rivalex\Lingua\Commands;
 use Illuminate\Console\Command;
 use Rivalex\Lingua\Models\Translation;
 
-class SyncToLocalCommand extends Command
+final class SyncToLocalCommand extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'lingua:sync-to-local';
+    protected $signature = 'lingua:sync-to-local {--force : Override file-mode no-op guard}';
 
     /**
      * The console command description.
@@ -28,6 +28,18 @@ class SyncToLocalCommand extends Command
      */
     public function handle(): void
     {
+        if (linguaIsFileMode()) {
+            if (! $this->option('force')) {
+                $this->warn('Refusing: file-mode active — DB is not the source of truth. Re-run with --force to override.');
+
+                return;
+            }
+
+            if (! $this->confirm('File-mode is active. DB may be empty and overwrite your files. Proceed?')) {
+                return;
+            }
+        }
+
         $this->info('Syncing translations from database to local files...');
 
         try {

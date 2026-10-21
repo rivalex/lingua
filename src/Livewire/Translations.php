@@ -10,11 +10,11 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Rivalex\Lingua\Contracts\TranslationRepository;
 use Rivalex\Lingua\Models\Language;
-use Rivalex\Lingua\Models\Translation;
 
 #[Title('Translations Manager')]
-class Translations extends Component
+final class Translations extends Component
 {
     use WithPagination;
 
@@ -40,11 +40,9 @@ class Translations extends Component
 
     public function mount(?string $locale = null): void
     {
-        $this->search = request('q', '');
-        $this->perPage = max(1, min((int) request('p', 10), 100));
-        $this->group = request('g', '');
-        $this->showOnlyMissing = request('m', false);
-
+        // q/p/g/m are bound by the #[Url] attributes — no manual request()
+        // re-reading. The previous request('m', false) assigned a string to a
+        // typed bool property, a fatal TypeError under strict_types with ?m=1.
         $this->language = Language::where('code', $locale ?? linguaDefaultLocale())->first();
         // Fall back to default locale when the requested locale does not exist in DB.
         $this->currentLocale = $this->language?->code ?? linguaDefaultLocale();
@@ -54,7 +52,7 @@ class Translations extends Component
     protected function setDefaults(): void
     {
         $this->availableLocale = Language::query()->active()->pluck('native', 'code')->toArray();
-        $this->availableGroups = Translation::orderBy('group')->groupBy('group')->pluck('group')->toArray();
+        $this->availableGroups = app(TranslationRepository::class)->groups();
     }
 
     #[On('refreshTranslationsTableDefaults')]
@@ -72,7 +70,8 @@ class Translations extends Component
             'q' => $this->search ?: null,
             'g' => $this->group ?: null,
         ]);
-        $this->redirect(route('lingua.translations', $params), true);
+        $route = config('lingua.links.translations.route', 'lingua.translations');
+        $this->redirect(route($route, $params), (bool) config('lingua.navigate', false));
     }
 
     public function updatedGroup(): void
@@ -84,27 +83,21 @@ class Translations extends Component
     #[Computed]
     public function translations()
     {
-        // Validate locale format before interpolating into JSON column paths to prevent SQL injection.
-        // currentLocale is a Livewire public property and can be tampered via the network layer.
-        $safeLocale = preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $this->currentLocale)
-            ? $this->currentLocale
-            : linguaDefaultLocale();
-
-        $defaultLocale = linguaDefaultLocale();
-
-        return Translation::query()
-            ->when(! empty($this->search),
-                fn ($q) => $q->where(fn ($query) => $query->whereLike('group_key', "%{$this->search}%")
-                    ->orWhereLike('text->'.$defaultLocale, "%{$this->search}%")
-                    ->orWhereLike('text->'.$safeLocale, "%{$this->search}%"))
-            )
-            ->when($this->showOnlyMissing, fn ($q) => $q->whereNull('text->'.$safeLocale))
-            ->when($this->group, fn ($q) => $q->where('group', '=', $this->group))
-            ->paginate($this->perPage);
+        return app(TranslationRepository::class)->paginate(
+            locale: $this->currentLocale,
+            search: $this->search,
+            group: $this->group,
+            onlyMissing: $this->showOnlyMissing,
+            // Clamp here so every entry point (URL, wire:model) is bounded.
+            perPage: max(1, min($this->perPage, 100)),
+        );
     }
 
     public function render()
     {
-        return view('lingua::translations');
+        $view = view('lingua::translations');
+        $layout = config('lingua.layout');
+
+        return $layout ? $view->layout($layout) : $view;
     }
 }

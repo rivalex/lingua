@@ -4,22 +4,41 @@ declare(strict_types=1);
 
 namespace Rivalex\Lingua\Database;
 
-use Spatie\TranslationLoader\Exceptions\InvalidConfiguration;
-use Spatie\TranslationLoader\LanguageLine;
+use Illuminate\Database\Eloquent\Model;
+use Rivalex\Lingua\Contracts\TranslationLoader;
+use Rivalex\Lingua\Exceptions\InvalidConfiguration;
 
-class Db extends \Spatie\TranslationLoader\TranslationLoaders\Db
+final class Db implements TranslationLoader
 {
     /**
+     * @return array<string, mixed>
+     *
      * @throws InvalidConfiguration
      */
-    protected function getConfiguredModelClass(): string
+    public function loadTranslations(string $locale, string $group, ?string $namespace = null): array
     {
         $modelClass = config('lingua.model');
 
-        if (! is_a(new $modelClass, LanguageLine::class)) {
-            throw InvalidConfiguration::invalidModel($modelClass);
+        if ($namespace !== null && $namespace !== '*') {
+            if (
+                ! is_string($modelClass) ||
+                ! is_subclass_of($modelClass, Model::class) ||
+                ! method_exists($modelClass, 'getVendorTranslationsForGroup')
+            ) {
+                throw InvalidConfiguration::invalidModel((string) $modelClass);
+            }
+
+            return $modelClass::getVendorTranslationsForGroup($locale, $namespace, $group);
         }
 
-        return $modelClass;
+        if (
+            ! is_string($modelClass) ||
+            ! is_subclass_of($modelClass, Model::class) ||
+            ! method_exists($modelClass, 'getTranslationsForGroup')
+        ) {
+            throw InvalidConfiguration::invalidModel((string) $modelClass);
+        }
+
+        return $modelClass::getTranslationsForGroup($locale, $group);
     }
 }

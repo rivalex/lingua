@@ -5,22 +5,31 @@ declare(strict_types=1);
 namespace Rivalex\Lingua\Models;
 
 use Carbon\Carbon;
+use Closure;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use LaravelLang\Locales\Facades\Locales;
+use Rivalex\Lingua\Contracts\BaseTranslationSource;
 use Rivalex\Lingua\Database\Factories\TranslationFactory;
 use Rivalex\Lingua\Enums\LinguaType;
-use Spatie\TranslationLoader\LanguageLine;
+use Rivalex\Lingua\Exceptions\VendorTranslationProtectedException;
+use Rivalex\Lingua\Locales\LocaleRegistry;
+use Rivalex\Lingua\Support\AtomicFileWriter;
+use Rivalex\Lingua\Support\CacheCircuit;
+use Rivalex\Lingua\Support\PathGuard;
+use Rivalex\Lingua\Support\PhpArrayExporter;
+use Rivalex\Lingua\Support\TranslationFileReader;
+use Rivalex\Lingua\TranslationManager\CacheKey;
+use Throwable;
 
 /**
  * Class Translation
- * Package: App\Models\System
  *
  * Translation model for managing language translations in the application.
- * Extends LanguageLine to provide advanced translation management capabilities.
  *
  * @property string $id UUID identifier for the translation
  * @property string $group Translation group name (e.g., 'single', 'validation', etc.)
@@ -35,8 +44,10 @@ use Spatie\TranslationLoader\LanguageLine;
  * @property-read string $lang_key Get the full group key (e.g., 'single.welcome')
  */
 #[UseFactory(TranslationFactory::class)]
-class Translation extends LanguageLine
+class Translation extends Model
 {
+    use HasFactory;
+
     /**
      * The database table used by the model.
      *
@@ -69,6 +80,13 @@ class Translation extends LanguageLine
     protected $fillable = [
         'group',
         'key',
+        // Derived (group.key composite), NOT NULL + UNIQUE by design. Fillable
+        // so write sites can set it explicitly as a belt-and-braces alongside
+        // save()'s authoritative recompute — see save() below. Every call site
+        // passes a fixed key array (verified: no request-input spreading
+        // anywhere in this package), so this carries no mass-assignment risk,
+        // and save() overwrites any caller-supplied value regardless.
+        'group_key',
         'type',
         'text',
         'is_vendor',
@@ -82,52 +100,209 @@ class Translation extends LanguageLine
     private static bool $syncing = false;
 
     /**
+     * Collects entries touched during syncToDatabase() for targeted cache invalidation.
+     * Each entry: [locale, group, isVendor (bool), vendor (string|null)]
+     *
+     * @var array<int, array{0: string, 1: string, 2: bool, 3: string|null}>
+     */
+    private static array $touchedCacheKeys = [];
+
+    /**
      * Bootstrap the model and its traits.
      * Automatically generates UUID for new translations.
      */
     public static function boot(): void
     {
         parent::boot();
-        static::creating(function ($model) {
-            $model->group_key = self::buildGroupKey(
-                $model->group,
-                $model->key,
-                $model->is_vendor ?? false,
-                $model->vendor
-            );
-        });
-        static::saving(function ($model) {
-            if ($model->isDirty('group') || $model->isDirty('key') || $model->isDirty('is_vendor') || $model->isDirty('vendor')) {
-                $model->group_key = self::buildGroupKey(
-                    $model->group,
-                    $model->key,
-                    $model->is_vendor ?? false,
-                    $model->vendor
-                );
-            }
-        });
-        // Suppress per-row cache clears during bulk sync; a single clear fires in the finally block.
-        static::saved(function () {
+        // Suppress per-row cache forgets during bulk sync; syncToDatabase() forgets each touched key once in its finally block.
+        static::saved(function (self $model) {
             if (! self::$syncing) {
-                Artisan::call('cache:clear');
+                $model->forgetCacheForLocales();
             }
         });
+        static::deleted(function (self $model) {
+            $model->forgetCacheForLocales();
+        });
+    }
+
+    /**
+     * Persist the model, guaranteeing group_key is populated even when Eloquent
+     * events are unavailable (e.g. the event dispatcher is unbound while this
+     * model first boots during `artisan migrate:fresh --seed`, or events are
+     * suppressed via withoutEvents()/saveQuietly()). A previous fix relied on a
+     * saving() event hook alone — that hook silently never registers when the
+     * dispatcher isn't bound yet, leaving group_key absent from the INSERT and
+     * violating the NOT NULL + UNIQUE constraint. group_key must never depend
+     * on the event pipeline, so it is recomputed here, in the write path
+     * itself, before every persist.
+     */
+    public function save(array $options = []): bool
+    {
+        $this->group_key = self::buildGroupKey(
+            $this->group,
+            $this->key,
+            $this->is_vendor ?? false,
+            $this->vendor,
+        );
+
+        return parent::save($options);
+    }
+
+    /**
+     * Retrieve all app (non-vendor) translations for the given locale and group, caching the result forever.
+     *
+     * Vendor rows are excluded: they are served by getVendorTranslationsForGroup() under their
+     * own namespace, and a vendor group with the same name must not leak into the app group.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getTranslationsForGroup(string $locale, string $group): array
+    {
+        $resolve = fn (): array => static::where('is_vendor', false)
+            ->where('group', $group)
+            ->get()
+            ->reduce(function (array $carry, self $translation) use ($locale): array {
+                $value = $translation->text[$locale] ?? null;
+                if ($value !== null) {
+                    data_set($carry, $translation->key, $value);
+                }
+
+                return $carry;
+            }, []);
+
+        // Never forever-cache an attacker-controlled, malformed locale: that
+        // would let a request-driven locale grow the cache without bound.
+        if (! self::isWellFormedLocale($locale)) {
+            return $resolve();
+        }
+
+        return self::rememberForeverResilient(CacheKey::forGroup($locale, $group), $resolve);
+    }
+
+    /**
+     * Retrieve all vendor translations for the given locale, vendor, and group, caching forever.
+     *
+     * Mirrors getTranslationsForGroup() but scoped to is_vendor=true rows for a specific
+     * vendor namespace. Uses a distinct cache key (forVendorGroup) to avoid collisions
+     * with app-string groups of the same name.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getVendorTranslationsForGroup(string $locale, string $vendor, string $group): array
+    {
+        $resolve = fn (): array => static::where('is_vendor', true)
+            ->where('vendor', $vendor)
+            ->where('group', $group)
+            ->get()
+            ->reduce(function (array $carry, self $translation) use ($locale): array {
+                $value = $translation->text[$locale] ?? null;
+                if ($value !== null) {
+                    data_set($carry, $translation->key, $value);
+                }
+
+                return $carry;
+            }, []);
+
+        // Never forever-cache an attacker-controlled, malformed locale.
+        if (! self::isWellFormedLocale($locale)) {
+            return $resolve();
+        }
+
+        return self::rememberForeverResilient(CacheKey::forVendorGroup($locale, $vendor, $group), $resolve);
+    }
+
+    /**
+     * rememberForever() that degrades to the database when the cache store is unavailable.
+     *
+     * Only cache I/O is guarded: the read and the write-back after a miss. A failure is
+     * reported, opens the request-scoped CacheCircuit and the value is served from the
+     * database. The resolver is deliberately NOT guarded: database exceptions must
+     * propagate unchanged, because LinguaManager::load() relies on QueryException for its
+     * missing-table fallback. The store itself is resolved outside any try block, so an
+     * invalid store name stays a loud misconfiguration error.
+     *
+     * @param  Closure(): array<string, mixed>  $resolve
+     * @return array<string, mixed>
+     */
+    private static function rememberForeverResilient(string $key, Closure $resolve): array
+    {
+        $store = Cache::store(config('lingua.cache.store'));
+        $circuit = app(CacheCircuit::class);
+
+        if ($circuit->isOpen()) {
+            return $resolve();
+        }
+
+        try {
+            $cached = $store->get($key);
+        } catch (Throwable $e) {
+            $circuit->open();
+            report($e);
+
+            return $resolve();
+        }
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $value = $resolve();
+
+        try {
+            $store->forever($key, $value);
+        } catch (Throwable $e) {
+            $circuit->open();
+            report($e);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Whether a locale code matches the canonical, safe-to-cache shape.
+     *
+     * Gates rememberForever() so that request-derived locales cannot create
+     * unbounded forever-cached entries (DoS). Garbage locales still resolve
+     * correctly — they are simply never written to the cache.
+     */
+    private static function isWellFormedLocale(string $locale): bool
+    {
+        return (bool) preg_match('/^[a-zA-Z]{2,8}([_-][a-zA-Z0-9]{1,8})*$/', $locale);
+    }
+
+    /**
+     * Forget all cache keys for every locale present in this model's text column.
+     * Unions current and original text to catch locale removals.
+     * Vendor rows bust forVendorGroup(); app rows bust forGroup().
+     */
+    protected function forgetCacheForLocales(): void
+    {
+        $locales = array_unique(array_merge(
+            array_keys($this->text ?? []),
+            array_keys($this->getOriginal('text') ?? [])
+        ));
+
+        $store = Cache::store(config('lingua.cache.store'));
+
+        foreach ($locales as $locale) {
+            if ($this->is_vendor && $this->vendor) {
+                $store->forget(CacheKey::forVendorGroup($locale, $this->vendor, $this->group));
+            } else {
+                $store->forget(CacheKey::forGroup($locale, $this->group));
+            }
+        }
     }
 
     protected function groupKey(): Attribute
     {
+        // Population lives solely in the saving() hook above — this accessor
+        // only normalizes the stored value on read.
         return Attribute::make(
             get: fn ($value) => Str::squish($value),
-            set: fn () => self::buildGroupKey(
-                $this->group,
-                $this->key,
-                $this->is_vendor ?? false,
-                $this->vendor,
-            )
         );
     }
 
-    protected static function buildGroupKey(string $group, string $key, bool $isVendor, ?string $vendor): string
+    public static function buildGroupKey(string $group, string $key, bool $isVendor, ?string $vendor): string
     {
         $prefix = $isVendor && $vendor ? $vendor.'::' : '';
 
@@ -140,49 +315,48 @@ class Translation extends LanguageLine
     }
 
     /**
+     * Set the translation value for a specific locale and persist.
+     *
+     * @param  string  $locale  The locale code
+     * @param  string  $value  The translated string
+     */
+    public function setTranslation(string $locale, string $value): static
+    {
+        $this->text = array_merge($this->text ?? [], [$locale => $value]);
+        $this->save();
+
+        return $this;
+    }
+
+    /**
      * Remove translation for a specific locale.
      *
      * @param  string  $locale  The locale code to remove
      */
     public function forgetTranslation(string $locale): void
     {
+        // Mirror the repository-layer guard so the integrity invariant holds
+        // even when this method is called directly (e.g. RemoveLangCommand).
+        if ($this->is_vendor) {
+            throw new VendorTranslationProtectedException;
+        }
+
         $data = $this->text;
         unset($data[$locale]);
         $this->text = $data;
         $this->save();
     }
 
-    /**
-     * Synchronize database translations to local files.
-     * Generates JSON and PHP translation files for each language.
-     */
-    /**
-     * Reject path segments that could enable directory traversal.
-     * Throws on separators, null bytes, or dot-dot sequences.
-     */
-    private static function assertSafePathSegment(string $segment, string $context = ''): void
-    {
-        if ($segment === '' ||
-            str_contains($segment, '/') ||
-            str_contains($segment, '\\') ||
-            str_contains($segment, '..') ||
-            str_contains($segment, "\0")
-        ) {
-            throw new \InvalidArgumentException(
-                '[Lingua] Unsafe path segment'.($context !== '' ? " ({$context})" : '').": {$segment}"
-            );
-        }
-    }
-
     public static function syncToLocal(): void
     {
+        $writer = app(AtomicFileWriter::class);
         $languages = Language::orderBy('sort', 'desc')->get();
         $translations = self::all();
         $langPath = config('lingua.lang_dir');
 
         foreach ($languages as $language) {
             $locale = $language->code;
-            self::assertSafePathSegment($locale, 'locale');
+            PathGuard::assertSafeSegment($locale, 'locale');
 
             $coreGroups = [];
             $vendorGroups = [];
@@ -211,8 +385,11 @@ class Translation extends LanguageLine
 
             // Core JSON
             $jsonFile = $langPath.'/'.$locale.'.json';
-            file_put_contents($jsonFile,
-                json_encode($coreGroups['single'] ?? (object) [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            $writer->putJson(
+                $jsonFile,
+                $coreGroups['single'] ?? [],
+                JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+            );
 
             // Core PHP
             foreach ($coreGroups as $group => $groupTranslations) {
@@ -220,29 +397,27 @@ class Translation extends LanguageLine
                     continue;
                 }
 
-                self::assertSafePathSegment($group, 'group');
+                PathGuard::assertSafeSegment($group, 'group');
                 $langFolder = $langPath.'/'.$locale;
-                if (! is_dir($langFolder)) {
-                    mkdir($langFolder, 0755, true);
-                }
+                $writer->ensureDir($langFolder);
 
                 $phpFile = $langFolder.'/'.$group.'.php';
-                $content = "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n";
-                file_put_contents($phpFile, $content);
+                $writer->putPhp($phpFile, "<?php\n\nreturn ".PhpArrayExporter::export($groupTranslations).";\n");
             }
 
             // Vendor JSON + PHP
             foreach ($vendorGroups as $vendor => $groups) {
-                self::assertSafePathSegment($vendor, 'vendor');
+                PathGuard::assertSafeSegment($vendor, 'vendor');
                 $vendorRoot = $langPath.'/vendor/'.$vendor;
 
                 if (isset($groups['single'])) {
-                    if (! is_dir($vendorRoot)) {
-                        mkdir($vendorRoot, 0755, true);
-                    }
+                    $writer->ensureDir($vendorRoot);
                     $jsonFile = $vendorRoot.'/'.$locale.'.json';
-                    file_put_contents($jsonFile,
-                        json_encode($groups['single'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                    $writer->putJson(
+                        $jsonFile,
+                        $groups['single'],
+                        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
+                    );
                 }
 
                 foreach ($groups as $group => $groupTranslations) {
@@ -250,51 +425,30 @@ class Translation extends LanguageLine
                         continue;
                     }
 
-                    self::assertSafePathSegment($group, 'vendor group');
+                    PathGuard::assertSafeSegment($group, 'vendor group');
                     $vendorLangFolder = $vendorRoot.'/'.$locale;
-                    if (! is_dir($vendorLangFolder)) {
-                        mkdir($vendorLangFolder, 0755, true);
-                    }
+                    $writer->ensureDir($vendorLangFolder);
 
                     $phpFile = $vendorLangFolder.'/'.$group.'.php';
-                    $content = "<?php\n\nreturn ".self::exportArray($groupTranslations).";\n";
-                    file_put_contents($phpFile, $content);
+                    $writer->putPhp($phpFile, "<?php\n\nreturn ".PhpArrayExporter::export($groupTranslations).";\n");
                 }
             }
         }
     }
 
     /**
-     * Export array to PHP code string format.
-     *
-     * @param  array  $array  Array to be exported
-     * @param  string  $indent  Current indentation level
-     * @return string PHP code representation of the array
-     */
-    protected static function exportArray(array $array, string $indent = ''): string
-    {
-        $content = "[\n";
-        foreach ($array as $key => $value) {
-            $content .= $indent.'    '.var_export($key, true).' => ';
-            if (is_array($value)) {
-                $content .= self::exportArray($value, $indent.'    ');
-            } else {
-                $content .= var_export($value, true);
-            }
-            $content .= ",\n";
-        }
-        $content .= $indent.']';
-
-        return $content;
-    }
-
-    /**
      * Synchronize local translation files to the database.
      *
      * Implements a two-pass strategy:
-     *   Pass 1 — Default locale: all keys are imported unconditionally; the set of
+     *   Pass 1 — Default locale: bundled base translations are merged first, then
+     *             app lang files (app files override bundled values for the same
+     *             key); all keys are imported unconditionally and the set of
      *             group+key combinations becomes the reference for Pass 2.
      *   Pass 2 — Remaining locales:
+     *             • Bundled base translations are merged only for locales that are
+     *               INSTALLED (a Language record exists) — adding a language and
+     *               re-syncing imports its bundled dataset, while never installing
+     *               the other bundled locales implicitly.
      *             • Non-vendor keys are imported only if the same key exists in the
      *               default locale files (orphan keys are silently skipped).
      *             • Vendor keys are imported only if a Language record exists for
@@ -303,20 +457,25 @@ class Translation extends LanguageLine
      * Existing DB records are never deleted; removals in lang files are ignored.
      * The model's saved() cache:clear hook is suppressed during bulk writes and
      * replaced by a single cache:clear at the end of the operation.
+     *
+     * Performance: existing rows are loaded ONCE into an in-memory index and only
+     * rows whose value actually changes are written, all inside one transaction.
+     * The previous per-entry lookup (two SELECTs + one write per key per locale)
+     * was latency-bound: a few thousand round-trips to a remote database exceeded
+     * reverse-proxy timeouts (e.g. Cloudflare 100 s) when triggered from the UI.
      */
     public static function syncToDatabase(): void
     {
         $langPath = config('lingua.lang_dir');
 
-        if (Locales::installed()->count() === 0) {
-            Artisan::call('lang:add', ['locales' => [config('lingua.default_locale')]]);
-        }
-
         $defaultLocale = Language::default()?->code ?? config('lingua.default_locale', 'en');
 
+        $bundledSource = app(BaseTranslationSource::class);
+        $reader = app(TranslationFileReader::class);
+
         $allLocales = array_values(array_unique(array_merge(
-            self::discoverLocales($langPath),
-            Locales::installed()->pluck('code')->all()
+            $reader->discoverLocales($langPath),
+            $bundledSource->available()
         )));
 
         $remainingLocales = array_values(array_diff($allLocales, [$defaultLocale]));
@@ -328,161 +487,108 @@ class Translation extends LanguageLine
         self::$syncing = true;
 
         try {
-            // ─── Pass 1: Default locale ────────────────────────────────────────────
-            $defaultTranslations = self::collectLocaleTranslations($langPath, $defaultLocale);
-            self::ensureLanguageRecord($defaultLocale);
-            $installedCodes[$defaultLocale] = true;
-
-            $defaultKeys = [];
-            foreach ($defaultTranslations as $translation) {
-                if (! $translation['is_vendor']) {
-                    $composite = $translation['group'].'|'.$translation['key'].'|0|';
-                    $defaultKeys[$composite] = true;
-                }
-                self::writeTranslation($translation);
-            }
-
-            // ─── Pass 2: Remaining locales ─────────────────────────────────────────
-            foreach ($remainingLocales as $locale) {
-                $translations = self::collectLocaleTranslations($langPath, $locale);
-                $localeEnsured = false;
-
-                // Sub-pass A: Non-vendor keys — must exist in default locale key set.
-                foreach ($translations as $translation) {
-                    if ($translation['is_vendor']) {
-                        continue;
-                    }
-
-                    $composite = $translation['group'].'|'.$translation['key'].'|0|';
-
-                    if (! isset($defaultKeys[$composite])) {
-                        if (config('app.debug')) {
-                            Log::debug('Lingua sync: skipping orphan key', [
-                                'group' => $translation['group'],
-                                'key' => $translation['key'],
-                                'locale' => $locale,
-                            ]);
-                        }
-
-                        continue;
-                    }
-
-                    if (! $localeEnsured) {
-                        self::ensureLanguageRecord($locale);
-                        $installedCodes[$locale] = true;
-                        $localeEnsured = true;
-                    }
-
-                    self::writeTranslation($translation);
+            self::query()->getConnection()->transaction(function () use (
+                $bundledSource, $reader, $langPath, $defaultLocale, $remainingLocales, &$installedCodes
+            ): void {
+                // One query for every existing row; writeTranslation() resolves against it.
+                $index = [];
+                foreach (self::query()->get() as $row) {
+                    $index[self::indexKey($row->group, $row->key, $row->is_vendor, $row->vendor)] = $row;
                 }
 
-                // Sub-pass B: Vendor keys — require Language record to exist.
-                if (! isset($installedCodes[$locale])) {
-                    if (config('app.debug')) {
-                        $skipped = array_filter($translations, fn (array $t): bool => $t['is_vendor']);
-                        if ($skipped !== []) {
-                            Log::debug('Lingua sync: skipping vendor keys — locale not installed', [
-                                'locale' => $locale,
-                                'count' => count($skipped),
-                            ]);
-                        }
-                    }
+                // ─── Pass 1: Default locale ────────────────────────────────────────────
+                $defaultTranslations = array_merge(
+                    $bundledSource->translationsFor($defaultLocale),
+                    $reader->collect($langPath, $defaultLocale)
+                );
+                self::ensureLanguageRecord($defaultLocale);
+                $installedCodes[$defaultLocale] = true;
 
-                    continue;
-                }
-
-                foreach ($translations as $translation) {
+                $defaultKeys = [];
+                foreach ($defaultTranslations as $translation) {
                     if (! $translation['is_vendor']) {
+                        $composite = $translation['group'].'|'.$translation['key'].'|0|';
+                        $defaultKeys[$composite] = true;
+                    }
+                    self::writeTranslation($translation, $defaultLocale, $index);
+                }
+
+                // ─── Pass 2: Remaining locales ─────────────────────────────────────────
+                foreach ($remainingLocales as $locale) {
+                    // Bundled content only for INSTALLED locales — never auto-install
+                    // the whole bundled catalogue. Lang files always participate;
+                    // they are appended after bundled entries so app files override
+                    // bundled values for the same key.
+                    $translations = array_merge(
+                        isset($installedCodes[$locale]) ? $bundledSource->translationsFor($locale) : [],
+                        $reader->collect($langPath, $locale)
+                    );
+                    $localeEnsured = false;
+
+                    // Sub-pass A: Non-vendor keys — must exist in default locale key set.
+                    foreach ($translations as $translation) {
+                        if ($translation['is_vendor']) {
+                            continue;
+                        }
+
+                        $composite = $translation['group'].'|'.$translation['key'].'|0|';
+
+                        if (! isset($defaultKeys[$composite])) {
+                            if (config('app.debug')) {
+                                Log::debug('Lingua sync: skipping orphan key', [
+                                    'group' => $translation['group'],
+                                    'key' => $translation['key'],
+                                    'locale' => $locale,
+                                ]);
+                            }
+
+                            continue;
+                        }
+
+                        if (! $localeEnsured) {
+                            self::ensureLanguageRecord($locale);
+                            $installedCodes[$locale] = true;
+                            $localeEnsured = true;
+                        }
+
+                        self::writeTranslation($translation, $defaultLocale, $index);
+                    }
+
+                    // Sub-pass B: Vendor keys — require Language record to exist.
+                    if (! isset($installedCodes[$locale])) {
+                        if (config('app.debug')) {
+                            $skipped = array_filter($translations, fn (array $t): bool => $t['is_vendor']);
+                            if ($skipped !== []) {
+                                Log::debug('Lingua sync: skipping vendor keys — locale not installed', [
+                                    'locale' => $locale,
+                                    'count' => count($skipped),
+                                ]);
+                            }
+                        }
+
                         continue;
                     }
-                    self::writeTranslation($translation);
+
+                    foreach ($translations as $translation) {
+                        if (! $translation['is_vendor']) {
+                            continue;
+                        }
+                        self::writeTranslation($translation, $defaultLocale, $index);
+                    }
                 }
-            }
+            });
         } finally {
             self::$syncing = false;
-            Artisan::call('cache:clear');
-        }
-    }
-
-    /**
-     * Collect all translation entries for a single locale from the filesystem.
-     *
-     * Reads core JSON, core PHP, vendor JSON, and vendor PHP files in order.
-     * Returns a flat array; each item has keys:
-     *   locale, group, key, value, is_vendor, vendor.
-     *
-     * @param  string  $langPath  Absolute path to the lang directory.
-     * @param  string  $locale  ISO locale code to collect files for.
-     * @return array<int, array{locale: string, group: string, key: string, value: string, is_vendor: bool, vendor: string|null}>
-     */
-    private static function collectLocaleTranslations(string $langPath, string $locale): array
-    {
-        $result = [];
-
-        // 1) Core JSON
-        $jsonFile = $langPath.'/'.$locale.'.json';
-        if (file_exists($jsonFile)) {
-            $decoded = json_decode(file_get_contents($jsonFile), true);
-            if (is_array($decoded)) {
-                foreach ($decoded as $key => $value) {
-                    $result[] = [
-                        'locale' => $locale,
-                        'group' => 'single',
-                        'key' => $key,
-                        'value' => $value ?? '',
-                        'is_vendor' => false,
-                        'vendor' => null,
-                    ];
+            $store = Cache::store(config('lingua.cache.store'));
+            foreach (array_unique(self::$touchedCacheKeys, SORT_REGULAR) as [$locale, $group, $isVendor, $vendor]) {
+                if ($isVendor && $vendor) {
+                    $store->forget(CacheKey::forVendorGroup($locale, $vendor, $group));
+                } else {
+                    $store->forget(CacheKey::forGroup($locale, $group));
                 }
             }
+            self::$touchedCacheKeys = [];
         }
-
-        // 2) Core PHP
-        $langFolder = $langPath.'/'.$locale;
-        if (is_dir($langFolder)) {
-            foreach (glob($langFolder.'/*.php') ?: [] as $file) {
-                $group = basename($file, '.php');
-                $groupTranslations = include $file;
-                if (is_array($groupTranslations)) {
-                    self::flattenTranslations($groupTranslations, $result, $locale, $group, false, null);
-                }
-            }
-        }
-
-        // 3) Vendor JSON + PHP
-        foreach (self::discoverVendorPackages($langPath) as $vendor) {
-            $vendorRoot = $langPath.'/vendor/'.$vendor;
-
-            $vendorJson = $vendorRoot.'/'.$locale.'.json';
-            if (file_exists($vendorJson)) {
-                $decoded = json_decode(file_get_contents($vendorJson), true);
-                if (is_array($decoded)) {
-                    foreach ($decoded as $key => $value) {
-                        $result[] = [
-                            'locale' => $locale,
-                            'group' => 'single',
-                            'key' => $key,
-                            'value' => $value ?? '',
-                            'is_vendor' => true,
-                            'vendor' => $vendor,
-                        ];
-                    }
-                }
-            }
-
-            $vendorLangFolder = $vendorRoot.'/'.$locale;
-            if (is_dir($vendorLangFolder)) {
-                foreach (glob($vendorLangFolder.'/*.php') ?: [] as $file) {
-                    $group = basename($file, '.php');
-                    $groupTranslations = include $file;
-                    if (is_array($groupTranslations)) {
-                        self::flattenTranslations($groupTranslations, $result, $locale, $group, true, $vendor);
-                    }
-                }
-            }
-        }
-
-        return $result;
     }
 
     /**
@@ -495,7 +601,19 @@ class Translation extends LanguageLine
      */
     private static function ensureLanguageRecord(string $locale): void
     {
-        $localeInfo = Locales::info($locale);
+        $localeInfo = app(LocaleRegistry::class)->info($locale);
+
+        if ($localeInfo === null) {
+            Language::firstOrCreate(['code' => $locale], [
+                'regional' => null,
+                'type' => 'Latn',
+                'name' => $locale,
+                'native' => $locale,
+                'direction' => 'ltr',
+            ]);
+
+            return;
+        }
 
         Language::updateOrCreate(
             [
@@ -504,9 +622,9 @@ class Translation extends LanguageLine
             ],
             [
                 'type' => $localeInfo->type,
-                'name' => $localeInfo->locale->name,
+                'name' => $localeInfo->name,
                 'native' => $localeInfo->native,
-                'direction' => $localeInfo->direction->value,
+                'direction' => $localeInfo->direction,
             ]
         );
     }
@@ -519,127 +637,116 @@ class Translation extends LanguageLine
      * Detects LinguaType (text/html/markdown) only for default-locale values;
      * for all other locales the existing type is preserved.
      *
+     * The default locale is passed explicitly: comparing against
+     * linguaDefaultLocale() (the app fallback locale) diverged from the
+     * Language::default() value resolved by syncToDatabase(), silently
+     * disabling type detection whenever the two differed.
+     *
      * @param  array{locale: string, group: string, key: string, value: string, is_vendor: bool, vendor: string|null}  $translation
+     * @param  string  $defaultLocale  The default locale resolved by the caller.
+     * @param  array<string, self>  $index  Existing rows keyed by indexKey(); new rows are added to it.
      */
-    private static function writeTranslation(array $translation): void
+    private static function writeTranslation(array $translation, string $defaultLocale, array &$index): void
     {
-        $existing = self::where('group', $translation['group'])
-            ->where('key', $translation['key'])
-            ->where('is_vendor', $translation['is_vendor'])
-            ->where('vendor', $translation['vendor'])
-            ->first();
+        $indexKey = self::indexKey(
+            (string) $translation['group'],
+            (string) $translation['key'],
+            (bool) $translation['is_vendor'],
+            $translation['vendor'],
+        );
+        $existing = $index[$indexKey] ?? null;
+
+        // Cache keys are touched even when nothing is written, preserving the
+        // "sync refreshes the cache" contract; the finally block deduplicates them.
+        self::$touchedCacheKeys[] = [
+            $translation['locale'],
+            $translation['group'],
+            (bool) $translation['is_vendor'],
+            $translation['vendor'] ?? null,
+        ];
+
+        if ($existing !== null) {
+            // Type is decided only when a row is created (unchanged behaviour),
+            // so an existing row needs a write only when its locale value differs.
+            if (array_key_exists($translation['locale'], $existing->text ?? [])
+                && $existing->text[$translation['locale']] === $translation['value']) {
+                return;
+            }
+
+            $existing->text = array_merge(
+                $existing->text ?? [],
+                [$translation['locale'] => $translation['value']]
+            );
+            $existing->save();
+
+            return;
+        }
 
         $stringType = LinguaType::text;
 
-        if ($translation['locale'] === linguaDefaultLocale()) {
+        // Skip type detection on oversized values: it is not worth the
+        // regex cost and bounds the work an attacker can trigger.
+        if ($translation['locale'] === $defaultLocale && mb_strlen((string) $translation['value']) <= 10000) {
             $string = Str::of($translation['value'])->trim();
             if (preg_match('#(?<=<)\w+(?=[^<]*?>)#', $string->toString())) {
                 $stringType = LinguaType::html;
             }
             // Detect markdown only when no HTML was found — look for common markdown markers.
+            // The link branch uses a negated class ([^\]]+) to avoid ReDoS backtracking.
             if ($stringType === LinguaType::text &&
-                preg_match('/^#{1,6}\s|\n#{1,6}\s|^\s*[-*+]\s|\[.+\]\(https?:/im', $string->toString())) {
+                preg_match('/^#{1,6}\s|\n#{1,6}\s|^\s*[-*+]\s|\[[^\]]+\]\(https?:/im', $string->toString())) {
                 $stringType = LinguaType::markdown;
             }
         }
 
-        Translation::updateOrCreate(
-            [
-                'group' => $translation['group'],
-                'key' => $translation['key'],
-                'is_vendor' => $translation['is_vendor'],
-                'vendor' => $translation['vendor'],
-            ],
-            [
-                'type' => $existing->type ?? $stringType,
-                'text' => array_merge(
-                    $existing->text ?? [],
-                    [$translation['locale'] => $translation['value']]
-                ),
-            ]
-        );
-    }
+        // save() recomputes group_key; group/key are cast to string because
+        // TranslationFileReader::flatten() can yield an int key for a top-level
+        // numeric-indexed array entry, which the strictly-typed buildGroupKey()
+        // would reject.
+        $row = new self([
+            'group' => (string) $translation['group'],
+            'key' => (string) $translation['key'],
+            'is_vendor' => $translation['is_vendor'],
+            'vendor' => $translation['vendor'],
+            'type' => $stringType,
+            'text' => [$translation['locale'] => $translation['value']],
+        ]);
+        $row->save();
 
-    protected static function flattenTranslations(
-        array $array,
-        array &$result,
-        string $locale,
-        string $group,
-        bool $isVendor,
-        ?string $vendor,
-        string $prefix = ''
-    ): void {
-        foreach ($array as $key => $value) {
-            $fullKey = $prefix ? $prefix.'.'.$key : $key;
-
-            if (is_array($value)) {
-                self::flattenTranslations($value, $result, $locale, $group, $isVendor, $vendor, $fullKey);
-            } else {
-                $result[] = [
-                    'locale' => $locale,
-                    'group' => $group,
-                    'key' => $fullKey,
-                    'value' => $value ?? '',
-                    'is_vendor' => $isVendor,
-                    'vendor' => $vendor,
-                ];
-            }
-        }
-    }
-
-    protected static function discoverLocales(string $langPath): array
-    {
-        $locales = [];
-
-        foreach (glob($langPath.'/*.json') ?: [] as $file) {
-            $locales[] = basename($file, '.json');
-        }
-
-        foreach (glob($langPath.'/*', GLOB_ONLYDIR) ?: [] as $dir) {
-            $name = basename($dir);
-            if ($name !== 'vendor') {
-                $locales[] = $name;
-            }
-        }
-
-        foreach (self::discoverVendorPackages($langPath) as $vendor) {
-            $vendorRoot = $langPath.'/vendor/'.$vendor;
-            foreach (glob($vendorRoot.'/*.json') ?: [] as $file) {
-                $locales[] = basename($file, '.json');
-            }
-            foreach (glob($vendorRoot.'/*', GLOB_ONLYDIR) ?: [] as $dir) {
-                $locales[] = basename($dir);
-            }
-        }
-
-        return array_values(array_unique($locales));
-    }
-
-    protected static function discoverVendorPackages(string $langPath): array
-    {
-        $vendorDir = $langPath.'/vendor';
-        if (! is_dir($vendorDir)) {
-            return [];
-        }
-
-        return array_map('basename', glob($vendorDir.'/*', GLOB_ONLYDIR) ?: []);
+        $index[$indexKey] = $row;
     }
 
     /**
-     * Count all translations for a specific locale
+     * Composite identity of a translation row, used by the in-memory sync index.
+     *
+     * Mirrors the (group, key, is_vendor, vendor) lookup previously done in SQL.
+     */
+    private static function indexKey(string $group, string $key, bool $isVendor, ?string $vendor): string
+    {
+        return $group."\0".$key."\0".($isVendor ? '1' : '0')."\0".($vendor ?? '');
+    }
+
+    /**
+     * Count all translations that have a non-null value for the given locale.
+     *
+     * Uses PHP aggregation over the text JSON column to stay compatible with
+     * every supported database driver (SQLite, MySQL, PostgreSQL, SQL Server).
      */
     public static function countByLocale(string $locale): int
     {
-        return self::whereRaw('(text->>?) IS NOT NULL', [$locale])->count() ?? 0;
+        return static::translationCounts()['byLocale'][$locale] ?? 0;
     }
 
     /**
-     * Get translation statistics for a specific locale
+     * Get translation statistics for a specific locale.
+     *
+     * @return array{total: int, translated: int, missing: int, percentage: float|int}
      */
     public static function getLocaleStats(string $locale): array
     {
-        $total = self::count();
-        $translated = self::countByLocale($locale);
+        $counts = static::translationCounts();
+        $total = $counts['total'];
+        $translated = $counts['byLocale'][$locale] ?? 0;
 
         return [
             'total' => $total,
@@ -647,5 +754,28 @@ class Translation extends LanguageLine
             'missing' => $total - $translated,
             'percentage' => $total > 0 ? round(($translated / $total) * 100, 2) : 0,
         ];
+    }
+
+    /**
+     * Load all language_lines rows (text column only) and count per-locale in PHP.
+     *
+     * Returns ['total' => int, 'byLocale' => [locale => count]].
+     * No SQL JSON functions used — compatible with all supported drivers.
+     *
+     * @return array{total: int, byLocale: array<string, int>}
+     */
+    public static function translationCounts(): array
+    {
+        $byLocale = [];
+        $total = 0;
+
+        self::select('text')->each(function (self $row) use (&$byLocale, &$total): void {
+            $total++;
+            foreach (array_keys($row->text ?? []) as $locale) {
+                $byLocale[$locale] = ($byLocale[$locale] ?? 0) + 1;
+            }
+        });
+
+        return ['total' => $total, 'byLocale' => $byLocale];
     }
 }

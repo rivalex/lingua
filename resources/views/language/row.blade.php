@@ -2,10 +2,21 @@
 	<flux:table.cell class="flex items-center gap-2">
         <livewire:lingua::selector.icon :locale="$language->code" size="lg"/>
 		<div class="flex flex-col gap-0.5">
-			<flux:link variant="ghost" wire:navigate
-			           href="{{ route('lingua.translations', ['locale' => $language->code]) }}">
+			@if(config('lingua.links.translations.enabled', true))
+				@if(config('lingua.navigate', false))
+				<flux:link variant="ghost" wire:navigate
+				           href="{{ route(config('lingua.links.translations.route', 'lingua.translations'), ['locale' => $language->code]) }}">
+					<p class="font-bold text-lg">{{ $language->native }}</p>
+				</flux:link>
+				@else
+				<flux:link variant="ghost"
+				           href="{{ route(config('lingua.links.translations.route', 'lingua.translations'), ['locale' => $language->code]) }}">
+					<p class="font-bold text-lg">{{ $language->native }}</p>
+				</flux:link>
+				@endif
+			@else
 				<p class="font-bold text-lg">{{ $language->native }}</p>
-			</flux:link>
+			@endif
 			<p class="italic text-xs">{{ $language->name }}</p>
 		</div>
 	</flux:table.cell>

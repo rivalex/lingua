@@ -10,7 +10,7 @@ use Livewire\Component;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Traits\ModalsConfirm;
 
-class SetDefault extends Component
+final class SetDefault extends Component
 {
     use ModalsConfirm;
 
@@ -26,6 +26,7 @@ class SetDefault extends Component
 
     public function setDefaultLanguage(): void
     {
+        $this->validateConfirmControl();
         try {
             app(Language::class)->setDefault($this->language);
             $this->dispatch('refreshLanguageRows');
