@@ -44,6 +44,8 @@ class Update extends Component
 
     public bool $locked = false;
 
+    public bool $isVendor = false;
+
     public function rules(): array
     {
         return [
@@ -76,6 +78,7 @@ class Update extends Component
 
     public function mount(): void
     {
+        $this->isVendor = $this->translation->is_vendor;
         $this->setDefaults();
     }
 
@@ -114,11 +117,17 @@ class Update extends Component
                 default => ''
             };
 
-            $this->translation->update([
-                'group' => $this->group,
-                'key' => $this->key,
-                'type' => $this->translationType,
-            ]);
+            // Vendor translations: group and key are locked — they map to vendor package files.
+            // Only the text value and type may be updated.
+            if ($this->translation->is_vendor) {
+                $this->translation->update(['type' => $this->translationType]);
+            } else {
+                $this->translation->update([
+                    'group' => $this->group,
+                    'key' => $this->key,
+                    'type' => $this->translationType,
+                ]);
+            }
             $this->translation->setTranslation($this->currentLocale, $translationValue);
             $this->translation->save();
             $this->translation->refresh();

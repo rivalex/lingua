@@ -11,7 +11,7 @@
 		@endif
 		<div class="flex flex-col grow leading-5 truncate">
 			<div class="truncate">{{ $name }}</div>
-			<div class="text-xs font-light text-gray-500 dark:text-gray-300 truncate">{{ $description }}</div>
+			<div class="text-xs font-light text-zinc-500 dark:text-zinc-300 truncate">{{ $description }}</div>
 		</div>
 	</div>
 @else

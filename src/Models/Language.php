@@ -351,7 +351,9 @@ class Language extends Model
      */
     public static function setDefault(self $language): void
     {
-        self::where('is_default', true)->update(['is_default' => false]);
-        $language->update(['is_default' => true]);
+        DB::transaction(function () use ($language) {
+            self::where('is_default', true)->update(['is_default' => false]);
+            $language->update(['is_default' => true]);
+        });
     }
 }

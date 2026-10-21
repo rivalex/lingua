@@ -81,9 +81,3 @@
         </div>
     @endif
 </div>
-
-{{--@assets--}}
-{{--@once--}}
-{{--    <script type="module" src="{{ lt_asset('js/lingua-editor.min.js') }}"></script>--}}
-{{--@endonce--}}
-{{--@endassets--}}

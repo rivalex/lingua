@@ -10,7 +10,7 @@ class LinguaMiddleware
     public function handle($request, \Closure $next)
     {
         $sessionLocale = config('lingua.session_variable');
-        $defaultLocale = Language::default()->code ?? config('app.locale');
+        $defaultLocale = Language::default()?->code ?? config('app.locale');
         if (Session::has($sessionLocale)) {
             $locale = Session::get($sessionLocale, $defaultLocale);
         } else {

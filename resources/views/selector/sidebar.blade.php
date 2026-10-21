@@ -11,7 +11,7 @@
                 <div class="justify-between flex items-center">
                     <div class="flex flex-col grow leading-5 truncate">
                         <div class="truncate">{{ $locale->name }}</div>
-                        <div class="text-xs font-light text-gray-500 truncate italic">{{ $locale->native }}</div>
+                        <div class="text-xs font-light text-zinc-500 truncate italic">{{ $locale->native }}</div>
                     </div>
                     <livewire:lingua::selector.icon locale="{{ linguaLanguageCode($locale->code) }}" :show-flags="$showFlags"/>
                 </div>
@@ -19,3 +19,8 @@
         @endforeach
     </x-lingua::menu-group>
 </div>
+@assets
+@once
+    <link rel="stylesheet" href="{{ asset('vendor/lingua/css/lingua.min.css') }}">
+@endonce
+@endassets

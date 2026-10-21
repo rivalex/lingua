@@ -31,7 +31,7 @@
 				@endif
 			</div>
 
-			<div class="overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+			<div class="overflow-hidden rounded-full bg-zinc-200 dark:bg-white/10">
 				<div @class([
                             'h-2 rounded-full',
                             'bg-orange-500' => (!$language->is_default && $language->missing_strings > 0),

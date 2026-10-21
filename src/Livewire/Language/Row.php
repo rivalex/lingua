@@ -23,7 +23,7 @@ class Row extends Component
         $this->language = Language::withStatistics()->find($this->language->id);
     }
 
-    public function placeholder()
+    public function placeholder(): string
     {
         return <<<'HTML'
         <flux:table.row>

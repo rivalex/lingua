@@ -4,10 +4,10 @@ namespace Rivalex\Lingua\Livewire\Language;
 
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Rivalex\Lingua\Facades\Lingua;
 use Rivalex\Lingua\Models\Language;
 use Rivalex\Lingua\Models\Translation;
 use Rivalex\Lingua\Traits\ModalsConfirm;
@@ -65,7 +65,7 @@ class Delete extends Component
         $this->validate();
         try {
             $locale = $this->language->code;
-            Artisan::call('lang:rm '.strtolower($locale).' --force');
+            Lingua::removeLanguage($locale);
             $translations = Translation::whereNotNull('text->'.$locale)->get();
             foreach ($translations as $translation) {
                 $translation->forgetTranslation($locale);
