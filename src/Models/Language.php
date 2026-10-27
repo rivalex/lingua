@@ -1,0 +1,306 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Rivalex\Lingua\Models;
+
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Rivalex\Lingua\Contracts\TranslationRepository;
+use Rivalex\Lingua\Database\Factories\LanguageFactory;
+
+/**
+ * # Language Model
+ * Represents a language configuration in the system with translation statistics tracking.
+ * This model manages language settings, default language selection, sorting order, and
+ * provides translation completion statistics.
+ *
+ *  ## Create a new language.
+ *  ```
+ *  // Create a new language
+ *  $language = Language::create([
+ *      'code' => 'es',
+ *      'regional' => 'ES',
+ *      'type' => 'standard',
+ *      'name' => 'Spanish',
+ *      'native' => 'Español',
+ *      'direction' => 'ltr',
+ *      'is_default' => false
+ *  ]);
+ *  ```
+ *
+ *  ## Get default language:
+ *  ```
+ *  $defaultLang = Language::default();
+ *  echo $defaultLang->name; // 'English'
+ *  ```
+ *
+ * ## Set a new default language:
+ *  ```
+ *  $spanish = Language::where('code', 'es')->first();
+ *  Language::setDefault($spanish);
+ *  ```
+ *
+ * ## Get languages with translation statistics:
+ *  ```
+ *  $languages = Language::withStatistics()->get();
+ *  foreach ($languages as $lang) {
+ *      echo "{$lang->name}: {$lang->completion_percentage}% complete\n";
+ *      echo "Translated: {$lang->translated_strings}/{$lang->total_strings}\n";
+ *  }
+ *  ```
+ *
+ * ## Reorder languages sequentially:
+ *  ```
+ *  Language::reorderLanguages();
+ *  ```
+ *
+ * ## Get active languages ordered by sort:
+ *  ```
+ *  $languages = Language::query->active()->get();
+ *  ```
+ *
+ *
+ * @property int $id ID primary key
+ * @property string $code ISO 639-1 language code (e.g., 'en', 'es', 'fr')
+ * @property string $regional Regional variant code (e.g., 'US', 'GB', 'MX')
+ * @property string $type Language type classification
+ * @property string $name English name of the language (e.g., 'English', 'Spanish')
+ * @property string $native Native name of the language (e.g., 'English', 'Español')
+ * @property string $direction Text direction: 'ltr' (left-to-right) or 'rtl' (right-to-left)
+ * @property bool $is_default Indicates if this is the default system language
+ * @property int $sort Display order position (lower numbers appear first)
+ * @property Carbon $created_at Creation timestamp
+ * @property Carbon $updated_at Last update timestamp
+ * @property-read int   $total_strings         Total number of translatable strings (computed)
+ * @property-read int   $translated_strings    Number of translated strings for this language (computed)
+ * @property-read int   $missing_strings       Number of untranslated strings (computed)
+ * @property-read float $completion_percentage Translation completion percentage (0-100) (computed)
+ */
+#[UseFactory(LanguageFactory::class)]
+class Language extends Model
+{
+    use HasFactory;
+
+    protected $table = 'languages';
+
+    protected $fillable = [
+        'code',
+        'regional',
+        'type',
+        'name',
+        'native',
+        'direction',
+        'is_default',
+        'sort',
+    ];
+
+    protected $casts = [
+        'code' => 'string',
+        'regional' => 'string',
+        'type' => 'string',
+        'name' => 'string',
+        'native' => 'string',
+        'direction' => 'string',
+        'is_default' => 'boolean',
+        'sort' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    /**
+     * ## Boot the model and register event listeners.
+     *
+     * Sets the sort order of every new language to the next available
+     * position (max + 1) so new languages are appended to the end of the list.
+     *
+     *  ```
+     *  $lang = new Language(['code' => 'fr', 'name' => 'French']);
+     *  $lang->save();
+     *
+     *  $lang->sort // is automatically set to the highest sort value + 1
+     *  ```
+     */
+    public static function boot(): void
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $model->sort = self::max('sort') + 1;
+        });
+    }
+
+    /**
+     * ## Query scope for active languages ordered by sort position.
+     *
+     * Returns a query builder instance that orders languages by their sort field
+     * in ascending order. This method is useful for displaying languages in the
+     * configured display order.
+     *
+     *   ```
+     *   // Get all languages in sorted order
+     *   $languages = Language::query()->active()->get();
+     *
+     *   // Apply additional filters
+     *   $ltrLanguages = Language::query()->active()->where('direction', 'ltr')->get();
+     *   ```
+     *
+     * @param  Builder  $query  Query builder instance
+     * @return Builder Modified query builder
+     */
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('sort');
+    }
+
+    /**
+     * Scope to retrieve active languages in sort order.
+     *
+     * @todo Filter by is_active when field is added.
+     *
+     * @param  Builder  $query  Query builder instance
+     * @return Builder Modified query builder
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $this->scopeOrdered($query);
+    }
+
+    /**
+     * Passthrough scope - statistics are now computed via PHP accessors.
+     * Kept for call-site compatibility: Language::withStatistics()->find/get
+     * continues to work; the four metric properties are available on every
+     * Language instance regardless of whether this scope is used.
+     *
+     * @param  Builder  $query  Query builder instance
+     * @return Builder Unmodified query builder
+     */
+    public function scopeWithStatistics(Builder $query): Builder
+    {
+        return $query;
+    }
+
+    /**
+     * Total number of translatable strings in the system.
+     * Computed via PHP aggregation - no SQL JSON functions.
+     */
+    public function getTotalStringsAttribute(): int
+    {
+        return app(TranslationRepository::class)->counts()['total'];
+    }
+
+    /**
+     * Number of strings translated for this language.
+     * Computed via PHP aggregation - no SQL JSON functions.
+     */
+    public function getTranslatedStringsAttribute(): int
+    {
+        return app(TranslationRepository::class)->counts()['byLocale'][$this->code] ?? 0;
+    }
+
+    /**
+     * Number of strings not yet translated for this language.
+     */
+    public function getMissingStringsAttribute(): int
+    {
+        return $this->total_strings - $this->translated_strings;
+    }
+
+    /**
+     * Translation completion percentage (0–100, rounded to 2 decimals).
+     */
+    public function getCompletionPercentageAttribute(): float
+    {
+        $total = $this->total_strings;
+
+        return $total > 0 ? round($this->translated_strings / $total * 100, 2) : 0.0;
+    }
+
+    /**
+     * ## Get the default system language.
+     *
+     * Retrieves the language that is marked as the default (is_default = true).
+     * Only one language should be set as default at any time. Returns null if
+     * no default language is configured.
+     *
+     *  ```
+     *  // Get the default language
+     *  $defaultLang = Language::default();
+     *  if ($defaultLang) {
+     *      echo "Default language: {$defaultLang->name}";
+     *      app()->setLocale($defaultLang->code);
+     *  }
+     *
+     *  // Use in middleware or service providers
+     *  $locale = Language::default()->code ?? 'en';
+     *  ```
+     *
+     * @return self|null The default language instance or null if not found
+     */
+    public static function default(): ?self
+    {
+        return self::where('is_default', true)->first();
+    }
+
+    /**
+     * ## Reorder all languages with sequential sort values.
+     *
+     * This method fetches all languages ordered by their current sort value and
+     * reassigns sequential sort numbers starting from 1. This is useful for
+     * fixing gaps in sort order that may occur after deletions or manual sorting.
+     *
+     *  ```
+     *  // After deleting languages or manual reordering, fix the sort sequence
+     *  Language::reorderLanguages();
+     *  // Now languages will have sort values: 1, 2, 3, 4... with no gaps
+     *
+     *  // Use after bulk operations
+     *  Language::whereIn('code', ['xx', 'yy'])->delete();
+     *  Language::reorderLanguages(); // Clean up sort order
+     *  ```
+     */
+    public static function reorderLanguages(): void
+    {
+        self::orderBy('sort')
+            ->get()
+            ->each(function ($language, $index) {
+                $language->update(['sort' => $index + 1]);
+            });
+    }
+
+    /**
+     * Set a language as the default system language.
+     *
+     * This method unsets any existing default language and sets the provided
+     * language as the new default. It ensures that only one language is marked
+     * as default at any time by first setting all languages' is_default to false,
+     * then setting the specified language's is_default to true.
+     *
+     *  ```
+     *  // Set Spanish as the default language
+     *  $spanish = Language::where('code', 'es')->first();
+     *  Language::setDefault($spanish);
+     *
+     *  // Verify the change
+     *  $default = Language::default();
+     *  echo $default->code; // 'es'
+     *
+     *  // Use in language switcher
+     *  $newDefault = Language::find($request->language_id);
+     *  Language::setDefault($newDefault);
+     *  session()->put('locale', $newDefault->code);
+     *  ```
+     *
+     * @param  self  $language  The language instance to set as default
+     */
+    public static function setDefault(self $language): void
+    {
+        DB::transaction(function () use ($language) {
+            self::where('is_default', true)->update(['is_default' => false]);
+            $language->update(['is_default' => true]);
+        });
+    }
+}

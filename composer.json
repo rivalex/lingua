@@ -1,0 +1,114 @@
+{
+    "name": "rivalex/lingua",
+    "description": "Self-hosted Laravel translation manager for the TALL stack: edit, sync, import/export and AI-translate your i18n / l10n language files via a Livewire UI. Database & file drivers, vendor translations, CSV/JSON/XLSX/ODS. A native alternative to laravel-lang and external services.",
+    "keywords": [
+        "laravel",
+        "translation",
+        "translations",
+        "translation-manager",
+        "localization",
+        "internationalization",
+        "i18n",
+        "l10n",
+        "multilingual",
+        "livewire",
+        "tall-stack",
+        "laravel-package",
+        "language-files",
+        "lang",
+        "self-hosted",
+        "import-export",
+        "vendor-translations"
+    ],
+    "homepage": "https://github.com/rivalex/lingua",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alessandro Rivolta",
+            "email": "info@rivalex.dev",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "ext-dom": "*",
+        "ext-libxml": "*",
+        "laravel/framework": "^12.0 || ^13.0",
+        "laravel/prompts": "^0.3",
+        "livewire/flux": "^2.21",
+        "livewire/livewire": "^4.4.8"
+    },
+    "require-dev": {
+        "larastan/larastan": "^v3.0.0",
+        "laravel/pao": "^1.0",
+        "laravel/pint": "^v1.24.0",
+        "nunomaduro/collision": "^v8.8.0",
+        "openspout/openspout": "^5.7",
+        "orchestra/testbench": "^10.9 || ^11.0",
+        "pestphp/pest": "^v4.4.0",
+        "pestphp/pest-plugin-arch": "^v4.0.0",
+        "pestphp/pest-plugin-laravel": "^v4.0.0",
+        "phpunit/phpunit": "^12.5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rivalex\\Lingua\\": "src/",
+            "Rivalex\\Lingua\\Database\\Factories\\": "database/factories/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Rivalex\\Lingua\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare",
+            "@composer run prepare"
+        ],
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint",
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "lint": [
+            "@php vendor/bin/pint --ansi"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "platform": {
+            "php": "8.4.1"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Rivalex\\Lingua\\LinguaServiceProvider"
+            ],
+            "aliases": {
+                "Lingua": "Rivalex\\Lingua\\Facades\\Lingua"
+            }
+        }
+    },
+    "suggest": {
+        "rivalex/lingua-pro": "Adds AI translation (DeepL, Anthropic, Google), translation memory, glossary, usage analytics, and license-gated features. Requires a Lingua Pro license.",
+        "openspout/openspout": "Enables XLSX/ODS translation import & export (CSV and JSON work without it)."
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

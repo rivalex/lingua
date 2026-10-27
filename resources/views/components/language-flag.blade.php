@@ -1,0 +1,19 @@
+@props([
+    'code' => '',
+    'name' => '',
+    'description' => '',
+    'size' => 6
+])
+@if(Flux::pro())
+	<div class="flex flex-row gap-2 items-center w-full">
+		@if(!empty($code))
+			<x-lingua::flag :code="$code" circle class="w-{{ $size }} h-{{ $size }}"/>
+		@endif
+		<div class="flex flex-col grow leading-5 truncate">
+			<div class="truncate">{{ $name }}</div>
+			<div class="text-xs font-light text-zinc-500 dark:text-zinc-300 truncate">{{ $description }}</div>
+		</div>
+	</div>
+@else
+	{{ $name }}&nbsp;({{ $description }})
+@endif

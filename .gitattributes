@@ -1,0 +1,17 @@
+/.github export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/tests export-ignore
+/phpunit.xml export-ignore
+/pint.json export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore
+/vite.config.js export-ignore
+/composer.lock export-ignore
+/resources/js export-ignore
+/resources/images export-ignore
+/src/dist/images/*.png export-ignore
+/src/dist/images/*.gif export-ignore
+/src/dist/js/*.map export-ignore
+/resources/translations/.meta.json export-ignore
+/resources/translations/.dataset-lock.json export-ignore

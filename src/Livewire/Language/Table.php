@@ -1,0 +1,75 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Rivalex\Lingua\Livewire\Language;
+
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Modelable;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
+use Rivalex\Lingua\Models\Language;
+use Rivalex\Lingua\Models\Translation;
+use Rivalex\Lingua\Traits\AuthorizesLingua;
+
+final class Table extends Component
+{
+    use AuthorizesLingua;
+    use WithPagination;
+
+    #[Url('search', except: ''), Modelable]
+    public string $search = '';
+
+    public function mount(): void
+    {
+        // Bootstrap convenience: import from lang files on first visit when no
+        // language records exist yet. Runs once per component lifecycle (mount)
+        // rather than on every render, keeping the computed a pure read path.
+        if (! Language::query()->exists()) {
+            Translation::syncToDatabase();
+        }
+    }
+
+    #[On('refreshLanguages')]
+    public function refreshLanguages(): void
+    {
+        $this->resetPage();
+        $this->renderIsland('languagesRows');
+    }
+
+    #[Computed]
+    public function languages()
+    {
+        $driver = DB::connection()->getDriverName();
+
+        $like = match ($driver) {
+            'pgsql' => 'ilike',
+            default => 'LIKE',
+        };
+
+        // Escape LIKE wildcards with '!' and declare it via ESCAPE: backslash
+        // escaping without an ESCAPE clause is MySQL/PG-only - SQLite and SQL
+        // Server treat the backslash literally and the search silently breaks.
+        $search = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $this->search);
+
+        return Language::query()->active()
+            ->when($this->search !== '',
+                fn ($query) => $query->where(function ($inner) use ($like, $search) {
+                    $grammar = $inner->getQuery()->getGrammar();
+                    foreach (['code', 'regional', 'name', 'native'] as $column) {
+                        $inner->orWhereRaw(
+                            $grammar->wrap($column)." {$like} ? ESCAPE '!'",
+                            ["%{$search}%"]
+                        );
+                    }
+                }))->paginate(5);
+    }
+
+    public function render()
+    {
+        return view('lingua::language.table');
+    }
+}

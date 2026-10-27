@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Rivalex\Lingua\Livewire\Language;
+
+use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Async;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Renderless;
+use Livewire\Component;
+use Rivalex\Lingua\Models\Language;
+use Rivalex\Lingua\Traits\AuthorizesLingua;
+
+final class Sort extends Component
+{
+    use AuthorizesLingua;
+
+    #[Renderless, Async]
+    public function updateLanguageOrder(int $item, mixed $position): void
+    {
+        try {
+            if (! is_int($position) || $position < 0) {
+                throw new \InvalidArgumentException('Invalid position value.');
+            }
+            $languages = Language::orderBy('sort')->get();
+            $movedLanguage = $languages->firstWhere('id', $item);
+            if (! $movedLanguage) {
+                return;
+            }
+            $languages = $languages->except($item);
+            $languages->splice($position, 0, [$movedLanguage]);
+            $languages->each(function ($language, $index) {
+                $language->update(['sort' => $index + 1]);
+            });
+            $this->dispatch('languages_sorted');
+            $this->dispatch('refreshLanguages');
+            $this->dispatch('refreshLanguageSelector');
+        } catch (\Throwable $e) {
+            $this->addError('updateLanguageOrderError', $e->getMessage());
+            $this->dispatch('languages_sorted_fail');
+            Log::error('Languages reorder failed! {error}', ['error' => $e->getMessage()]);
+        }
+    }
+
+    #[Computed]
+    public function languages()
+    {
+        return Language::orderBy('sort')->get();
+    }
+
+    #[On('refreshLanguages')]
+    public function refreshSortList(): void
+    {
+        $this->forceRender();
+    }
+
+    public function render()
+    {
+        return view('lingua::language.sort');
+    }
+}

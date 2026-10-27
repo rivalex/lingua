@@ -1,0 +1,94 @@
+<div wire:ignore>
+    <flux:modal.trigger name="{{ $modalName }}">
+        <flux:button variant="primary" color="green" icon="plus">
+            @lang('lingua::lingua.translations.create.action')
+        </flux:button>
+    </flux:modal.trigger>
+    <flux:modal name="{{ $modalName }}" class="lingua w-11/12 min-[992px]:w-[42rem]">
+        <div class="flex flex-col gap-4">
+            <flux:heading size="xl" level="1">
+                @lang('lingua::lingua.translations.create.header')
+            </flux:heading>
+            <flux:separator/>
+            <x-lingua::validation-errors class="text-start"/>
+            <form wire:submit.prevent="addNewTranslation" id="addNewTranslationForm" class="flex flex-col gap-4">
+                @csrf
+                <div class="grid grid-cols-3 gap-2 items-start">
+                    <div @class(['col-span-2' => !$fileMode, 'col-span-3' => $fileMode])>
+                        <x-lingua::autocomplete wire:model.blur.live="group" required :options="$groups"
+                                                :label="__('lingua::lingua.translations.fields.group')"
+                                                :placeholder="__('lingua::lingua.translations.fields.group_placeholder')"/>
+                    </div>
+                    @if(!$fileMode)
+                    <div class="col-span-1">
+                        <x-lingua::select wire:model.change.live="translationType"
+                                          required
+                                          :badge="__('lingua::lingua.global.required')"
+                                          :label="__('lingua::lingua.translations.fields.type')"
+                                          :placeholder="__('lingua::lingua.translations.fields.type_placeholder')">
+                            @foreach($translationsTypes as $translationTypeItem)
+                                <x-lingua::select.option
+                                    value="{{ $translationTypeItem['value'] }}"
+                                    :selected-label="strip_tags($translationTypeItem['label'])">
+                                    {!! $translationTypeItem['label'] !!}
+                                </x-lingua::select.option>
+                            @endforeach
+                        </x-lingua::select>
+                    </div>
+                    @endif
+                    <div class="col-span-3">
+                        <flux:input wire:model.blur.live="key" type="text" icon="key"
+                                    :label="__('lingua::lingua.translations.fields.key')"
+                                    :placeholder="__('lingua::lingua.translations.fields.key_placeholder')"
+                                    required :badge="__('lingua::lingua.global.required')"/>
+                    </div>
+                    <div class="col-span-3">
+                        @if($fileMode)
+                            <flux:textarea wire:model.blur="textValue" rows="3"
+                                           :label="__('lingua::lingua.translations.fields.textValue')"
+                                           :placeholder="__('lingua::lingua.translations.fields.text')"/>
+                        @else
+                            <div x-cloak x-show="$wire.translationType === 'text'">
+                                <x-lingua::editor wire:model.blur="textValue" type="text" :helper="false"
+                                                  :label="__('lingua::lingua.translations.fields.textValue')"
+                                                  :placeholder="__('lingua::lingua.translations.fields.text')"/>
+                            </div>
+                            <div x-cloak x-show="$wire.translationType === 'html'">
+                                <x-lingua::editor wire:model.blur="htmlValue" type="html" :helper="false"
+                                                  :label="__('lingua::lingua.translations.fields.htmlValue')"
+                                                  :placeholder="__('lingua::lingua.translations.fields.html')"/>
+                            </div>
+                            <div x-cloak x-show="$wire.translationType === 'markdown'">
+                                <x-lingua::editor wire:model.blur="mdValue" type="markdown" :helper="false"
+                                                  :label="__('lingua::lingua.translations.fields.mdValue')"
+                                                  :placeholder="__('lingua::lingua.translations.fields.md')"/>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                <flux:separator/>
+                {{--                @if(!config('lingua.suppress_pro_nudge', false))--}}
+                {{--                <div class="flex items-center justify-between gap-3 rounded-md border border-accent/20 bg-accent/5 px-3 py-2 text-xs dark:border-accent/30 dark:bg-accent/10">--}}
+                {{--                    <div class="flex items-center gap-2 text-accent-content">--}}
+                {{--                        <flux:icon.sparkles size="xs" class="shrink-0"/>--}}
+                {{--                        <span>@lang('lingua::lingua.pro.hint_text')</span>--}}
+                {{--                    </div>--}}
+                {{--                    <a--}}
+                {{--                        href="{{ config('lingua.pro_upgrade_url', 'https://lingua.rivalex.dev') }}"--}}
+                {{--                        target="_blank"--}}
+                {{--                        rel="noopener noreferrer"--}}
+                {{--                        class="shrink-0 font-semibold text-accent-content hover:underline"--}}
+                {{--                    >@lang('lingua::lingua.pro.hint_cta')</a>--}}
+                {{--                </div>--}}
+                {{--                @endif--}}
+                <div class="flex justify-between gap-2 items-center">
+                    <flux:button variant="filled" color="gray" icon="x-mark"
+                                 x-on:click="$flux.modal('{{ $modalName }}').close()">@lang('lingua::lingua.global.close')</flux:button>
+                    <flux:button type="submit" variant="primary" color="green"
+                                 icon="check">@lang('lingua::lingua.global.save')</flux:button>
+                </div>
+            </form>
+        </div>
+    </flux:modal>
+</div>
+
