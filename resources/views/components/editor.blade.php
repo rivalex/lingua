@@ -62,7 +62,7 @@
             @if(config('lingua.editor.code-mode'))
                 <div x-cloak x-show="sourceView">
                     <div class="toolbar flex w-full min-w-full flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-zinc-200 bg-zinc-50 p-1 dark:border-white/10 dark:bg-zinc-800 [&_[data-flux-separator]]:mx-1 [&_[data-flux-separator]]:my-[0.45rem]" x-ref="toolbar">
-                        <p class="px-[0.35rem] font-mono text-[0.7rem] font-semibold text-zinc-500 dark:text-zinc-800">{{ __('lingua::lingua.translations.editor.code-mode') }}</p>
+                        <p class="px-[0.35rem] font-mono text-[0.7rem] font-semibold text-zinc-500 dark:text-zinc-400">{{ __('lingua::lingua.translations.editor.code-mode') }}</p>
                         <flux:spacer vertical/>
                         <x-lingua::editor.code-mode @click="toggleSourceCode()"/>
                     </div>

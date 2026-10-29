@@ -2,6 +2,13 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## 3.0.2 - 2026-10-29
+
+### Fixed
+
+- **Code mode label in dark mode** - the "code mode" label above the HTML source editor was the same colour as its
+  background in dark mode; it is now readable.
+
 ## 3.0.1 - 2026-10-29
 
 ### Fixed
