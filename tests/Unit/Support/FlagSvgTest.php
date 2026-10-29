@@ -13,6 +13,23 @@ it('resolves every registry locale to an existing flag file', function (string $
     }
 })->with($codes);
 
+it('shows a real flag for every registry locale except the documented neutral ones', function (): void {
+    $neutral = static fn (bool $circle): array => array_values(array_filter(
+        array_keys(require __DIR__.'/../../../resources/data/locales.php'),
+        static fn (string $code): bool => str_ends_with(FlagSvg::path($code, $circle), 'country-xx.svg'),
+    ));
+
+    expect($neutral(false))->toBe(['ckb', 'eo', 'tt', 'ug'])
+        ->and($neutral(true))->toBe(['ckb', 'tt', 'ug']);
+});
+
+it('falls back to the country flag of the main language area', function (): void {
+    expect(basename(FlagSvg::path('gd')))->toBe('country-gb-sct.svg')
+        ->and(basename(FlagSvg::path('mni_Mtei')))->toBe('country-in.svg')
+        ->and(basename(FlagSvg::path('haw', true)))->toBe('circle-country-us-hi.svg')
+        ->and(basename(FlagSvg::path('haw')))->toBe('language-haw.svg');
+});
+
 it('matches regional codes case-insensitively and falls back to the base language', function (): void {
     expect(basename(FlagSvg::path('de_AT')))->toBe('language-de-at.svg')
         ->and(basename(FlagSvg::path('de-AT', true)))->toBe('circle-language-de-at.svg')

@@ -556,42 +556,22 @@ The full view tree is:
 
 ```
 resources/views/vendor/lingua/
-├── components/               # Blade anonymous components
-│   ├── branding.blade.php
-│   ├── card.blade.php
-│   ├── card/
-│   │   └── row.blade.php
-│   ├── clipboard.blade.php
-│   ├── editor.blade.php
-│   ├── language-flag.blade.php
-│   ├── menu-group.blade.php
-│   ├── message.blade.php
-│   ├── nav.blade.php
-│   └── select.blade.php
+├── components/               # Blade anonymous components (<x-lingua::...>)
+│   ├── branding, card, clipboard, editor, flag, language-flag, menu-group,
+│   ├── message, nav, select, stat, type-icon, validation-errors, ...
+│   ├── card/  editor/  select/
 ├── selector/                 # Language selector views
-│   ├── sidebar.blade.php
-│   ├── dropdown.blade.php
-│   ├── modal.blade.php
-│   └── headless.blade.php
-└── livewire/                 # Livewire page + component views
-    ├── languages.blade.php
-    ├── translations.blade.php
-    ├── statistics.blade.php
-    ├── settings.blade.php
-    ├── transfer.blade.php
-    ├── export.blade.php
-    ├── import.blade.php
-    ├── language/
-    │   ├── create.blade.php
-    │   ├── delete.blade.php
-    │   ├── row.blade.php
-    │   ├── set-default.blade.php
-    │   └── sort.blade.php
-    └── translation/
-        ├── create.blade.php
-        ├── delete.blade.php
-        ├── row.blade.php
-        └── update.blade.php
+│   ├── sidebar.blade.php, dropdown.blade.php, modal.blade.php,
+│   └── headless.blade.php, icon.blade.php
+├── languages.blade.php       # Livewire pages
+├── translations.blade.php
+├── statistics.blade.php      # + statistics/partials/
+├── settings.blade.php        # + settings/partials/
+├── transfer.blade.php        # + transfer/partials/
+├── export.blade.php
+├── import.blade.php
+├── language/                 # create, delete, row, set-default, sort, table
+└── translation/              # create, delete, row, update
 ```
 
 > **Tip:** Only publish views you intend to change. Unpublished views are served directly from the package and will

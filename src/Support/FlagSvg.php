@@ -8,12 +8,40 @@ namespace Rivalex\Lingua\Support;
  * Inline SVG flag for a locale, from the flags shipped in resources/flags.
  *
  * Lookup: the full code (`de_AT` -> `de-at`), then the base language (`sr_Cyrl` -> `sr`),
- * then the neutral flag. File names are matched case-insensitively, so regional codes
+ * then the flag of the country where the language is mainly spoken (see COUNTRY), then the
+ * neutral flag. File names are matched case-insensitively, so regional codes
  * resolve the same way on case-sensitive filesystems.
  */
 final class FlagSvg
 {
     private const DIR = __DIR__.'/../../resources/flags';
+
+    /**
+     * Country flag for registry languages that have no language flag in a set.
+     *
+     * Languages without a state of their own whose country flag would be contested
+     * (ckb, tt, ug) are left out on purpose and keep the neutral flag, as does `eo`
+     * in the square set.
+     *
+     * @var array<string, string> base language => country code
+     */
+    private const COUNTRY = [
+        'bho' => 'in',
+        'ceb' => 'ph',
+        'doi' => 'in',
+        'ee' => 'gh',
+        'fil' => 'ph',
+        'fy' => 'nl',
+        'gd' => 'gb-sct',
+        'haw' => 'us-hi',
+        'mai' => 'in',
+        'mni' => 'in',
+        'oc' => 'fr',
+        'om' => 'et',
+        'or' => 'in',
+        'sa' => 'in',
+        'sc' => 'it',
+    ];
 
     /** @var array<string, array<string, string>> lowercase file name => file name, per set */
     private static array $index = [];
@@ -52,7 +80,9 @@ final class FlagSvg
             }
         }
 
-        return self::DIR.'/'.$set.'/'.($circle ? 'circle-' : '').'country-xx.svg';
+        $country = ($circle ? 'circle-' : '').'country-'.(self::COUNTRY[$base] ?? 'xx').'.svg';
+
+        return self::DIR.'/'.$set.'/'.($index[$country] ?? ($circle ? 'circle-' : '').'country-xx.svg');
     }
 
     /**

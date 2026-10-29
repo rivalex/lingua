@@ -103,7 +103,7 @@ An extension component that Lingua renders (for example a translation tab) and t
 
 ### Flux 2.21 or newer
 
-Update `livewire/flux` to 2.21 or newer before requiring Lingua 2.2: `composer update livewire/flux`.
+Update `livewire/flux` to 2.21 or newer before requiring Lingua 3.0: `composer update livewire/flux`.
 
 ### Notifications for new languages
 

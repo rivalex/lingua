@@ -2,7 +2,8 @@
 
 The SVG files in this directory are a subset of the flags distributed by
 [outhebox/blade-flags](https://github.com/MohmmedAshraf/blade-flags), copied unchanged.
-Only the flags needed by Lingua's locale registry are included.
+Only the flags needed by Lingua's locale registry are included, plus the country flags (`country-*.svg`) used as
+a fallback for languages that have no language flag (see `Support\FlagSvg::COUNTRY`).
 
 - `square/`: graphics from [Twemoji](https://github.com/twitter/twemoji), Copyright 2020 Twitter, Inc and
   other contributors, licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/).

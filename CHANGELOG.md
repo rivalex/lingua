@@ -2,6 +2,22 @@
 
 All notable changes to `lingua` will be documented in this file.
 
+## 3.0.1 - 2026-10-29
+
+### Fixed
+
+- **Flags for more languages** - Dogri, Ewe, West Frisian, Scottish Gaelic, Maithili, Manipuri, Occitan, Oromo, Odia,
+  Sanskrit and Sardinian now show the flag of the country where they are mainly spoken instead of the neutral flag;
+  in the circle set also Bhojpuri, Cebuano, Filipino and Hawaiian. Central Kurdish, Tatar and Uyghur keep the neutral
+  flag on purpose, as does Esperanto in the square set.
+- **Logo in dark mode** - the Lingua logo and watermark switch their grey parts to white in dark mode, so
+  "Laravel Translation Manager" is readable on a dark background.
+
+### Documentation
+
+- **Upgrade guide and README** - the Flux note in the 3.0 upgrade section now says to update Flux before requiring
+  Lingua 3.0 (it said 2.2), and the README shows the actual tree of published views.
+
 ## 3.0.0 - 2026-10-27
 
 ### Security
